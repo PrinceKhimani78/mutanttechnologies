@@ -32,4 +32,4 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./out/
-        server-dir: ./public_html/ # CHANGE THIS if you want to deploy to a subdirectory or different folder
+        server-dir: ./next.mutanttechnologies.com/
