@@ -4,14 +4,23 @@ import { NextRequest, NextResponse } from 'next/server';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
-    try {
-        const { name, email, service, message, type } = await req.json();
+  try {
+    const apiKey = process.env.RESEND_API_KEY;
 
-        const subject = type === 'proposal'
-            ? `New Project Proposal from ${name}`
-            : `New Contact Message from ${name}`;
+    // Safety check to prevent build failures if key is missing
+    if (!apiKey) {
+      return NextResponse.json({ error: 'RESEND_API_KEY is missing' }, { status: 500 });
+    }
 
-        const htmlContent = `
+    const resend = new Resend(apiKey);
+
+    const { name, email, service, message, type } = await req.json();
+
+    const subject = type === 'proposal'
+      ? `New Project Proposal from ${name}`
+      : `New Contact Message from ${name}`;
+
+    const htmlContent = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e5e5; border-radius: 8px;">
         <h2 style="color: #333;">${subject}</h2>
         <div style="margin-bottom: 20px;">
@@ -29,16 +38,16 @@ export async function POST(req: NextRequest) {
       </div>
     `;
 
-        const data = await resend.emails.send({
-            from: 'Mutant Website <onboarding@resend.dev>', // Use default until user verifies domain
-            to: ['prince@mutanttechnologies.com'],
-            subject: subject,
-            html: htmlContent,
-            replyTo: email
-        });
+    const data = await resend.emails.send({
+      from: 'Mutant Website <onboarding@resend.dev>', // Use default until user verifies domain
+      to: ['prince@mutanttechnologies.com'],
+      subject: subject,
+      html: htmlContent,
+      replyTo: email
+    });
 
-        return NextResponse.json(data);
-    } catch (error) {
-        return NextResponse.json({ error }, { status: 500 });
-    }
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json({ error }, { status: 500 });
+  }
 }
