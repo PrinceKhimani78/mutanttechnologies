@@ -70,7 +70,7 @@ export const Hero = () => {
                 </p>
 
                 <div className="hero-btn flex justify-center gap-6">
-                    <Button size="lg" className="rounded-full px-10 py-6 text-xl hover:scale-110 transition-transform cursor-hover">
+                    <Button href="/#contact" size="lg" className="rounded-full px-10 py-6 text-xl hover:scale-110 transition-transform cursor-hover">
                         Start Project
                     </Button>
                 </div>

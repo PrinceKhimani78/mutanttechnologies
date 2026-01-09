@@ -58,10 +58,14 @@ export const Navbar = () => {
                                         <div className="flex flex-col gap-1">
                                             {[
                                                 { name: "Web Development", href: "/services/web-development" },
-                                                { name: "SEO Optimization", href: "/services/seo" },
+                                                { name: "App Development", href: "/services/app-development" },
                                                 { name: "Digital Marketing", href: "/services/digital-marketing" },
+                                                { name: "Graphic Design", href: "/services/graphic-design" },
+                                                { name: "SEO Optimization", href: "/services/seo" },
+                                                { name: "GEO", href: "/services/geo" },
+                                                { name: "Brand Identity", href: "/services/brand-identity" },
                                                 { name: "Cyber Security", href: "/services/cyber-security" },
-                                                { name: "UI/UX Design", href: "/services/ui-ux-design" },
+                                                { name: "AI Automations", href: "/services/ai-automations" },
                                             ].map((subItem) => (
                                                 <Link
                                                     key={subItem.name}
@@ -87,7 +91,7 @@ export const Navbar = () => {
                             </Link>
                         );
                     })}
-                    <Button href="/contact" size="sm">Get Started</Button>
+                    <Button href="/#contact" size="sm">Get Started</Button>
                 </div>
 
                 {/* Mobile Toggle */}
@@ -110,10 +114,14 @@ export const Navbar = () => {
                                     <div className="pl-4 border-l-2 border-primary/20 flex flex-col gap-3">
                                         {[
                                             { name: "Web Development", href: "/services/web-development" },
-                                            { name: "SEO Optimization", href: "/services/seo" },
+                                            { name: "App Development", href: "/services/app-development" },
                                             { name: "Digital Marketing", href: "/services/digital-marketing" },
+                                            { name: "Graphic Design", href: "/services/graphic-design" },
+                                            { name: "SEO Optimization", href: "/services/seo" },
+                                            { name: "GEO", href: "/services/geo" },
+                                            { name: "Brand Identity", href: "/services/brand-identity" },
                                             { name: "Cyber Security", href: "/services/cyber-security" },
-                                            { name: "UI/UX Design", href: "/services/ui-ux-design" },
+                                            { name: "AI Automations", href: "/services/ai-automations" },
                                         ].map((subItem) => (
                                             <Link
                                                 key={subItem.name}

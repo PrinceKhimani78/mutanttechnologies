@@ -1,3 +1,5 @@
+import { services } from '@/lib/data';
+
 export const Footer = () => {
     return (
         <footer className="bg-zinc-950 pt-20 pb-10 relative overflow-hidden text-white">
@@ -28,10 +30,16 @@ export const Footer = () => {
                         <div>
                             <h3 className="font-oswald font-bold text-lg mb-6 tracking-widest uppercase text-gray-500">Services</h3>
                             <ul className="space-y-4 text-gray-300">
-                                <li><a href="/services/web-development" className="hover:text-primary transition-colors">Web Development</a></li>
-                                <li><a href="/services/seo" className="hover:text-primary transition-colors">SEO Optimization</a></li>
-                                <li><a href="/services/digital-marketing" className="hover:text-primary transition-colors">Digital Marketing</a></li>
-                                <li><a href="/services/cyber-security" className="hover:text-primary transition-colors">Cyber Security</a></li>
+                                {services.slice(0, 5).map((service) => (
+                                    <li key={service.slug}>
+                                        <a href={`/services/${service.slug}`} className="hover:text-primary transition-colors">
+                                            {service.title}
+                                        </a>
+                                    </li>
+                                ))}
+                                <li>
+                                    <a href="/services" className="text-primary hover:underline text-sm opacity-80">View All Services &rarr;</a>
+                                </li>
                             </ul>
                         </div>
                         <div>
@@ -39,6 +47,7 @@ export const Footer = () => {
                             <ul className="space-y-4 text-gray-300">
                                 <li><a href="/about" className="hover:text-primary transition-colors">About Us</a></li>
                                 <li><a href="/portfolio" className="hover:text-primary transition-colors">Our Work</a></li>
+                                <li><a href="/blog" className="hover:text-primary transition-colors">Blog</a></li>
                                 <li><a href="/contact" className="hover:text-primary transition-colors">Contact</a></li>
                             </ul>
                         </div>

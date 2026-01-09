@@ -63,7 +63,9 @@ export const Services = () => {
                             <h3 className="text-4xl font-oswald font-bold text-white mb-6 uppercase">
                                 {service.title}
                             </h3>
-                            {service.shortDescription}
+                            <p className="text-zinc-400 text-lg leading-relaxed group-hover:text-zinc-300 transition-colors">
+                                {service.shortDescription}
+                            </p>
                         </div>
 
                         <Link href={`/services/${service.slug}`} className="inline-flex items-center gap-2 text-white font-bold tracking-widest uppercase hover:text-primary transition-colors cursor-hover">

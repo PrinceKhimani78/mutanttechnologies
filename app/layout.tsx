@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Oswald } from "next/font/google"; // Oswald for Headers
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { CustomCursor } from "@/components/CustomCursor";
+import { Preloader } from "@/components/Preloader";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -37,6 +38,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${plusJakarta.variable} ${oswald.variable} font-sans antialiased bg-white text-dark-slate overflow-x-hidden`}
       >
+        <Preloader />
         <SmoothScroll>
           <CustomCursor />
           {children}

@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     href?: string;
-    variant?: 'primary' | 'outline' | 'ghost';
+    variant?: 'primary' | 'outline' | 'ghost' | 'link';
     size?: 'sm' | 'md' | 'lg';
     withIcon?: boolean;
 }
@@ -24,6 +24,7 @@ export const Button = ({
         primary: "bg-primary text-white hover:bg-orange-600 hover:scale-105 shadow-lg",
         outline: "border-2 border-primary text-primary hover:bg-primary hover:text-white",
         ghost: "text-dark-slate hover:text-primary hover:bg-slate-100",
+        link: "text-primary hover:text-orange-600 hover:underline bg-transparent px-0 py-0",
     };
 
     const sizes = {
