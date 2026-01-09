@@ -31,7 +31,7 @@ export const ProposalForm = () => {
         const messageInput = form.querySelector('textarea') as HTMLTextAreaElement;
 
         try {
-            const res = await fetch('/api/send', {
+            const res = await fetch('/mail.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
