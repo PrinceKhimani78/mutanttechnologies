@@ -3,49 +3,11 @@ import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Monitor, Search, BarChart, Shield, Layout, PenTool, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-gsap.registerPlugin(ScrollTrigger);
-
-const services = [
-    {
-        title: "Web Development",
-        id: "01",
-        description: "Custom, high-performance websites built with modern technologies like Next.js and React. We build scalable solutions that grow with your business.",
-        icon: Monitor,
-        color: "bg-blue-600"
-    },
-    {
-        title: "SEO Optimization",
-        id: "02",
-        description: "Data-driven strategies to boost your search rankings and drive organic traffic. We analyze, optimize, and dominate the SERPs.",
-        icon: Search,
-        color: "bg-orange-600"
-    },
-    {
-        title: "Digital Marketing",
-        id: "03",
-        description: "Comprehensive marketing campaigns that convert visitors into loyal customers. From social media to PPC, we handle it all.",
-        icon: BarChart,
-        color: "bg-purple-600"
-    },
-    {
-        title: "Cyber Security",
-        id: "04",
-        description: "Protect your digital assets with our robust security audits and solutions. We ensure your business is safe from threats.",
-        icon: Shield,
-        color: "bg-red-600"
-    },
-    {
-        title: "UI/UX Design",
-        id: "05",
-        description: "User-centric designs that provide intuitive and engaging digital experiences. We craft interfaces that users love.",
-        icon: Layout,
-        color: "bg-emerald-600"
-    },
-];
+import { services } from '@/lib/data';
 
 export const Services = () => {
     const containerRef = useRef<HTMLElement>(null);
@@ -101,16 +63,12 @@ export const Services = () => {
                             <h3 className="text-4xl font-oswald font-bold text-white mb-6 uppercase">
                                 {service.title}
                             </h3>
-                            <p className="text-zinc-400 text-lg leading-relaxed max-w-sm">
-                                {service.description}
-                            </p>
+                            {service.shortDescription}
                         </div>
 
-                        <div className="relative z-10 pt-8 border-t border-zinc-800">
-                            <Link href={`/services/${service.title.toLowerCase().replace(" ", "-")}`} className="inline-flex items-center gap-2 text-white font-bold tracking-widest uppercase hover:text-primary transition-colors cursor-hover">
-                                Explore Service <ExternalLink className="w-4 h-4" />
-                            </Link>
-                        </div>
+                        <Link href={`/services/${service.slug}`} className="inline-flex items-center gap-2 text-white font-bold tracking-widest uppercase hover:text-primary transition-colors cursor-hover">
+                            Explore Service <ExternalLink className="w-4 h-4" />
+                        </Link>
                     </div>
                 ))}
             </div>
