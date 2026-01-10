@@ -3,6 +3,8 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Newsletter } from "@/components/Newsletter";
+import { LikeButton } from "@/components/blog/LikeButton";
+import { CommentSection } from "@/components/blog/CommentSection";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import Link from 'next/link';
@@ -104,9 +106,16 @@ function BlogPostContent() {
                     dangerouslySetInnerHTML={{ __html: post.content }}
                 />
 
-                <div className="mt-16">
+                <div className="mt-12 flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 pt-8">
+                    <p className="font-oswald uppercase text-gray-500 tracking-wider text-sm">Did you enjoy this article?</p>
+                    <LikeButton slug={post.slug} />
+                </div>
+
+                <div className="mt-8">
                     <Newsletter />
                 </div>
+
+                <CommentSection slug={post.slug} />
             </div>
 
             <Footer />
