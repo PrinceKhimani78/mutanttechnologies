@@ -292,30 +292,74 @@ export default function ServiceDetailClient({ slug }: ServiceDetailClientProps) 
                 </div>
             </section>
 
-            {/* 6. FEATURES (Replaces 'Industry Focus' & 'Stacked Services') */}
-            <section className="py-32 bg-white dark:bg-zinc-950">
-                <div className="container mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-5xl md:text-7xl font-bold font-heading text-zinc-900 dark:text-white leading-tight">
-                            Integrated <span className="text-gray-400 dark:text-zinc-600">Capabilities</span>
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {service.features.map((feature: string, idx: number) => (
-                            <div key={idx} className="group p-8 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-orange-500/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                                <div className="mb-6 inline-flex p-3 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 group-hover:border-orange-200 group-hover:bg-orange-50 dark:group-hover:bg-orange-900/20 text-zinc-900 dark:text-zinc-100 group-hover:text-orange-600 transition-colors shadow-sm">
-                                    <Layers className="w-6 h-6" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3 group-hover:text-orange-600 transition-colors">{feature}</h3>
-                                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed group-hover:text-zinc-600 dark:group-hover:text-zinc-300">
-                                    Professional solution tailored to your specific requirements.
-                                </p>
-                            </div>
-                        ))}
-                    </div>
+            {/* 6. WHAT'S INCLUDED (Stacked Services) */}
+            <div className="bg-zinc-50 dark:bg-zinc-900/50 relative z-10">
+                <div className="py-24 text-center">
+                    <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-900 dark:text-white">
+                        What's included
+                    </h2>
                 </div>
-            </section>
+
+                <div className="pinned-services-container relative w-full">
+                    {service.features.map((feature: string, index: number) => {
+                        const colors = [
+                            { bg: "#020617", text: "#fff" }, // Dark Slate
+                            { bg: "#ffffff", text: "#000" }, // White
+                            { bg: "#ea580c", text: "#fff" }, // Brand Orange
+                            { bg: "#000000", text: "#fff" }, // Black
+                        ];
+                        const theme = colors[index % colors.length];
+
+                        return (
+                            <div
+                                key={index}
+                                className="pinned-service-card sticky top-0 min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden"
+                                style={{
+                                    backgroundColor: theme.bg,
+                                    color: theme.text,
+                                    zIndex: index + 1
+                                }}
+                            >
+                                <div className="container mx-auto px-6 h-full flex items-center">
+                                    <div className="flex flex-col lg:flex-row items-center w-full gap-8 lg:gap-16 h-full justify-center py-12 lg:py-20">
+                                        {/* Text Side */}
+                                        <div className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left">
+                                            <div className="w-16 h-1 bg-current mb-6 lg:mb-8 opacity-50 mx-auto lg:mx-0"></div>
+                                            <h3 className="text-4xl md:text-5xl lg:text-7xl font-bold font-heading mb-6 lg:mb-8 leading-tight">{feature}</h3>
+                                            <p className="text-lg md:text-xl lg:text-2xl opacity-90 mb-8 lg:mb-10 leading-relaxed font-light">
+                                                Professional {service.title.toLowerCase()} solution tailored to your specific requirements.
+                                            </p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                                                {/* Fake sub-features since we don't have deep data */}
+                                                {["Industry Standard", "Fully Customizable", "Expert Support"].map(f => (
+                                                    <div key={f} className="flex items-start gap-3 justify-center lg:justify-start">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-current mt-2.5 shrink-0"></div>
+                                                        <span className="text-lg font-medium">{f}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Visual Side */}
+                                        <div className="w-full lg:w-1/2 flex justify-center lg:justify-end mt-8 lg:mt-0">
+                                            <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
+                                                {/* Mockup Frame */}
+                                                <div className="w-full h-full bg-white relative overflow-hidden rounded-2xl">
+                                                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-zinc-300">
+                                                        <div className="text-4xl font-heading opacity-20 text-center px-4">{feature}<br />Mockup</div>
+                                                    </div>
+                                                    {/* Decorative Overlay for visual flare */}
+                                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/10 to-transparent pointer-events-none"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
 
             {/* 7. FULL PROCESS */}
             <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
