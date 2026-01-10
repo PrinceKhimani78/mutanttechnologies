@@ -41,6 +41,24 @@ function BlogPostContent() {
         fetchPost();
     }, [slug]);
 
+    // SEO: Update Page Title and Description
+    useEffect(() => {
+        if (post) {
+            document.title = `${post.title} | Mutant Technologies`;
+
+            // Update meta description if it exists
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) {
+                metaDesc.setAttribute('content', post.excerpt || '');
+            } else {
+                const meta = document.createElement('meta');
+                meta.name = "description";
+                meta.content = post.excerpt || '';
+                document.head.appendChild(meta);
+            }
+        }
+    }, [post]);
+
     if (loading) {
         return (
             <main className="min-h-screen bg-background flex items-center justify-center">
