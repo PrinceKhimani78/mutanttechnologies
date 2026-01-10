@@ -84,9 +84,14 @@ export default function AdminDashboard() {
             <main className="container mx-auto px-6 py-12">
                 <div className="flex justify-between items-center mb-10">
                     <h2 className="text-3xl font-bold">Blog Posts</h2>
-                    <Button href="/admin/create">
-                        <Plus className="w-5 h-5 mr-2" /> Create New Post
-                    </Button>
+                    <div className="flex gap-4">
+                        <Button href="/admin/portfolio" variant="outline">
+                            Manage Portfolio
+                        </Button>
+                        <Button href="/admin/create">
+                            <Plus className="w-5 h-5 mr-2" /> Create New Post
+                        </Button>
+                    </div>
                 </div>
 
                 {posts.length === 0 ? (
