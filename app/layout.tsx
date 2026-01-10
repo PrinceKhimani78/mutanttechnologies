@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Oswald } from "next/font/google"; // Oswald for Head
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { CustomCursor } from "@/components/CustomCursor";
 import { Preloader } from "@/components/Preloader";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -33,16 +34,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
-        suppressHydrationWarning
-        className={`${plusJakarta.variable} ${oswald.variable} font-sans antialiased bg-white text-dark-slate overflow-x-hidden`}
+        className={`${plusJakarta.variable} ${oswald.variable} font-sans antialiased overflow-x-hidden`}
       >
-        <Preloader />
-        <SmoothScroll>
-          <CustomCursor />
-          {children}
-        </SmoothScroll>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Preloader />
+          <SmoothScroll>
+            <CustomCursor />
+            {children}
+          </SmoothScroll>
+        </ThemeProvider>
       </body>
     </html>
   );

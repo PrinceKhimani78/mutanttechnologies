@@ -31,12 +31,12 @@ export const ServiceMarquee = () => {
     }
 
     return (
-        <div className="relative flex h-[200px] overflow-hidden bg-dark-slate items-center py-10">
+        <div className="relative flex h-[200px] overflow-hidden bg-gray-50 dark:bg-dark-slate/10 items-center py-10">
             <div ref={slider} className="absolute whitespace-nowrap flex">
-                <p ref={firstText} className="text-[10vw] font-oswald font-bold text-white/10 uppercase pr-8">
+                <p ref={firstText} className="text-[10vw] font-oswald font-bold text-dark-slate/5 dark:text-white/5 uppercase pr-8">
                     Web Development • SEO • Digital Marketing • Cyber Security •
                 </p>
-                <p ref={secondText} className="text-[10vw] font-oswald font-bold text-white/10 uppercase pr-8">
+                <p ref={secondText} className="text-[10vw] font-oswald font-bold text-dark-slate/5 dark:text-white/5 uppercase pr-8">
                     Web Development • SEO • Digital Marketing • Cyber Security •
                 </p>
             </div>

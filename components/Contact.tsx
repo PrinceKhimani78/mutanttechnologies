@@ -52,7 +52,7 @@ export const Contact = () => {
     }, { scope: containerRef });
 
     return (
-        <section id="contact" ref={containerRef} className="py-24 bg-dark-slate text-white relative overflow-hidden">
+        <section id="contact" ref={containerRef} className="py-12 md:py-24 bg-[#111827] text-white relative overflow-hidden">
             {/* Background Glow */}
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
 

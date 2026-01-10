@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function ContactPage() {
     return (
-        <main className="min-h-screen bg-white text-dark-slate">
+        <main className="min-h-screen bg-background text-foreground">
             <Navbar />
             <div className="pt-20">
                 <Contact />

@@ -4,15 +4,26 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Button } from './ui/button';
 
-export const Hero = () => {
+interface HeroProps {
+    title1?: string;
+    title2?: string;
+    subtitle?: string;
+    buttonText?: string;
+}
+
+export const Hero = ({
+    title1 = "SHINE",
+    title2 = "BRIGHT",
+    subtitle = "We blend creativity and technology to boost your digital presence.",
+    buttonText = "Start Project"
+}: HeroProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
         const tl = gsap.timeline();
 
-        // Text Reveal Animation (Clip Path style)
-        // Ensure initial state is visible first to prevent "disappearing" bug
+        // Text Reveal Animation
         gsap.set(".hero-char", { opacity: 1 });
 
         tl.from(".hero-char", {
@@ -21,7 +32,7 @@ export const Hero = () => {
             stagger: 0.05,
             duration: 1,
             ease: "power4.out",
-            clearProps: "all" // Ensure no lingering styles cause issues
+            clearProps: "all"
         })
             .from(".hero-sub", {
                 y: 20,
@@ -41,24 +52,23 @@ export const Hero = () => {
     return (
         <section
             ref={containerRef}
-            className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white cursor-none" // Hide default cursor for custom one
+            className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background cursor-none"
         >
             {/* Dynamic Background */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(252,98,3,0.05),transparent_70%)]" />
-            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] mix-blend-multiply animate-pulse" />
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] mix-blend-multiply dark:mix-blend-screen animate-pulse" />
 
             <div className="container mx-auto px-6 text-center relative z-10">
                 <div ref={titleRef} className="overflow-hidden mb-6">
-                    {/* Manually split text for animation control without SplitText plugin */}
                     <h1 className="font-oswald text-[12vw] leading-[0.9] font-bold uppercase text-dark-slate tracking-tighter pb-4">
                         <span className="inline-block">
-                            {"SHINE".split("").map((char, i) => (
+                            {title1.split("").map((char, i) => (
                                 <span key={i} className="hero-char inline-block">{char}</span>
                             ))}
                         </span>
                         <br />
                         <span className="inline-block text-transparent bg-clip-text bg-linear-to-r from-primary to-orange-500 pb-2 relative">
-                            {"BRIGHT".split("").map((char, i) => (
+                            {title2.split("").map((char, i) => (
                                 <span key={i} className="hero-char inline-block">{char}</span>
                             ))}
                         </span>
@@ -66,12 +76,12 @@ export const Hero = () => {
                 </div>
 
                 <p className="hero-sub text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto font-light mb-10">
-                    We blend creativity and technology to boost your digital presence.
+                    {subtitle}
                 </p>
 
                 <div className="hero-btn flex justify-center gap-6">
-                    <Button href="/#contact" size="lg" className="rounded-full px-10 py-6 text-xl hover:scale-110 transition-transform cursor-hover">
-                        Start Project
+                    <Button href="/#contact" className="rounded-full px-8 py-3 md:px-10 md:py-6 text-base md:text-xl hover:scale-110 transition-transform cursor-hover">
+                        {buttonText}
                     </Button>
                 </div>
             </div>
