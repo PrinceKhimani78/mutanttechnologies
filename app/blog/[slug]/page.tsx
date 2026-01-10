@@ -9,16 +9,27 @@ import { ArrowLeft } from "lucide-react";
 
 export const dynamicParams = false;
 
+
 export async function generateStaticParams() {
     try {
-        const { data: posts } = await supabase.from('posts').select('slug');
-        console.log("Generating static params for posts:", posts?.length);
-        return posts?.map((post) => ({
+        const { data: posts, error } = await supabase.from('posts').select('slug');
+
+        if (error) {
+            console.error("Supabase Error in generateStaticParams:", JSON.stringify(error, null, 2));
+        }
+
+        if (!posts || posts.length === 0) {
+            console.warn("No posts found or DB error. Generating fallback 'welcome' page.");
+            return [{ slug: 'welcome' }];
+        }
+
+        console.log(`Successfully generated params for ${posts.length} posts.`);
+        return posts.map((post) => ({
             slug: post.slug,
-        })) || [];
+        }));
     } catch (error) {
-        console.error("Error generating static params:", error);
-        return [];
+        console.error("Unexpected error in generateStaticParams:", error);
+        return [{ slug: 'welcome' }];
     }
 }
 
