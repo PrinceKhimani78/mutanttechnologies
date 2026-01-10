@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Newsletter } from "@/components/Newsletter";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 import Link from 'next/link';
@@ -102,6 +103,10 @@ function BlogPostContent() {
                     prose-blockquote:border-l-primary prose-blockquote:bg-gray-50 dark:prose-blockquote:bg-zinc-900 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:not-italic prose-blockquote:rounded-r-lg"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                 />
+
+                <div className="mt-16">
+                    <Newsletter />
+                </div>
             </div>
 
             <Footer />
