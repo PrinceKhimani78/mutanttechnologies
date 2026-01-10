@@ -83,7 +83,7 @@ export default function WebDesignClient() {
     }, { scope: containerRef });
 
     return (
-        <main ref={containerRef} className="bg-white text-zinc-900 font-sans selection:bg-orange-500 selection:text-white">
+        <main ref={containerRef} className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-orange-500 selection:text-white transition-colors duration-300">
             <Navbar />
 
             {/* 1. HERO SECTION */}
@@ -166,29 +166,29 @@ export default function WebDesignClient() {
             </section>
 
             {/* 2. LOGO MARQUEE */}
-            <section className="py-16 bg-white border-b border-zinc-100">
-                <p className="text-center text-zinc-500 font-medium mb-10  tracking-widest text-sm">Trusted by 500+ global companies</p>
+            <section className="py-16 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800">
+                <p className="text-center text-zinc-500 dark:text-zinc-400 font-medium mb-10 tracking-widest text-sm">Trusted by 500+ global companies</p>
                 <div className="overflow-hidden relative w-full">
                     <div className="marquee-content flex gap-16 whitespace-nowrap min-w-full items-center">
                         {/* Duplicated list for seamless loop */}
                         {[...navLogos, ...navLogos, ...navLogos].map((logo, i) => (
-                            <span key={i} className="text-2xl font-bold text-zinc-300  tracking-tighter">{logo}</span>
+                            <span key={i} className="text-2xl font-bold text-zinc-300 dark:text-zinc-700 tracking-tighter">{logo}</span>
                         ))}
                     </div>
                     {/* Fade Edges */}
-                    <div className="absolute top-0 left-0 h-full w-32 bg-linear-to-r from-white to-transparent z-10"></div>
-                    <div className="absolute top-0 right-0 h-full w-32 bg-linear-to-l from-white to-transparent z-10"></div>
+                    <div className="absolute top-0 left-0 h-full w-32 bg-linear-to-r from-white dark:from-zinc-950 to-transparent z-10"></div>
+                    <div className="absolute top-0 right-0 h-full w-32 bg-linear-to-l from-white dark:from-zinc-950 to-transparent z-10"></div>
                 </div>
             </section>
 
             {/* 3. WHY FOUNDERS TRUST US (SPLIT) */}
-            <section className="py-24 bg-zinc-50">
+            <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
                 <div className="container mx-auto px-6">
                     <div className="flex flex-col lg:flex-row gap-16">
                         {/* Left: Image */}
                         <div className="lg:w-1/2 reveal-up">
                             <div className="sticky top-32">
-                                <div className="bg-zinc-900 rounded-3xl p-2 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
+                                <div className="bg-zinc-900 dark:bg-black rounded-3xl p-2 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
                                     <div className="aspect-video bg-zinc-800 rounded-2xl overflow-hidden relative">
                                         {/* Abstract Dashboard UI */}
                                         <div className="absolute inset-0 bg-[#0f0f0f] p-8">
@@ -206,10 +206,10 @@ export default function WebDesignClient() {
 
                         {/* Right: Accordion */}
                         <div className="lg:w-1/2 reveal-up">
-                            <h2 className="text-4xl lg:text-5xl font-bold font-heading leading-tight mb-8 text-zinc-900">
+                            <h2 className="text-4xl lg:text-5xl font-bold font-heading leading-tight mb-8 text-zinc-900 dark:text-white">
                                 Why founders trust us to <span className="text-orange-600">design</span> their website
                             </h2>
-                            <p className="text-lg text-zinc-600 mb-12">
+                            <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-12">
                                 Confusing navigation and poor design kill conversions. We solve this by building user-first experiences that guide visitors to action.
                             </p>
 
@@ -223,21 +223,21 @@ export default function WebDesignClient() {
                                 ].map((item, idx) => (
                                     <div
                                         key={idx}
-                                        className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden cursor-pointer ${activeAccordion === idx ? 'border-orange-500 shadow-lg' : 'border-zinc-200'}`}
+                                        className={`bg-white dark:bg-zinc-900 rounded-xl border transition-all duration-300 overflow-hidden cursor-pointer ${activeAccordion === idx ? 'border-orange-500 shadow-lg dark:shadow-orange-900/10' : 'border-zinc-200 dark:border-zinc-800'}`}
                                         onClick={() => setActiveAccordion(idx)}
                                     >
                                         <div className="p-6 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <span className={`font-mono text-sm ${activeAccordion === idx ? 'text-orange-600' : 'text-zinc-400'}`}>0{idx + 1}</span>
-                                                <h3 className="text-xl font-bold text-zinc-900">{item.title}</h3>
+                                                <span className={`font-mono text-sm ${activeAccordion === idx ? 'text-orange-600' : 'text-zinc-400 dark:text-zinc-500'}`}>0{idx + 1}</span>
+                                                <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{item.title}</h3>
                                             </div>
-                                            <ChevronDown className={`w-5 h-5 transition-transform ${activeAccordion === idx ? 'rotate-180 text-orange-600' : 'text-zinc-400'}`} />
+                                            <ChevronDown className={`w-5 h-5 transition-transform ${activeAccordion === idx ? 'rotate-180 text-orange-600' : 'text-zinc-400 dark:text-zinc-500'}`} />
                                         </div>
                                         <div
                                             className={`grid transition-all duration-300 ease-in-out ${activeAccordion === idx ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
                                         >
                                             <div className="overflow-hidden">
-                                                <p className="px-6 pb-6 pt-0 text-zinc-600 ml-10">
+                                                <p className="px-6 pb-6 pt-0 text-zinc-600 dark:text-zinc-400 ml-10">
                                                     {item.desc}
                                                 </p>
                                             </div>
@@ -251,15 +251,15 @@ export default function WebDesignClient() {
             </section>
 
             {/* 4. CASE STUDIES GRID */}
-            <section className="py-24 bg-white relative">
-                <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-50/50 pointer-events-none"></div>
+            <section className="py-24 bg-white dark:bg-zinc-950 relative">
+                <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-50/50 dark:bg-blue-900/10 pointer-events-none"></div>
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
-                        <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-900 leading-tight">
+                        <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-900 dark:text-white leading-tight">
                             Turn your ideas into <br />
                             <span className="text-orange-600">impactful solutions</span>
                         </h2>
-                        <Button className="mt-8 md:mt-0 rounded-full h-12 px-8 bg-zinc-900 text-white hover:bg-zinc-800 whitespace-nowrap">
+                        <Button className="mt-8 md:mt-0 rounded-full h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 whitespace-nowrap">
                             View all projects <ArrowRight className="ml-2 w-4 h-4" />
                         </Button>
                     </div>
@@ -279,8 +279,8 @@ export default function WebDesignClient() {
                                         <ArrowRight className="w-5 h-5 text-orange-600" />
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-zinc-900 mb-2">{study.title}</h3>
-                                <p className="text-zinc-500 font-mono text-sm  tracking-wider">{study.category}</p>
+                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{study.title}</h3>
+                                <p className="text-zinc-500 dark:text-zinc-400 font-mono text-sm tracking-wider">{study.category}</p>
                             </div>
                         ))}
                     </div>
@@ -339,9 +339,9 @@ export default function WebDesignClient() {
 
             {/* 6. EXTENDED SERVICES (Fixed Stacking) - (Already updated title) */}
             {/* ... servicesList container ... */}
-            <div className="bg-zinc-50 relative z-10">
+            <div className="bg-zinc-50 dark:bg-zinc-900/50 relative z-10">
                 <div className="py-24 text-center">
-                    <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-900">
+                    <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-900 dark:text-white">
                         What's included
                     </h2>
                 </div>
@@ -395,12 +395,12 @@ export default function WebDesignClient() {
             </div>
 
             {/* 7. INDUSTRY FOCUS (Vertical Cards) */}
-            <section className="py-32 bg-white">
+            <section className="py-32 bg-white dark:bg-zinc-950">
                 <div className="container mx-auto px-6">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
-                        <h2 className="text-5xl md:text-7xl font-bold font-heading text-zinc-900 leading-tight">
+                        <h2 className="text-5xl md:text-7xl font-bold font-heading text-zinc-900 dark:text-white leading-tight">
                             Web design for <br />
-                            <span className="text-gray-400">your industry</span>
+                            <span className="text-gray-400 dark:text-zinc-600">your industry</span>
                         </h2>
                         <Button className="mt-8 md:mt-0 rounded-full h-14 px-8 bg-blue-600 text-white hover:bg-blue-700 text-lg whitespace-nowrap">
                             Start your project <ArrowRight className="ml-2 w-5 h-5" />
@@ -416,12 +416,12 @@ export default function WebDesignClient() {
                             { title: "Healthcare", desc: "Patient-first digital experiences.", icon: <HeartPulse className="w-8 h-8" /> },
                             { title: "Agency", desc: "Portfolios that win big clients.", icon: <Briefcase className="w-8 h-8" /> }
                         ].map((item, idx) => (
-                            <div key={idx} className="group p-8 rounded-3xl bg-zinc-50 border border-zinc-200 hover:border-orange-500/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
-                                <div className="mb-6 inline-flex p-3 rounded-2xl bg-white border border-zinc-200 group-hover:border-orange-200 group-hover:bg-orange-50 text-zinc-900 group-hover:text-orange-600 transition-colors shadow-sm">
+                            <div key={idx} className="group p-8 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-orange-500/30 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                                <div className="mb-6 inline-flex p-3 rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 group-hover:border-orange-200 group-hover:bg-orange-50 dark:group-hover:bg-orange-900/20 text-zinc-900 dark:text-zinc-100 group-hover:text-orange-600 transition-colors shadow-sm">
                                     {item.icon}
                                 </div>
-                                <h3 className="text-2xl font-bold text-zinc-900 mb-3 group-hover:text-orange-600 transition-colors">{item.title}</h3>
-                                <p className="text-zinc-500 leading-relaxed group-hover:text-zinc-600">{item.desc}</p>
+                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3 group-hover:text-orange-600 transition-colors">{item.title}</h3>
+                                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed group-hover:text-zinc-600 dark:group-hover:text-zinc-300">{item.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -453,9 +453,9 @@ export default function WebDesignClient() {
             </section>
 
             {/* 9. PROCESS WORKFLOW (Update Numbers) */}
-            <section className="py-24 bg-zinc-50">
+            <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
                 <div className="container mx-auto px-6">
-                    <h2 className="text-center text-4xl font-bold font-heading text-zinc-900 mb-20">Our process</h2>
+                    <h2 className="text-center text-4xl font-bold font-heading text-zinc-900 dark:text-white mb-20">Our process</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {[
                             { step: "01", title: "Discovery", desc: "Workshops to align on goals and requirements." },
@@ -465,10 +465,10 @@ export default function WebDesignClient() {
                             { step: "05", title: "Development", desc: "Pixel-perfect implementation in Next.js." },
                             { step: "06", title: "Launch", desc: "QA testing, deployment, and post-launch care." }
                         ].map((item, idx) => (
-                            <div key={idx} className="bg-white p-8 rounded-2xl border border-zinc-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                            <div key={idx} className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-zinc-100 dark:border-zinc-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
                                 <div className="text-6xl font-bold text-orange-500 mb-6 transition-colors">{item.step}</div>
-                                <h3 className="text-xl font-bold text-zinc-900 mb-4">{item.title}</h3>
-                                <p className="text-zinc-500">{item.desc}</p>
+                                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-4">{item.title}</h3>
+                                <p className="text-zinc-500 dark:text-zinc-400">{item.desc}</p>
                             </div>
                         ))}
                     </div>
@@ -491,12 +491,12 @@ export default function WebDesignClient() {
             </section>
 
             {/* 11. FAQ - Skipping */}
-            <section className="py-24 bg-white">
+            <section className="py-24 bg-white dark:bg-zinc-950">
                 <div className="container mx-auto px-6 max-w-5xl">
                     <div className="flex flex-col md:flex-row gap-16">
                         <div className="md:w-1/3">
-                            <h2 className="text-4xl font-bold font-heading mb-6">Frequently <br /> asked <br />questions</h2>
-                            <p className="text-zinc-500">Everything you need to know about working with us.</p>
+                            <h2 className="text-4xl font-bold font-heading mb-6 text-zinc-900 dark:text-white">Frequently <br /> asked <br />questions</h2>
+                            <p className="text-zinc-500 dark:text-zinc-400">Everything you need to know about working with us.</p>
                         </div>
                         <div className="md:w-2/3 space-y-4">
                             {[
@@ -505,9 +505,9 @@ export default function WebDesignClient() {
                                 { q: "Do you use templates?", a: "Never. Every pixel is custom designed for your brand." },
                                 { q: "Will I be able to update it?", a: "Yes, we integrate user-friendly CMS solutions like Sanity or Strapi." }
                             ].map((item, idx) => (
-                                <div key={idx} className="border-b border-zinc-200 py-6">
-                                    <h3 className="text-lg font-bold text-zinc-900 mb-2">{item.q}</h3>
-                                    <p className="text-zinc-600">{item.a}</p>
+                                <div key={idx} className="border-b border-zinc-200 dark:border-zinc-800 py-6">
+                                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">{item.q}</h3>
+                                    <p className="text-zinc-600 dark:text-zinc-400">{item.a}</p>
                                 </div>
                             ))}
                         </div>
