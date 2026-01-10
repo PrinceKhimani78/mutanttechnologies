@@ -6,11 +6,20 @@ import { Loader2 } from "lucide-react";
 import Link from 'next/link';
 import { ArrowLeft } from "lucide-react";
 
+
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
-    const { data: posts } = await supabase.from('posts').select('slug');
-    return posts?.map((post) => ({
-        slug: post.slug,
-    })) || [];
+    try {
+        const { data: posts } = await supabase.from('posts').select('slug');
+        console.log("Generating static params for posts:", posts?.length);
+        return posts?.map((post) => ({
+            slug: post.slug,
+        })) || [];
+    } catch (error) {
+        console.error("Error generating static params:", error);
+        return [];
+    }
 }
 
 export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
