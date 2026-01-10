@@ -1,65 +1,61 @@
+'use client';
+
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { notFound } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Link from 'next/link';
 import { ArrowLeft } from "lucide-react";
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { Post } from "@/lib/types";
 
+function BlogPostContent() {
+    const searchParams = useSearchParams();
+    const slug = searchParams.get('slug');
+    const [post, setPost] = useState<Post | null>(null);
+    const [loading, setLoading] = useState(true);
 
-export const dynamicParams = false;
+    useEffect(() => {
+        const fetchPost = async () => {
+            if (!slug) {
+                setLoading(false);
+                return;
+            }
 
+            const { data, error } = await supabase
+                .from('posts')
+                .select('*')
+                .eq('slug', slug)
+                .single();
 
+            if (!error && data) {
+                setPost(data);
+            }
+            setLoading(false);
+        };
 
-export async function generateStaticParams() {
-    try {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        console.log("Debug - Supabase URL:", url ? `${url.substring(0, 10)}...` : "UNDEFINED");
-        console.log("Debug - Supabase Key present:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+        fetchPost();
+    }, [slug]);
 
-        const { data: posts, error } = await supabase.from('posts').select('slug');
-
-
-        if (error) {
-            console.error("Supabase Error in generateStaticParams:", JSON.stringify(error, null, 2));
-        }
-
-        if (!posts || posts.length === 0) {
-            console.warn("No posts found or DB error. Generating fallback 'welcome' page.");
-            return [{ slug: 'welcome' }];
-        }
-
-        console.log(`Successfully generated params for ${posts.length} posts.`);
-        return posts.map((post) => ({
-            slug: post.slug,
-        }));
-    } catch (error) {
-        console.error("Unexpected error in generateStaticParams:", error);
-        return [{ slug: 'welcome' }];
+    if (loading) {
+        return (
+            <main className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </main>
+        );
     }
-}
 
-export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-
-    const { data: post, error } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-
-    if (error || !post) {
-        if (!post) {
-            return (
-                <main className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-4">
-                    <h1 className="text-4xl font-oswald font-bold mb-4">Post Not Found</h1>
-                    <p className="text-gray-500 mb-8">The article you are looking for does not exist.</p>
-                    <Link href="/blog" className="px-6 py-3 bg-primary text-white rounded-full font-bold uppercase tracking-wider text-sm hover:bg-orange-600 transition-colors">
-                        Back to Blog
-                    </Link>
-                </main>
-            );
-        }
+    if (!post) {
+        return (
+            <main className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-4">
+                <h1 className="text-4xl font-oswald font-bold mb-4">Post Not Found</h1>
+                <p className="text-gray-500 mb-8">The article you are looking for does not exist.</p>
+                <Link href="/blog" className="px-6 py-3 bg-primary text-white rounded-full font-bold uppercase tracking-wider text-sm hover:bg-orange-600 transition-colors">
+                    Back to Blog
+                </Link>
+            </main>
+        );
     }
 
     return (
@@ -110,5 +106,17 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
 
             <Footer />
         </main>
+    );
+}
+
+export default function BlogPost() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <BlogPostContent />
+        </Suspense>
     );
 }

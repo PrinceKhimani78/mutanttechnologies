@@ -56,7 +56,7 @@ export default function Blog() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-x-8 gap-y-16 mx-auto">
                         {posts.map((post) => (
-                            <Link href={`/blog/${post.slug}`} key={post.id} className="group cursor-pointer block">
+                            <Link href={`/blog/read?slug=${post.slug}`} key={post.id} className="group cursor-pointer block">
                                 {/* Image Container */}
                                 <div className="aspect-[4/3] bg-gray-100 dark:bg-zinc-900 rounded-2xl overflow-hidden mb-6 relative border border-gray-200 dark:border-zinc-800">
                                     <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay"></div>
