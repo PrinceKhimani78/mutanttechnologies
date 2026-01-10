@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import { ArrowLeft, Save, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function EditPost() {
+function EditPostContent() {
     const router = useRouter();
-    const { id } = useParams();
+    const searchParams = useSearchParams();
+    const id = searchParams.get('id');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -28,13 +29,10 @@ export default function EditPost() {
     useEffect(() => {
         const fetchPost = async () => {
             if (!id) return;
-            // Handle array param
-            const postId = Array.isArray(id) ? id[0] : id;
-
             const { data, error } = await supabase
                 .from('posts')
                 .select('*')
-                .eq('id', postId)
+                .eq('id', id)
                 .single();
 
             if (error) {
@@ -96,8 +94,6 @@ export default function EditPost() {
         }
         setSaving(true);
 
-        const postId = Array.isArray(id) ? id[0] : id;
-
         try {
             const { data: { user } } = await supabase.auth.getUser();
 
@@ -118,7 +114,7 @@ export default function EditPost() {
                     is_published: isPublished,
                     updated_at: new Date().toISOString(),
                 })
-                .eq('id', postId);
+                .eq('id', id);
 
             if (error) throw error;
             router.push('/admin/dashboard');
@@ -264,5 +260,17 @@ export default function EditPost() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function EditPost() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <EditPostContent />
+        </Suspense>
     );
 }

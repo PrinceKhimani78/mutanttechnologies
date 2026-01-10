@@ -1,61 +1,39 @@
-'use client';
-
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { useState, useEffect } from "react";
-import { Post } from "@/lib/types";
-import { notFound, useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import Link from 'next/link';
 import { ArrowLeft } from "lucide-react";
 
-export default function BlogPost() {
-    const { slug } = useParams();
-    const [post, setPost] = useState<Post | null>(null);
-    const [loading, setLoading] = useState(true);
+export async function generateStaticParams() {
+    const { data: posts } = await supabase.from('posts').select('slug');
+    return posts?.map((post) => ({
+        slug: post.slug,
+    })) || [];
+}
 
-    useEffect(() => {
-        const fetchPost = async () => {
-            if (!slug) return;
+export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params;
 
-            // Check if slug is array or string (handle potential catch-all route typing)
-            const slugString = Array.isArray(slug) ? slug[0] : slug;
+    const { data: post, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('slug', slug)
+        .single();
 
-            const { data, error } = await supabase
-                .from('posts')
-                .select('*')
-                .eq('slug', slugString)
-                .single();
-
-            if (error) {
-                console.error("Error fetching post:", error);
-            } else {
-                setPost(data);
-            }
-            setLoading(false);
-        };
-        fetchPost();
-    }, [slug]);
-
-    if (loading) {
-        return (
-            <main className="min-h-screen bg-background flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
-            </main>
-        );
-    }
-
-    if (!post) {
-        return (
-            <main className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-4">
-                <h1 className="text-4xl font-oswald font-bold mb-4">Post Not Found</h1>
-                <p className="text-gray-500 mb-8">The article you are looking for does not exist.</p>
-                <Link href="/blog" className="px-6 py-3 bg-primary text-white rounded-full font-bold uppercase tracking-wider text-sm hover:bg-orange-600 transition-colors">
-                    Back to Blog
-                </Link>
-            </main>
-        );
+    if (error || !post) {
+        if (!post) {
+            return (
+                <main className="min-h-screen bg-background flex flex-col items-center justify-center text-center px-4">
+                    <h1 className="text-4xl font-oswald font-bold mb-4">Post Not Found</h1>
+                    <p className="text-gray-500 mb-8">The article you are looking for does not exist.</p>
+                    <Link href="/blog" className="px-6 py-3 bg-primary text-white rounded-full font-bold uppercase tracking-wider text-sm hover:bg-orange-600 transition-colors">
+                        Back to Blog
+                    </Link>
+                </main>
+            );
+        }
     }
 
     return (

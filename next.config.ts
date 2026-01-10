@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // output: "export", // Disabled to allow dynamic Admin Panel & Database fetching
+  output: "export",
   images: {
     unoptimized: true,
   },

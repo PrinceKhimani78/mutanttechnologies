@@ -114,7 +114,7 @@ export default function AdminDashboard() {
                                     <p className="text-xs text-gray-400 font-mono">{new Date(post.created_at).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button href={`/admin/edit/${post.id}`} variant="ghost" size="sm" className="px-2">
+                                    <Button href={`/admin/edit?id=${post.id}`} variant="ghost" size="sm" className="px-2">
                                         <Edit className="w-4 h-4" />
                                     </Button>
                                     <Button variant="ghost" size="sm" onClick={() => handleDelete(post.id)} className="text-gray-400 hover:text-red-500 px-2">
