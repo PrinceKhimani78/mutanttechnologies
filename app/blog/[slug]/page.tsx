@@ -10,9 +10,15 @@ import { ArrowLeft } from "lucide-react";
 export const dynamicParams = false;
 
 
+
 export async function generateStaticParams() {
     try {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        console.log("Debug - Supabase URL:", url ? `${url.substring(0, 10)}...` : "UNDEFINED");
+        console.log("Debug - Supabase Key present:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
         const { data: posts, error } = await supabase.from('posts').select('slug');
+
 
         if (error) {
             console.error("Supabase Error in generateStaticParams:", JSON.stringify(error, null, 2));
