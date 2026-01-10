@@ -47,6 +47,14 @@ export const ProposalForm = () => {
 
             if (res.ok) {
                 setStatus('success');
+                // Track Conversion via Data Layer
+                if (typeof window !== 'undefined' && (window as any).dataLayer) {
+                    (window as any).dataLayer.push({
+                        event: 'generate_lead',
+                        form_location: 'proposal_form',
+                        service_interest: serviceSelect.value
+                    });
+                }
             } else {
                 setStatus('error');
             }
