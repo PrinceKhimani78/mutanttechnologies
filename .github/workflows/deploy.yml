@@ -1,5 +1,6 @@
 name: Deploy to cPanel
 
+on:
   push:
     branches:
       - main
