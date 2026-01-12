@@ -10,5 +10,6 @@ export const trackEvent = (eventName: string, params: Record<string, any> = {}) 
         event: eventName,
         ...params,
     };
+    console.log('GTM Manual Event:', eventData); // Debug log
     sendGTMEvent(eventData);
 };
