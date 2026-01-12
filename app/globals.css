@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-oswald: var(--font-oswald), sans-serif;
+
+  --color-primary: #FC6203;
+  /* Orange */
+  --color-dark-slate: var(--dark-slate);
+  /* Dark Slate - Headings */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Animations */
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+/* Theme Variables */
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  --dark-slate: #111827;
+  --dot-color: #111827;
+}
+
+.dark {
+  --background: #111827;
+  --foreground: #ffffff;
+  --dark-slate: #ffffff;
+  --dot-color: #374151;
+  /* Gray-700 dots on dark bg */
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-linear-to-r from-primary to-orange-400;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  /* Dot Grid Pattern */
+  background-image: radial-gradient(var(--dot-color) 0.5px, transparent 0.5px), radial-gradient(var(--dot-color) 0.5px, var(--color-background) 0.5px);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+  background-attachment: fixed;
+}

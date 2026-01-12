@@ -1,0 +1,108 @@
+'use client';
+
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+import { PortfolioProject } from "@/lib/types";
+import { Loader2, ExternalLink } from "lucide-react";
+import Link from 'next/link';
+
+export default function Portfolio() {
+    const [projects, setProjects] = useState<PortfolioProject[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            const { data, error } = await supabase
+                .from('portfolio')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching projects:', error);
+            } else {
+                setProjects(data || []);
+            }
+            setLoading(false);
+        };
+        fetchProjects();
+    }, []);
+
+    return (
+        <main className="bg-background min-h-screen text-foreground transition-colors duration-300">
+            <Navbar />
+
+            <div className="pt-40 pb-20 px-6 w-full max-w-[2400px] mx-auto">
+                {/* Header Section */}
+                <div className="text-center mb-24">
+                    <h1 className="text-6xl md:text-8xl font-oswald font-bold uppercase mb-6 tracking-tight text-foreground">
+                        Our <span className="font-serif italic text-primary font-light">Work</span>
+                    </h1>
+                    <p className="text-xl text-gray-600 dark:text-zinc-400 max-w-2xl mx-auto font-light">
+                        Featured projects and case studies.
+                    </p>
+                </div>
+
+                {/* Projects Grid */}
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    </div>
+                ) : projects.length === 0 ? (
+                    <div className="text-center py-20 text-gray-500">
+                        No projects uploaded yet. Check back soon!
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto">
+                        {projects.map((project) => (
+                            <div key={project.id} className="group relative bg-gray-50 dark:bg-zinc-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-zinc-800 flex flex-col h-full">
+                                {/* Image */}
+                                <div className="aspect-video relative overflow-hidden bg-gray-200 dark:bg-zinc-800">
+                                    {project.image_url ? (
+                                        <img
+                                            src={project.image_url}
+                                            alt={project.title}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400 font-mono text-sm">[No Image]</div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                                        {project.project_url && (
+                                            <a
+                                                href={project.project_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full text-sm font-bold uppercase tracking-wider hover:bg-orange-600 transition-colors"
+                                            >
+                                                View Live <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="p-8 flex-1 flex flex-col">
+                                    <div className="mb-4">
+                                        <span className="text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
+                                            {project.category || 'Project'}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-2xl font-oswald font-bold uppercase leading-tight mb-4 group-hover:text-primary transition-colors">
+                                        {project.title}
+                                    </h3>
+                                    <p className="text-gray-600 dark:text-zinc-400 leading-relaxed font-light flex-1">
+                                        {project.description}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <Footer />
+        </main>
+    );
+}
