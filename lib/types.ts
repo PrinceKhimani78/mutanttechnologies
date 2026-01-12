@@ -21,3 +21,20 @@ export interface PortfolioProject {
     category: string;
     created_at: string;
 }
+
+export interface Service {
+    id: string;
+    slug: string;
+    title: string;
+    short_description: string;
+    description: string;
+    icon: string; // Stored as string name in DB
+    color: string;
+    bg_gradient: string;
+    features: string[]; // JSONB in DB, parsed as string[]
+    content: string;
+    tools: string[]; // JSONB in DB
+    process: { step: string; title: string; description: string }[]; // JSONB in DB
+    benefits: { title: string; description: string }[]; // JSONB in DB
+    created_at: string;
+}

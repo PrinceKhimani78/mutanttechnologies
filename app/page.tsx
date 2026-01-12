@@ -13,6 +13,9 @@ import { RenderBuilderContent } from "@/components/builder-page";
 const BUILDER_PUBLIC_API_KEY = process.env.NEXT_PUBLIC_BUILDER_API_KEY || "YOUR_PUBLIC_API_KEY";
 const model = "page";
 
+import { supabase } from "@/lib/supabase";
+import { Service } from "@/lib/types";
+
 export default async function Home() {
   let content = undefined;
 
@@ -31,6 +34,11 @@ export default async function Home() {
     console.error("Builder fetch error:", err);
   }
 
+  const { data: services } = await supabase
+    .from('services')
+    .select('*')
+    .order('id');
+
   return (
     <main className="min-h-screen overflow-hidden">
       <Navbar />
@@ -42,7 +50,7 @@ export default async function Home() {
           <Hero />
           <ServiceMarquee />
           <Ongoing />
-          <Services />
+          <Services services={(services || []) as Service[]} />
           <Testimonials />
           <About />
           <Contact />

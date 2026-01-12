@@ -4,22 +4,21 @@ import { useRef, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import * as LucideIcons from 'lucide-react';
 import {
-    ArrowRight, ChevronDown, Layers,
-    Landmark, ShoppingBag, Building2, HeartPulse, Briefcase,
-    CheckCircle2, Code2, Layout, Smartphone, BarChart, MousePointer2
+    ArrowRight, ChevronDown
 } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { services } from '@/lib/data';
+import { Service } from '@/lib/types';
 import { ProposalForm } from './ProposalForm';
 import Image from 'next/image';
 
 gsap.registerPlugin(ScrollTrigger);
 
 interface ServiceDetailClientProps {
-    slug: string;
+    service: Service;
 }
 
 const navLogos = ["NEXUS", "VORTEX", "APEX", "ECHO", "QUANTUM", "HORIZON", "PULSE"];
@@ -31,8 +30,7 @@ const genericCaseStudies = [
     { title: "MediCore", category: "Healthcare", image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop" }
 ];
 
-export default function ServiceDetailClient({ slug }: ServiceDetailClientProps) {
-    const service = services.find(s => s.slug === slug);
+export default function ServiceDetailClient({ service }: ServiceDetailClientProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
 
@@ -82,7 +80,9 @@ export default function ServiceDetailClient({ slug }: ServiceDetailClientProps) 
         return <div className="min-h-screen bg-background flex items-center justify-center text-foreground">Service Not Found</div>;
     }
 
-    const Icon = service.icon;
+    // Dynamic Icon
+    // @ts-ignore
+    const Icon = LucideIcons[service.icon] || LucideIcons.Monitor;
 
     return (
         <main ref={containerRef} className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-orange-500 selection:text-white transition-colors duration-300">
@@ -92,7 +92,7 @@ export default function ServiceDetailClient({ slug }: ServiceDetailClientProps) 
             <section className="relative min-h-[90vh] bg-[#020617] text-white pt-24 pb-12 lg:pt-32 lg:pb-20 overflow-hidden flex items-center">
 
                 {/* Background Glows */}
-                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] lg:w-[800px] h-[400px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px] pointer-events-none opacity-20 bg-linear-to-br ${service.bgGradient || 'from-blue-600 to-purple-600'}`} />
+                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] lg:w-[800px] h-[400px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px] pointer-events-none opacity-20 bg-linear-to-br ${service.bg_gradient || 'from-blue-600 to-purple-600'}`} />
 
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
@@ -128,7 +128,7 @@ export default function ServiceDetailClient({ slug }: ServiceDetailClientProps) 
                             <div className="relative z-10 transform lg:rotate-[-5deg] hover:rotate-0 transition-transform duration-700 ease-out">
                                 <div className="bg-zinc-900 rounded-[24px] lg:rounded-[32px] overflow-hidden border-4 lg:border-8 border-zinc-800 shadow-2xl aspect-[3/4] sm:aspect-[4/3] lg:aspect-[3/4]">
                                     <div className="h-full w-full bg-zinc-950 p-8 flex flex-col relative overflow-hidden group items-center justify-center">
-                                        <div className={`absolute inset-0 bg-linear-to-br ${service.bgGradient} opacity-20`}></div>
+                                        <div className={`absolute inset-0 bg-linear-to-br ${service.bg_gradient} opacity-20`}></div>
                                         <Icon className="w-32 h-32 text-zinc-700 relative z-10" />
                                         <div className="mt-8 text-2xl font-bold text-zinc-500 z-10">{service.title}</div>
                                         <div className="font-mono text-zinc-700 text-sm mt-2 z-10">{service.id}</div>
@@ -163,7 +163,7 @@ export default function ServiceDetailClient({ slug }: ServiceDetailClientProps) 
                             <div className="sticky top-32">
                                 <div className="bg-zinc-900 dark:bg-black rounded-3xl p-2 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
                                     <div className="aspect-video bg-zinc-800 rounded-2xl overflow-hidden relative flex items-center justify-center">
-                                        <div className={`absolute inset-0 bg-linear-to-br ${service.bgGradient} opacity-30`}></div>
+                                        <div className={`absolute inset-0 bg-linear-to-br ${service.bg_gradient} opacity-30`}></div>
                                         <Icon className="w-24 h-24 text-white/20" />
                                     </div>
                                 </div>
@@ -380,7 +380,7 @@ export default function ServiceDetailClient({ slug }: ServiceDetailClientProps) 
 
             {/* 8. PROPOSAL FORM (Replaced simple CTA) */}
             <section id="proposal-form" className="py-24 lg:py-32 px-6 relative overflow-hidden bg-gray-100 dark:bg-zinc-900">
-                <div className={`absolute top-0 left-0 w-full h-full bg-linear-to-b ${service.bgGradient} opacity-5`}></div>
+                <div className={`absolute top-0 left-0 w-full h-full bg-linear-to-b ${service.bg_gradient} opacity-5`}></div>
                 <div className="container mx-auto relative z-10 flex flex-col lg:flex-row gap-16 items-start">
                     <div className="lg:w-1/2">
                         <h2 className="text-5xl md:text-7xl font-oswald font-bold uppercase mb-8 leading-tight text-foreground">
