@@ -40,6 +40,10 @@ export function Newsletter() {
             } else {
                 setStatus('success');
                 setMessage("Thanks for subscribing! You're on the list.");
+
+                const { trackEvent } = await import('@/lib/gtm');
+                trackEvent('sign_up', { method: "footer_newsletter" });
+
                 setEmail('');
             }
         } catch (error) {

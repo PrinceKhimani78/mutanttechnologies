@@ -6,6 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { trackEvent } from '@/lib/gtm';
 
 import { services } from '@/lib/data';
 
@@ -68,7 +69,11 @@ export const Services = () => {
                             </p>
                         </div>
 
-                        <Link href={`/services/${service.slug}`} className="inline-flex items-center gap-2 text-dark-slate dark:text-white font-bold tracking-widest uppercase hover:text-primary transition-colors cursor-hover">
+                        <Link
+                            href={`/services/${service.slug}`}
+                            className="inline-flex items-center gap-2 text-dark-slate dark:text-white font-bold tracking-widest uppercase hover:text-primary transition-colors cursor-hover"
+                            onClick={() => trackEvent('service_view', { service_name: service.title })}
+                        >
                             Explore Service <ExternalLink className="w-4 h-4" />
                         </Link>
                     </div>

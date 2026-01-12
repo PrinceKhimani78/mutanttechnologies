@@ -4,7 +4,7 @@ import { SmoothScroll } from "@/components/SmoothScroll";
 import { CustomCursor } from "@/components/CustomCursor";
 import { Preloader } from "@/components/Preloader";
 import { ThemeProvider } from "@/components/theme-provider";
-import { GoogleTagManager } from '@next/third-parties/google';
+import { GoogleTagManager, GoogleAnalytics } from '@next/third-parties/google';
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -53,6 +53,7 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
       <GoogleTagManager gtmId="GTM-MG6PRBMP" />
+      <GoogleAnalytics gaId="G-VYNDWPNV0G" />
     </html>
   );
 }

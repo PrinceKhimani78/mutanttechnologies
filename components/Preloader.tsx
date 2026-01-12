@@ -37,15 +37,15 @@ export const Preloader = () => {
             const centerY = height / 2;
 
             // Create particles in a radial pattern
-            for (let i = 0; i < 400; i++) {
+            for (let i = 0; i < 1200; i++) {
                 const angle = Math.random() * Math.PI * 2;
                 const dist = Math.random() * 20; // Start close to center
                 particles.push({
                     x: centerX + Math.cos(angle) * dist,
                     y: centerY + Math.sin(angle) * dist,
                     angle: angle,
-                    speed: 2 + Math.random() * 15, // Varied speeds for explosion
-                    size: 1 + Math.random() * 3, // Small dash-like sizes
+                    speed: 4 + Math.random() * 25, // Faster, bigger explosion
+                    size: 1 + Math.random() * 4, // Slightly varied sizes
                     color: colors[Math.floor(Math.random() * colors.length)],
                     alpha: 0
                 });
@@ -77,18 +77,34 @@ export const Preloader = () => {
             }
         });
 
-        // 1. Initial State: Fade in particles briefly in center
-        tl.to(particles, {
-            alpha: 1,
-            duration: 0.5,
-            stagger: { amount: 0.2, from: "random" },
-            ease: "power2.out",
-            onUpdate: render
-        })
+        // Initial setup
+        gsap.set(".preloader-logo", { opacity: 0, scale: 0.8 });
+
+        tl
+            // 1. Logo Fades In & Scales Up
+            .to(".preloader-logo", {
+                opacity: 1,
+                scale: 1,
+                duration: 1.0,
+                ease: "power2.out"
+            })
+            // 2. Anticipation (Breath in)
+            .to(".preloader-logo", {
+                scale: 0.9,
+                duration: 0.4,
+                ease: "power2.in"
+            })
             .addLabel("explode")
 
-            // 2. The Explosion (Liftoff)
-            .call(triggerHero, [], "explode+=0.1") // Trigger hero just as it explodes
+            // 3. The Explosion (Particles + Logo Disappears)
+            // Fade in particles instantly at center
+            .to(particles, {
+                alpha: 1,
+                duration: 0.1,
+                stagger: { amount: 0.1, from: "random" },
+            }, "explode")
+
+            // Move particles (Explosion)
             .to(particles, {
                 x: (i) => particles[i].x + Math.cos(particles[i].angle) * (Math.max(width, height) * 1.5),
                 y: (i) => particles[i].y + Math.sin(particles[i].angle) * (Math.max(width, height) * 1.5),
@@ -96,6 +112,20 @@ export const Preloader = () => {
                 ease: "power4.out",
                 onUpdate: render
             }, "explode")
+
+            // Logo vanishes into the explosion (Zoom out + Fade)
+            .to(".preloader-logo", {
+                scale: 1.5,
+                opacity: 0,
+                filter: 'blur(10px)',
+                duration: 0.4,
+                ease: "power2.out"
+            }, "explode")
+
+            // Trigger Hero animation slightly after explosion starts
+            .call(triggerHero, [], "explode+=0.2")
+
+            // Fade out particles
             .to(particles, {
                 alpha: 0,
                 duration: 1.0,
@@ -103,12 +133,12 @@ export const Preloader = () => {
                 onUpdate: render
             }, "explode+=0.5")
 
-            // 3. Fade out container
+            // 4. Fade out container
             .to(containerRef.current, {
                 opacity: 0,
                 duration: 0.8,
                 ease: "power2.inOut"
-            }, "explode+=0.5");
+            }, "explode+=0.8");
 
 
         // Resize handler
@@ -129,11 +159,15 @@ export const Preloader = () => {
 
     return (
         <div ref={containerRef} className="fixed inset-0 z-[100] bg-white dark:bg-black flex items-center justify-center pointer-events-none">
-            {/* Logo or specialized loader could go here, centered */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 animate-pulse">
-                {/* Optional central element before explosion */}
+            {/* Logo */}
+            <div className="preloader-logo relative z-20 w-48 h-48 md:w-64 md:h-64 flex items-center justify-center">
+                <img
+                    src="/logoAnimation.jpg"
+                    alt="Logo"
+                    className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                />
             </div>
-            <canvas ref={canvasRef} className="absolute inset-0" />
+            <canvas ref={canvasRef} className="absolute inset-0 z-10" />
         </div>
     );
 };

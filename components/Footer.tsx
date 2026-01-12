@@ -1,4 +1,5 @@
 import { services } from '@/lib/data';
+import { trackEvent } from '@/lib/gtm';
 
 export const Footer = () => {
     return (

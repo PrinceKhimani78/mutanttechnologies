@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Button } from './ui/button';
+import { trackEvent } from '@/lib/gtm';
 import { ParticleBackground } from './ParticleBackground';
 
 interface HeroProps {
@@ -88,18 +89,11 @@ export const Hero = ({
                             ))}
                         </span>
                         <br />
-                        <span
-                            className="inline-block pb-2 relative"
-                            style={{
-                                background: 'linear-gradient(to right, #FC6203, #e85b02)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                backgroundClip: 'text',
-                                color: 'transparent'
-                            }}
-                        >
+                        <span className="relative inline-block pb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
                             {title2.split("").map((char, i) => (
-                                <span key={i} className="hero-char inline-block">{char}</span>
+                                <span key={i} className="hero-char inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
+                                    {char}
+                                </span>
                             ))}
                         </span>
                     </h1>
@@ -110,7 +104,11 @@ export const Hero = ({
                 </p>
 
                 <div className="hero-btn flex justify-center gap-6">
-                    <Button href="/#contact" className="rounded-full px-8 py-3 md:px-10 md:py-6 text-base md:text-xl hover:scale-110 transition-transform cursor-hover">
+                    <Button
+                        href="/#contact"
+                        className="rounded-full px-8 py-3 md:px-10 md:py-6 text-base md:text-xl hover:scale-110 transition-transform cursor-hover"
+                        onClick={() => trackEvent('cta_click', { location: 'hero', label: 'Start Project' })}
+                    >
                         {buttonText}
                     </Button>
                 </div>

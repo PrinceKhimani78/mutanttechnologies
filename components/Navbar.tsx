@@ -7,6 +7,7 @@ import { Menu, X, ArrowRight, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import { cn } from '@/lib/utils';
+import { trackEvent } from '@/lib/gtm';
 
 const navLinks = [
     { name: 'Home', href: '/' },
@@ -138,7 +139,13 @@ export const Navbar = () => {
                             );
                         })}
                         <ThemeToggle />
-                        <Button href="/#contact" size="sm">Get Started</Button>
+                        <Button
+                            href="/#contact"
+                            size="sm"
+                            onClick={() => trackEvent('cta_click', { location: 'navbar', label: 'Get Started' })}
+                        >
+                            Get Started
+                        </Button>
                     </div>
 
                     {/* Mobile Toggle */}
@@ -208,7 +215,13 @@ export const Navbar = () => {
                     <div className="mobile-nav-footer mt-auto pb-12 border-t border-gray-200 dark:border-zinc-800 pt-8 flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
                         <div className="flex flex-col gap-2">
                             <span className="text-sm text-gray-500 dark:text-zinc-500 uppercase tracking-widest font-mono">Get in touch</span>
-                            <a href="mailto:hello@mutant.tech" className="text-xl font-bold text-foreground hover:text-primary transition-colors">hello@mutant.tech</a>
+                            <a
+                                href="mailto:hello@mutant.tech"
+                                className="text-xl font-bold text-foreground hover:text-primary transition-colors"
+                                onClick={() => trackEvent('contact_click', { type: 'email', value: 'hello@mutant.tech' })}
+                            >
+                                hello@mutant.tech
+                            </a>
                         </div>
                         <Button href="/contact" withIcon={true} className="w-auto text-sm sm:text-base px-6 py-3">
                             Start Project

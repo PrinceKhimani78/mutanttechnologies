@@ -55,6 +55,13 @@ export const ProposalForm = () => {
                         service_interest: serviceSelect.value
                     });
                 }
+
+                // Track via helper (consistent)
+                const { trackEvent } = await import('@/lib/gtm');
+                trackEvent('generate_lead', {
+                    form_id: "proposal_form",
+                    value: 0
+                });
             } else {
                 setStatus('error');
             }
