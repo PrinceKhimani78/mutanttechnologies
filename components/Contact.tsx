@@ -115,24 +115,24 @@ export const Contact = () => {
                                 <h3 className="text-2xl font-bold mb-6">Send us a message</h3>
                                 <form className="space-y-6" onSubmit={handleSubmit}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
+                                        <div suppressHydrationWarning>
                                             <label className="block text-sm font-medium text-gray-400 mb-2">Name</label>
-                                            <input required name="name" type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="John Doe" />
+                                            <input suppressHydrationWarning required name="name" type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="John Doe" />
                                         </div>
-                                        <div>
+                                        <div suppressHydrationWarning>
                                             <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
-                                            <input required name="email" type="email" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="john@example.com" />
+                                            <input suppressHydrationWarning required name="email" type="email" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="john@example.com" />
                                         </div>
                                     </div>
 
-                                    <div>
+                                    <div suppressHydrationWarning>
                                         <label className="block text-sm font-medium text-gray-400 mb-2">Subject</label>
-                                        <input required name="subject" type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="Project Inquiry" />
+                                        <input suppressHydrationWarning required name="subject" type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="Project Inquiry" />
                                     </div>
 
-                                    <div>
+                                    <div suppressHydrationWarning>
                                         <label className="block text-sm font-medium text-gray-400 mb-2">Message</label>
-                                        <textarea required name="message" rows={4} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="Tell us about your project..." />
+                                        <textarea suppressHydrationWarning required name="message" rows={4} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="Tell us about your project..." />
                                     </div>
 
                                     <Button type="submit" size="lg" className="w-full" disabled={loading}>

@@ -1,34 +1,33 @@
-'use client';
-
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import Link from 'next/link';
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
 import { Post } from "@/lib/types";
-import { Loader2 } from "lucide-react";
+import { Metadata } from "next";
 
-export default function Blog() {
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [loading, setLoading] = useState(true);
+export const revalidate = 0; // Force dynamic fetch for listing page
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            const { data, error } = await supabase
-                .from('posts')
-                .select('*')
-                .eq('is_published', true)
-                .order('created_at', { ascending: false });
+export const metadata: Metadata = {
+    title: "Blog | Mutant Technologies",
+    description: "Explore insights and updates from the world of digital innovation, web development, and marketing.",
+    alternates: {
+        canonical: '/blog',
+    },
+};
 
-            if (error) {
-                console.error('Error fetching public posts:', error);
-            } else {
-                setPosts(data || []);
-            }
-            setLoading(false);
-        };
-        fetchPosts();
-    }, []);
+export default async function Blog() {
+    const { data: posts, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching public posts:', error);
+    }
+
+    const safePosts = (posts || []) as Post[];
 
     return (
         <main className="bg-background min-h-screen text-foreground transition-colors duration-300">
@@ -45,23 +44,25 @@ export default function Blog() {
                 </div>
 
                 {/* Blog Grid */}
-                {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                    </div>
-                ) : posts.length === 0 ? (
+                {safePosts.length === 0 ? (
                     <div className="text-center py-20 text-gray-500">
                         No articles published yet. Check back soon!
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-x-8 gap-y-16 mx-auto">
-                        {posts.map((post) => (
-                            <Link href={`/blog/read?slug=${post.slug}`} key={post.id} className="group cursor-pointer block">
+                        {safePosts.map((post) => (
+                            <Link href={`/blog/${post.slug}`} key={post.id} className="group cursor-pointer block">
                                 {/* Image Container */}
                                 <div className="aspect-[4/3] bg-gray-100 dark:bg-zinc-900 rounded-2xl overflow-hidden mb-6 relative border border-gray-200 dark:border-zinc-800">
                                     <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay"></div>
                                     {post.cover_image ? (
-                                        <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                                        <Image
+                                            src={post.cover_image}
+                                            alt={post.title}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        />
                                     ) : (
                                         <div className="w-full h-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-400 dark:text-zinc-700 font-mono text-xs">
                                             [No Image]

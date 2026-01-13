@@ -1,33 +1,32 @@
-'use client';
-
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
 import { PortfolioProject } from "@/lib/types";
-import { Loader2, ExternalLink } from "lucide-react";
-import Link from 'next/link';
+import { ExternalLink } from "lucide-react";
+import Image from "next/image";
+import { Metadata } from "next";
 
-export default function Portfolio() {
-    const [projects, setProjects] = useState<PortfolioProject[]>([]);
-    const [loading, setLoading] = useState(true);
+export const revalidate = 0; // Force dynamic fetch for portfolio
 
-    useEffect(() => {
-        const fetchProjects = async () => {
-            const { data, error } = await supabase
-                .from('portfolio')
-                .select('*')
-                .order('created_at', { ascending: false });
+export const metadata: Metadata = {
+    title: "Portfolio | Mutant Technologies",
+    description: "Explore our featured projects and case studies showcasing creativity and technical excellence.",
+    alternates: {
+        canonical: '/portfolio',
+    },
+};
 
-            if (error) {
-                console.error('Error fetching projects:', error);
-            } else {
-                setProjects(data || []);
-            }
-            setLoading(false);
-        };
-        fetchProjects();
-    }, []);
+export default async function Portfolio() {
+    const { data, error } = await supabase
+        .from('portfolio')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching projects:', error);
+    }
+
+    const projects = (data || []) as PortfolioProject[];
 
     return (
         <main className="bg-background min-h-screen text-foreground transition-colors duration-300">
@@ -45,11 +44,7 @@ export default function Portfolio() {
                 </div>
 
                 {/* Projects Grid */}
-                {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                    </div>
-                ) : projects.length === 0 ? (
+                {projects.length === 0 ? (
                     <div className="text-center py-20 text-gray-500">
                         No projects uploaded yet. Check back soon!
                     </div>
@@ -60,10 +55,12 @@ export default function Portfolio() {
                                 {/* Image */}
                                 <div className="aspect-video relative overflow-hidden bg-gray-200 dark:bg-zinc-800">
                                     {project.image_url ? (
-                                        <img
+                                        <Image
                                             src={project.image_url}
                                             alt={project.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            fill
+                                            className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400 font-mono text-sm">[No Image]</div>

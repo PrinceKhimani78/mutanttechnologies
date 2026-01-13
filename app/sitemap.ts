@@ -34,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
         if (posts) {
             blogPages = posts.map((post) => ({
-                url: `${baseUrl}/blog/read?slug=${post.slug}`,
+                url: `${baseUrl}/blog/${post.slug}`,
                 lastModified: new Date(post.created_at), // timestamp with time zone
                 changeFrequency: 'weekly' as const,
                 priority: 0.7,

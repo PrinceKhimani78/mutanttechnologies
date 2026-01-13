@@ -3,6 +3,7 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export const Preloader = () => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -160,11 +161,13 @@ export const Preloader = () => {
     return (
         <div ref={containerRef} className="fixed inset-0 z-[100] bg-white dark:bg-black flex items-center justify-center pointer-events-none">
             {/* Logo */}
-            <div className="preloader-logo relative z-20 w-48 h-48 md:w-64 md:h-64 flex items-center justify-center">
-                <img
+            <div className="preloader-logo relative z-20 w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
+                <Image
                     src="/logoAnimation.jpg"
                     alt="Logo"
-                    className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                    fill
+                    className="object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                    priority
                 />
             </div>
             <canvas ref={canvasRef} className="absolute inset-0 z-10" />
