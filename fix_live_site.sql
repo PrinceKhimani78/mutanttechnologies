@@ -59,6 +59,38 @@ DROP POLICY IF EXISTS "Public read access" ON page_sections;
 CREATE POLICY "Public read access" ON page_sections FOR SELECT USING (true);
 
 
+-- 3.5 FIX PORTFOLIO (PROJECTS) PERMISSIONS
+-- Check if table exists (assuming table name is 'portfolio' based on previous code)
+CREATE TABLE IF NOT EXISTS portfolio (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    project_url TEXT,
+    category TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE portfolio ENABLE ROW LEVEL SECURITY;
+
+-- Add Public Read Policy for Portfolio
+DROP POLICY IF EXISTS "Public read access" ON portfolio;
+CREATE POLICY "Public read access" ON portfolio FOR SELECT USING (true);
+
+-- Add Admin Write Policy for Portfolio
+DROP POLICY IF EXISTS "Admin write access" ON portfolio;
+CREATE POLICY "Admin write access" ON portfolio FOR ALL USING (auth.role() = 'authenticated');
+
+-- Seed Portfolio Data (if empty)
+INSERT INTO portfolio (title, description, image_url, project_url, category)
+SELECT 'E-Commerce Platform', 'A full-featured online store with payment integration.', '/portfolio-1.jpg', 'https://example.com', 'Web App'
+WHERE NOT EXISTS (SELECT 1 FROM portfolio LIMIT 1);
+
+INSERT INTO portfolio (title, description, image_url, project_url, category)
+SELECT 'Corporate Website', 'Modern corporate identity website for a financial firm.', '/portfolio-2.jpg', 'https://example.com', 'Website'
+WHERE NOT EXISTS (SELECT 1 FROM portfolio LIMIT 1);
+
+
 -- 4. RE-SEED SERVICE DATA (If table is empty)
 -- This ensures service pages have content to display
 INSERT INTO public.services (slug, title, short_description, description, icon, color, bg_gradient, features, content, tools, process, benefits)
