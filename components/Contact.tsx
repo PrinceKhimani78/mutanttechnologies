@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Button } from './ui/button';
@@ -36,6 +36,27 @@ export const Contact = () => {
             setLoading(false);
         }
     };
+
+    const [contactInfo, setContactInfo] = useState({
+        phone: '(+91) 7016228551',
+        email: 'contact@mutanttechnologies.com',
+        address: 'B-113 RK iconic Sheetal Park, Rajkot, Gujarat'
+    });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const { getSiteSettings } = await import('@/lib/cms');
+            const { data } = await getSiteSettings();
+            if (data) {
+                setContactInfo({
+                    phone: data.phone_number || contactInfo.phone,
+                    email: data.contact_email || contactInfo.email,
+                    address: data.address || contactInfo.address
+                });
+            }
+        };
+        fetchSettings();
+    }, []);
 
     useGSAP(() => {
         gsap.from(".contact-item", {
@@ -74,7 +95,7 @@ export const Contact = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold">Call Center</h4>
-                                    <p className="text-gray-400">(+91) 7016228551</p>
+                                    <p className="text-gray-400">{contactInfo.phone}</p>
                                 </div>
                             </div>
 
@@ -84,7 +105,7 @@ export const Contact = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold">Email Address</h4>
-                                    <p className="text-gray-400">contact@mutanttechnologies.com</p>
+                                    <p className="text-gray-400">{contactInfo.email}</p>
                                 </div>
                             </div>
 
@@ -94,7 +115,7 @@ export const Contact = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold">Office Location</h4>
-                                    <p className="text-gray-400">B-113 RK iconic Sheetal Park, Rajkot, Gujarat</p>
+                                    <p className="text-gray-400">{contactInfo.address}</p>
                                 </div>
                             </div>
                         </div>

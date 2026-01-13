@@ -3,29 +3,25 @@ import { useRef } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Users, Target, Lightbulb } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const features = [
-    {
-        icon: Target,
-        title: "Our Mission",
-        desc: "To empower businesses with digital solutions that drive real, measurable growth."
-    },
-    {
-        icon: Lightbulb,
-        title: "Our Vision",
-        desc: "To be the global standard for creative innovation and technical excellence."
-    },
-    {
-        icon: Users,
-        title: "Our Team",
-        desc: "A collective of passionate designers, developers, and strategists."
-    }
-];
+import * as LucideIcons from 'lucide-react';
 
-export const About = () => {
+interface AboutProps {
+    content?: {
+        title?: string;
+        subtitle?: string;
+        description?: string;
+    };
+    features?: {
+        title: string;
+        desc: string;
+        icon: string;
+    }[];
+}
+
+export const About = ({ content, features = [] }: AboutProps) => {
     const containerRef = useRef(null);
 
     useGSAP(() => {
@@ -52,25 +48,33 @@ export const About = () => {
 
                     <div className="space-y-8">
                         <h2 className="about-item text-4xl md:text-5xl font-bold font-oswald uppercase tracking-wide text-foreground">
-                            We Don't Just Follow Trends, <br />
-                            <span className="text-primary">We Set Them.</span>
+                            {content?.title || "We Don't Just Follow Trends,"} <br />
+                            <span className="text-primary">{content?.subtitle || "We Set Them."}</span>
                         </h2>
                         <p className="about-item text-lg text-gray-600 dark:text-gray-400 leading-relaxed font-light">
-                            At <span className="font-bold text-dark-slate dark:text-white">Mutant Technologies</span>, we believe in the power of mutation – the constant evolution required to stay ahead in the digital age. We aren't just a service provider; we are your strategic partner in navigating the complex digital landscape.
+                            {content?.description || (
+                                <>
+                                    At <span className="font-bold text-dark-slate dark:text-white">Mutant Technologies</span>, we believe in the power of mutation – the constant evolution required to stay ahead in the digital age. We aren't just a service provider; we are your strategic partner in navigating the complex digital landscape.
+                                </>
+                            )}
                         </p>
 
                         <div className="space-y-6 pt-4">
-                            {features.map((feature, idx) => (
-                                <div key={idx} className="about-item flex gap-4 items-start group">
-                                    <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:border-primary/50 transition-all">
-                                        <feature.icon className="w-6 h-6" />
+                            {features.map((feature, idx) => {
+                                // @ts-ignore
+                                const Icon = LucideIcons[feature.icon] || LucideIcons.CheckCircle;
+                                return (
+                                    <div key={idx} className="about-item flex gap-4 items-start group">
+                                        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:border-primary/50 transition-all">
+                                            <Icon className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xl font-bold mb-1 font-oswald tracking-wide text-foreground">{feature.title}</h4>
+                                            <p className="text-gray-600 dark:text-gray-500">{feature.desc}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="text-xl font-bold mb-1 font-oswald tracking-wide text-foreground">{feature.title}</h4>
-                                        <p className="text-gray-600 dark:text-gray-500">{feature.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 

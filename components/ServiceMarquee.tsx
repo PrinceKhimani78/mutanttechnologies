@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 
@@ -7,9 +7,26 @@ export const ServiceMarquee = () => {
     const firstText = useRef<HTMLDivElement>(null);
     const secondText = useRef<HTMLDivElement>(null);
     const slider = useRef<HTMLDivElement>(null);
+    const [text, setText] = useState("Web Development • SEO • Digital Marketing • Cyber Security •");
 
     let xPercent = 0;
     let direction = -1;
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const { getSiteSettings } = await import('@/lib/cms');
+            const { data } = await getSiteSettings();
+            if (data?.marquee_text) {
+                // Ensure text ends with a separator for seamless loop visually
+                let marquee = data.marquee_text.trim();
+                if (!marquee.endsWith('•') && !marquee.endsWith('|')) {
+                    marquee += ' •';
+                }
+                setText(marquee);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     useGSAP(() => {
         requestAnimationFrame(animate);
@@ -34,10 +51,10 @@ export const ServiceMarquee = () => {
         <div className="relative flex h-[200px] overflow-hidden bg-gray-50 dark:bg-dark-slate/10 items-center py-10">
             <div ref={slider} className="absolute whitespace-nowrap flex">
                 <p ref={firstText} className="text-[10vw] font-oswald font-bold text-dark-slate/5 dark:text-white/5 uppercase pr-8">
-                    Web Development • SEO • Digital Marketing • Cyber Security •
+                    {text}
                 </p>
                 <p ref={secondText} className="text-[10vw] font-oswald font-bold text-dark-slate/5 dark:text-white/5 uppercase pr-8">
-                    Web Development • SEO • Digital Marketing • Cyber Security •
+                    {text}
                 </p>
             </div>
         </div>

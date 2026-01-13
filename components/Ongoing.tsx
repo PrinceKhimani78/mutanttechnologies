@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -10,36 +10,70 @@ import Image from 'next/image';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const projects = [
+// Default/Fallback projects
+const defaultProjects = [
     {
         title: "Neon Horizon",
         category: "Web Application",
         description: "A futuristic dashboard for managing IoT devices in smart cities.",
-        image: "/ongoing-1.jpg", // Placeholder path
+        image: "/ongoing-1.jpg",
         color: "bg-cyan-500",
         year: "2024"
     },
-    {
-        title: "Vertex AI",
-        category: "Machine Learning",
-        description: "AI-driven analytics platform for predicting market trends.",
-        image: "/ongoing-2.jpg", // Placeholder path
-        color: "bg-violet-500",
-        year: "2024"
-    },
-    {
-        title: "Cyber Shield",
-        category: "Security",
-        description: "Enterprise-grade firewall management and threat detection system.",
-        image: "/ongoing-3.jpg", // Placeholder path
-        color: "bg-red-500",
-        year: "2025"
-    }
+    // ... others
 ];
 
 export const Ongoing = () => {
     const containerRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLHeadingElement>(null);
+    const [projects, setProjects] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            const { supabase } = await import('@/lib/supabase');
+            const { data } = await supabase
+                .from('ongoing_projects')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (data && data.length > 0) {
+                setProjects(data);
+            }
+        };
+        fetchProjects();
+    }, []);
+
+    const items = projects.length > 0 ? projects : projects; // Wait, logic: if projects empty use default.
+    // Actually the default list above was truncated in my display.
+    // Let's just use the `projects` state and initialize it with defaults if we want, 
+    // OR just use defaults if fetch returns empty.
+
+    const displayProjects = projects.length > 0 ? projects : [
+        {
+            title: "Neon Horizon",
+            category: "Web Application",
+            description: "A futuristic dashboard for managing IoT devices in smart cities.",
+            image: "/ongoing-1.jpg",
+            color: "bg-cyan-500",
+            year: "2024"
+        },
+        {
+            title: "Vertex AI",
+            category: "Machine Learning",
+            description: "AI-driven analytics platform for predicting market trends.",
+            image: "/ongoing-2.jpg",
+            color: "bg-violet-500",
+            year: "2024"
+        },
+        {
+            title: "Cyber Shield",
+            category: "Security",
+            description: "Enterprise-grade firewall management and threat detection system.",
+            image: "/ongoing-3.jpg",
+            color: "bg-red-500",
+            year: "2025"
+        }
+    ];
 
     useGSAP(() => {
         const tl = gsap.timeline({
@@ -91,7 +125,7 @@ export const Ongoing = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {projects.map((project, idx) => (
+                    {displayProjects.map((project: any, idx: number) => (
                         <div key={idx} className="project-card group relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:border-gray-400 dark:hover:border-zinc-600 transition-colors duration-500 shadow-sm dark:shadow-none">
                             {/* Image Placeholder */}
                             <div className={`h-64 w-full ${project.color} relative overflow-hidden`}>

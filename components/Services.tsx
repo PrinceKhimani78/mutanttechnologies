@@ -19,9 +19,13 @@ import { Service } from '@/lib/types';
  */
 interface ServicesProps {
     services: Service[];
+    header?: {
+        title?: string;
+        subtitle?: string; // Although not used in current layout, good to have
+    };
 }
 
-export const Services = ({ services }: ServicesProps) => {
+export const Services = ({ services, header }: ServicesProps) => {
     const containerRef = useRef<HTMLElement>(null);
     const triggerRef = useRef<HTMLDivElement>(null);
 
@@ -51,8 +55,13 @@ export const Services = ({ services }: ServicesProps) => {
 
             <div className="container mx-auto px-6 mb-8 relative z-10">
                 <h2 className="text-foreground text-5xl md:text-7xl font-oswald uppercase font-bold tracking-tight">
-                    What We <span className="text-primary">Do</span>
+                    {header?.title ? header.title : (
+                        <>What We <span className="text-primary">Do</span></>
+                    )}
                 </h2>
+                {header?.subtitle && (
+                    <p className="text-gray-600 dark:text-gray-400 mt-4 text-xl max-w-2xl">{header.subtitle}</p>
+                )}
             </div>
 
             <div ref={triggerRef} className="flex gap-12 px-6 md:px-24 w-fit">

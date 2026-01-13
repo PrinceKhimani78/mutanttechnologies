@@ -4,8 +4,8 @@ import { ArrowRight } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     href?: string;
-    variant?: 'primary' | 'outline' | 'ghost' | 'link';
-    size?: 'sm' | 'md' | 'lg';
+    variant?: 'primary' | 'outline' | 'ghost' | 'link' | 'destructive' | 'secondary';
+    size?: 'sm' | 'md' | 'lg' | 'icon';
     withIcon?: boolean;
 }
 
@@ -25,12 +25,15 @@ export const Button = ({
         outline: "border-2 border-[#FC6203] text-[#FC6203] hover:bg-[#FC6203] hover:text-white",
         ghost: "text-zinc-900 hover:text-[#FC6203] hover:bg-zinc-100",
         link: "text-[#FC6203] underline-offset-4 hover:underline",
+        destructive: "bg-red-500 text-white hover:bg-red-600 shadow-sm",
+        secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700",
     };
 
     const sizes = {
         sm: "px-4 py-2 text-sm",
         md: "px-6 py-3 text-base",
         lg: "px-8 py-4 text-lg",
+        icon: "h-9 w-9 p-0",
     };
 
     const classes = cn(baseStyles, variants[variant], sizes[size], className);

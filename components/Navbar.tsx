@@ -47,6 +47,17 @@ export const Navbar = () => {
         });
     }, []);
 
+    const [contactEmail, setContactEmail] = useState('hello@mutant.tech');
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const { data } = await import('@/lib/cms').then(mod => mod.getSiteSettings());
+            if (data?.contact_email) {
+                setContactEmail(data.contact_email);
+            }
+        };
+        fetchSettings();
+    }, []);
+
     // Mobile Menu Animation
     useGSAP(() => {
         if (!menuRef.current) return;
@@ -102,7 +113,7 @@ export const Navbar = () => {
                             src="/logo.png"
                             alt="Mutant Technologies"
                             fill
-                            className="object-contain object-left dark:brightness-0 dark:invert transition-all duration-300"
+                            className="object-contain object-left transition-all duration-300"
                             priority
                         />
                     </Link>
@@ -147,7 +158,7 @@ export const Navbar = () => {
                         })}
                         <ThemeToggle />
                         <Button
-                            href="/#contact"
+                            href="/contact"
                             size="sm"
                             onClick={() => trackEvent('cta_click', { location: 'navbar', label: 'Get Started' })}
                         >
@@ -223,11 +234,11 @@ export const Navbar = () => {
                         <div className="flex flex-col gap-2">
                             <span className="text-sm text-gray-500 dark:text-zinc-500 uppercase tracking-widest font-mono">Get in touch</span>
                             <a
-                                href="mailto:hello@mutant.tech"
+                                href={`mailto:${contactEmail}`}
                                 className="text-xl font-bold text-foreground hover:text-primary transition-colors"
-                                onClick={() => trackEvent('contact_click', { type: 'email', value: 'hello@mutant.tech' })}
+                                onClick={() => trackEvent('contact_click', { type: 'email', value: contactEmail })}
                             >
-                                hello@mutant.tech
+                                {contactEmail}
                             </a>
                         </div>
                         <Button href="/contact" withIcon={true} className="w-auto text-sm sm:text-base px-6 py-3">
