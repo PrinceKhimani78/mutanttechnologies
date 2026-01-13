@@ -29,6 +29,37 @@ export async function generateStaticParams() {
     return fallbackSlugs.map(slug => ({ slug }));
 }
 
+import { Metadata } from 'next';
+
+// ... existing generateStaticParams ...
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+
+    const { data: service } = await supabase
+        .from('services')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+    if (!service) {
+        return {
+            title: 'Service Not Found',
+        };
+    }
+
+    return {
+        title: `${service.title} | Services | Mutant Technologies`,
+        description: service.short_description || service.description,
+        openGraph: {
+            title: service.title,
+            description: service.short_description || service.description,
+            type: 'website',
+            images: [], // Add service image if available
+        },
+    };
+}
+
 export default async function ServiceDetail({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
 
@@ -42,5 +73,26 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
         notFound();
     }
 
-    return <ServiceDetailClient service={service as Service} />;
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: service.title,
+        description: service.short_description || service.description,
+        provider: {
+            '@type': 'Organization',
+            name: 'Mutant Technologies',
+            url: 'https://www.mutanttechnologies.com'
+        },
+        url: `https://www.mutanttechnologies.com/services/${service.slug}`,
+    };
+
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <ServiceDetailClient service={service as Service} />
+        </>
+    );
 }

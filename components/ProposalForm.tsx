@@ -1,29 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Send } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { services } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
+import { Service } from '@/lib/types';
 
+/**
+ * ProposalForm Component
+ * 
+ * Handles client project requests. 
+ * Fetches available services dynamically from Supabase to populate the dropdown.
+ */
 export const ProposalForm = () => {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [services, setServices] = useState<Service[]>([]);
+
+    // Fetch services on mount for the dropdown
+    useEffect(() => {
+        const fetchServices = async () => {
+            const { data } = await supabase.from('services').select('id, title');
+            if (data) setServices(data as Service[]);
+        };
+        fetchServices();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
-        const formData = new FormData(e.target as HTMLFormElement);
-        const data = {
-            name: formData.get('name') || (e.target as any)[0].value, // Fallback for uncontrolled inputs if needed
-            email: formData.get('email') || (e.target as any)[1].value,
-            service: (e.target as any)[2].value, // Select input
-            message: (e.target as any)[3].value, // Textarea
-            type: 'proposal'
-        };
-
-        // Better way to get data from our specific form structure
         const form = e.target as HTMLFormElement;
         const nameInput = form.querySelector('input[type="text"]') as HTMLInputElement;
         const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement;
@@ -31,6 +37,7 @@ export const ProposalForm = () => {
         const messageInput = form.querySelector('textarea') as HTMLTextAreaElement;
 
         try {
+            // Send data to PHP mailer handler
             const res = await fetch('/mail.php', {
                 method: 'POST',
                 headers: {
@@ -47,25 +54,18 @@ export const ProposalForm = () => {
 
             if (res.ok) {
                 setStatus('success');
-                // Track Conversion via Data Layer
-                if (typeof window !== 'undefined' && (window as any).dataLayer) {
-                    (window as any).dataLayer.push({
-                        event: 'generate_lead',
-                        form_location: 'proposal_form',
-                        service_interest: serviceSelect.value
-                    });
-                }
 
-                // Track via helper (consistent)
+                // Track Google Tag Manager Event
                 const { trackEvent } = await import('@/lib/gtm');
                 trackEvent('generate_lead', {
                     form_id: "proposal_form",
-                    value: 0
+                    service_interest: serviceSelect.value
                 });
             } else {
                 setStatus('error');
             }
         } catch (err) {
+            console.error("Form submission error:", err);
             setStatus('error');
         } finally {
             setLoading(false);
@@ -100,18 +100,20 @@ export const ProposalForm = () => {
 
             <form id="proposal-submission-form" onSubmit={handleSubmit} className="space-y-6 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
+                    <div className="space-y-2" suppressHydrationWarning>
                         <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Name</label>
                         <input
+                            suppressHydrationWarning
                             required
                             type="text"
                             placeholder="John Doe"
                             className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-hidden focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-zinc-700"
                         />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2" suppressHydrationWarning>
                         <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Email</label>
                         <input
+                            suppressHydrationWarning
                             required
                             type="email"
                             placeholder="john@company.com"
@@ -120,9 +122,9 @@ export const ProposalForm = () => {
                     </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2" suppressHydrationWarning>
                     <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Service Interest</label>
-                    <select className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-hidden focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all appearance-none cursor-pointer">
+                    <select suppressHydrationWarning className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-hidden focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all appearance-none cursor-pointer">
                         {services.map((service) => (
                             <option key={service.id} value={service.title} className="bg-zinc-900 text-white">
                                 {service.title}
@@ -132,9 +134,10 @@ export const ProposalForm = () => {
                     </select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2" suppressHydrationWarning>
                     <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Project Details</label>
                     <textarea
+                        suppressHydrationWarning
                         required
                         rows={4}
                         placeholder="Tell us about your goals, budget, and timeline..."

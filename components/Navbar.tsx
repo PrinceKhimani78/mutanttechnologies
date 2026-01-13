@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu, X, ArrowRight, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ThemeToggle';
@@ -97,7 +98,13 @@ export const Navbar = () => {
                 <div className="w-full max-w-[2400px] mx-auto px-6 flex justify-between items-center">
                     {/* Logo */}
                     <Link href="/" className="relative z-50 w-48 h-12 flex items-center" onClick={() => setIsOpen(false)}>
-                        <img src="/logo.png" alt="Mutant Technologies" className="w-full h-full object-contain object-left dark:brightness-0 dark:invert transition-all duration-300" />
+                        <Image
+                            src="/logo.png"
+                            alt="Mutant Technologies"
+                            fill
+                            className="object-contain object-left dark:brightness-0 dark:invert transition-all duration-300"
+                            priority
+                        />
                     </Link>
 
                     {/* Desktop Menu */}

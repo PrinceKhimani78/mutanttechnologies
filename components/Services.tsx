@@ -11,6 +11,12 @@ import { trackEvent } from '@/lib/gtm';
 import * as LucideIcons from 'lucide-react';
 import { Service } from '@/lib/types';
 
+/**
+ * Services Component
+ * 
+ * Displays a horizontal scrolling list of services using GSAP ScrollTrigger.
+ * Dynamically resolves Lucide icons based on string names from the database.
+ */
 interface ServicesProps {
     services: Service[];
 }
@@ -23,6 +29,7 @@ export const Services = ({ services }: ServicesProps) => {
         if (!triggerRef.current) return;
         const totalWidth = triggerRef.current.scrollWidth - window.innerWidth;
 
+        // Horizontal scroll animation tied to vertical scroll
         gsap.to(triggerRef.current, {
             x: -totalWidth,
             ease: "none",
@@ -50,6 +57,7 @@ export const Services = ({ services }: ServicesProps) => {
 
             <div ref={triggerRef} className="flex gap-12 px-6 md:px-24 w-fit">
                 {services.map((service, idx) => {
+                    // Dynamically resolve icon component, fallback to Monitor if not found
                     // @ts-ignore
                     const Icon = LucideIcons[service.icon] || LucideIcons.Monitor;
 

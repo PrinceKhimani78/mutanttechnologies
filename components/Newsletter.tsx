@@ -76,6 +76,7 @@ export function Newsletter() {
                 ) : (
                     <form onSubmit={handleSubscribe} className="flex flex-col md:flex-row gap-4">
                         <input
+                            suppressHydrationWarning
                             type="email"
                             placeholder="Enter your email address"
                             className="flex-1 px-6 py-4 rounded-full border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
