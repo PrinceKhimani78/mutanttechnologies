@@ -7,7 +7,7 @@ import Image from "next/image";
 import { Metadata } from "next";
 import { getPageContent } from "@/lib/cms";
 
-export const revalidate = 0; // Force dynamic fetch for portfolio
+// export const revalidate = 0; // Removed for static export compatibility
 
 export const metadata: Metadata = {
     title: "Portfolio | Mutant Technologies",

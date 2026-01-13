@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types";
 import { Metadata } from "next";
 
-export const revalidate = 0; // Force dynamic fetch for listing page
+// export const revalidate = 0; // Removed for static export compatibility
 
 export const metadata: Metadata = {
     title: "Blog | Mutant Technologies",
