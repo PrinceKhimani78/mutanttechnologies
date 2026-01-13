@@ -7,9 +7,10 @@ import { trackEvent } from '@/lib/gtm';
 
 interface FooterClientProps {
     services: Service[];
+    settings?: Record<string, string>;
 }
 
-export const FooterClient = ({ services }: FooterClientProps) => {
+export const FooterClient = ({ services, settings }: FooterClientProps) => {
     return (
         <footer className="bg-gray-100 dark:bg-zinc-950 pt-20 pb-10 relative overflow-hidden text-dark-slate dark:text-white transition-colors duration-300">
             {/* Gradient Separator */}
@@ -34,7 +35,7 @@ export const FooterClient = ({ services }: FooterClientProps) => {
                             Let's Build Something <br /><span className="text-primary">Extraordinary.</span>
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed font-light">
-                            We blend creativity and technology to boost your digital presence. From stunning websites to smart marketing.
+                            {settings?.address || "We blend creativity and technology to boost your digital presence. From stunning websites to smart marketing."}
                         </p>
                     </div>
 
@@ -62,6 +63,17 @@ export const FooterClient = ({ services }: FooterClientProps) => {
                                 <li><Link href="/portfolio" className="hover:text-primary transition-colors">Our Work</Link></li>
                                 <li><Link href="/blog" className="hover:text-primary transition-colors">Blog</Link></li>
                                 <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="font-oswald font-bold text-lg mb-6 tracking-widest uppercase text-gray-500">Socials</h3>
+                            <ul className="space-y-4 text-gray-600 dark:text-gray-300">
+                                {settings?.linkedin_url && (
+                                    <li><a href={settings.linkedin_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">LinkedIn</a></li>
+                                )}
+                                {settings?.instagram_url && (
+                                    <li><a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a></li>
+                                )}
                             </ul>
                         </div>
                     </div>

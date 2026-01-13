@@ -1,5 +1,5 @@
 'use client';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Button } from './ui/button';
@@ -21,6 +21,30 @@ export const Hero = ({
 }: HeroProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
+
+    // Dynamic Content State
+    const [content, setContent] = useState({
+        title1,
+        title2,
+        subtitle,
+        button_text: buttonText
+    });
+
+    useEffect(() => {
+        const fetchContent = async () => {
+            const { getPageContent } = await import('@/lib/cms');
+            const data = await getPageContent('home');
+
+            if (data?.hero) {
+                // Merge defects with DB content
+                setContent(prev => ({
+                    ...prev,
+                    ...data.hero
+                }));
+            }
+        };
+        fetchContent();
+    }, []);
 
     useGSAP(() => {
         const tl = gsap.timeline({ paused: true });
@@ -68,7 +92,7 @@ export const Hero = ({
             clearTimeout(timer);
         };
 
-    }, { scope: containerRef });
+    }, { scope: containerRef, dependencies: [content] }); // Re-run animation if content changes (though usually initial load is fine)
 
     return (
         <section
@@ -84,13 +108,13 @@ export const Hero = ({
                 <div ref={titleRef} className="overflow-hidden mb-6">
                     <h1 className="font-oswald text-[12vw] leading-[0.9] font-bold uppercase text-dark-slate tracking-tighter pb-4">
                         <span className="inline-block">
-                            {title1.split("").map((char, i) => (
+                            {content.title1.split("").map((char, i) => (
                                 <span key={i} className="hero-char inline-block">{char}</span>
                             ))}
                         </span>
                         <br />
                         <span className="relative inline-block pb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
-                            {title2.split("").map((char, i) => (
+                            {content.title2.split("").map((char, i) => (
                                 <span key={i} className="hero-char inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
                                     {char}
                                 </span>
@@ -100,7 +124,7 @@ export const Hero = ({
                 </div>
 
                 <p className="hero-sub text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto font-light mb-10">
-                    {subtitle}
+                    {content.subtitle}
                 </p>
 
                 <div className="hero-btn flex justify-center gap-6">
@@ -109,7 +133,7 @@ export const Hero = ({
                         className="rounded-full px-8 py-3 md:px-10 md:py-6 text-base md:text-xl hover:scale-110 transition-transform cursor-hover"
                         onClick={() => trackEvent('cta_click', { location: 'hero', label: 'Start Project' })}
                     >
-                        {buttonText}
+                        {content.button_text}
                     </Button>
                 </div>
             </div>

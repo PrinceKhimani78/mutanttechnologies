@@ -5,6 +5,7 @@ import { PortfolioProject } from "@/lib/types";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { Metadata } from "next";
+import { getPageContent } from "@/lib/cms";
 
 export const revalidate = 0; // Force dynamic fetch for portfolio
 
@@ -27,6 +28,8 @@ export default async function Portfolio() {
     }
 
     const projects = (data || []) as PortfolioProject[];
+    const pageContent = await getPageContent('portfolio');
+    const header = pageContent?.header || {};
 
     return (
         <main className="bg-background min-h-screen text-foreground transition-colors duration-300">
@@ -36,10 +39,14 @@ export default async function Portfolio() {
                 {/* Header Section */}
                 <div className="text-center mb-24">
                     <h1 className="text-6xl md:text-8xl font-oswald font-bold uppercase mb-6 tracking-tight text-foreground">
-                        Our <span className="font-serif italic text-primary font-light">Work</span>
+                        {header.title ? header.title.split(' ').map((word: string, i: number) => (
+                            <span key={i} className={i === 1 ? "font-serif italic text-primary font-light" : ""}>{word} </span>
+                        )) : (
+                            <>Our <span className="font-serif italic text-primary font-light">Work</span></>
+                        )}
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-zinc-400 max-w-2xl mx-auto font-light">
-                        Featured projects and case studies.
+                        {header.subtitle || "Featured projects and case studies."}
                     </p>
                 </div>
 

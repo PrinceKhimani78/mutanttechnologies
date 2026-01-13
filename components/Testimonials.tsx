@@ -2,9 +2,9 @@
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Quote, Star } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
-const testimonials = [
+const defaultTestimonials = [
     {
         quote: "Mutant Technologies delivered on every promise. Their in-depth understanding of digital marketing has propelled our product to new heights.",
         author: "Issa Yattassaye",
@@ -27,13 +27,42 @@ const testimonials = [
     }
 ];
 
+const fetchTestimonials = async () => {
+    const { supabase } = await import('@/lib/supabase');
+    const { data } = await supabase
+        .from('testimonials')
+        .select('*')
+        .order('created_at', { ascending: false });
+    return data || [];
+};
+
 export const Testimonials = () => {
     const marqueeRef = useRef<HTMLDivElement>(null);
+    const [testimonials, setTestimonials] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchTestimonials = async () => {
+            const { supabase } = await import('@/lib/supabase');
+            const { data } = await supabase
+                .from('testimonials')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (data && data.length > 0) {
+                setTestimonials(data);
+            }
+        };
+        fetchTestimonials();
+    }, []);
+
+    // Use default testimonials if DB is empty
+    // @ts-ignore
+    const items = testimonials.length > 0 ? testimonials : defaultTestimonials;
 
     useGSAP(() => {
         // Clone the list to create seamless loop
         const list = marqueeRef.current;
-        if (list) {
+        if (list && items.length > 0) {
             const content = list.innerHTML;
             list.innerHTML = content + content + content + content; // Repeat enough times
 
@@ -44,7 +73,7 @@ export const Testimonials = () => {
                 repeat: -1
             });
         }
-    }, { scope: marqueeRef });
+    }, { scope: marqueeRef, dependencies: [items] });
 
     return (
         <section className="py-12 md:py-24 bg-background overflow-hidden relative">
@@ -61,7 +90,7 @@ export const Testimonials = () => {
                 <div className="absolute right-0 top-0 bottom-0 w-32 bg-linear-to-l from-gray-50 via-gray-50/50 dark:from-zinc-950 dark:via-zinc-950/50 to-transparent z-10"></div>
 
                 <div className="flex w-fit" ref={marqueeRef}>
-                    {testimonials.map((t, i) => (
+                    {items.map((t: any, i: number) => (
                         <div key={i} className="w-[400px] shrink-0 px-6">
                             <div className="bg-white dark:bg-zinc-800/50 border border-t-[6px] border-t-primary border-x-transparent border-b-transparent p-8 rounded-2xl h-full relative group hover:-translate-y-2 transition-transform duration-300 shadow-xl dark:shadow-none">
                                 <div className="flex gap-1 mb-6">

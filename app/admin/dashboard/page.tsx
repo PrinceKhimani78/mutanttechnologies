@@ -88,6 +88,21 @@ export default function AdminDashboard() {
                         <Button href="/admin/portfolio" variant="outline">
                             Manage Portfolio
                         </Button>
+                        <Button href="/admin/settings" variant="outline">
+                            Settings
+                        </Button>
+                        <Button href="/admin/pages" variant="outline">
+                            Pages
+                        </Button>
+                        <Button href="/admin/services" variant="outline">
+                            Services
+                        </Button>
+                        <Button href="/admin/testimonials" variant="outline">
+                            Testimonials
+                        </Button>
+                        <Button href="/admin/ongoing" variant="outline">
+                            Ongoing
+                        </Button>
                         <Button href="/admin/create">
                             <Plus className="w-5 h-5 mr-2" /> Create New Post
                         </Button>
