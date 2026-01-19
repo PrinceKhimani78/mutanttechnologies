@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import ServiceDetailClient from '@/components/ServiceDetailClient';
 import { notFound } from 'next/navigation';
 import { Service } from '@/lib/types';
+import { Footer } from '@/components/Footer';
 
 // Required for Static Export
 export async function generateStaticParams() {
@@ -93,6 +94,7 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <ServiceDetailClient service={service as Service} />
+            <Footer />
         </>
     );
 }

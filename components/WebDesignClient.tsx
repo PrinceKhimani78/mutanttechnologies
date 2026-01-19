@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import {
     ArrowRight, CheckCircle2, Code2, Globe, Layout,
@@ -530,8 +529,6 @@ export default function WebDesignClient() {
                     </Button>
                 </div>
             </section>
-
-            <Footer />
         </main>
     );
 }
