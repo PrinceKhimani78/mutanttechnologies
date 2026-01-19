@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import * as LucideIcons from 'lucide-react';
 import {
@@ -429,8 +428,6 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
                     </div>
                 </div>
             </section>
-
-            <Footer />
         </main>
     );
 }

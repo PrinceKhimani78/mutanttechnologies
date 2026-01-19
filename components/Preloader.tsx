@@ -166,7 +166,7 @@ export const Preloader = () => {
                     src="/logoAnimation.jpg"
                     alt="Logo"
                     fill
-                    className="object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                    className="object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.3)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] mix-blend-multiply dark:mix-blend-screen"
                     priority
                 />
             </div>
