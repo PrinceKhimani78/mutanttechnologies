@@ -28,7 +28,7 @@ export const FooterClient = ({ services, settings }: FooterClientProps) => {
                                 src="/logo.png"
                                 alt="Mutant Technologies"
                                 fill
-                                className="object-contain object-left dark:brightness-0 dark:invert transition-all duration-300"
+                                className="object-contain object-left transition-all duration-300"
                             />
                         </div>
                         <h2 className="text-4xl md:text-5xl font-oswald font-bold uppercase leading-tight mb-6">
