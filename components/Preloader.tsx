@@ -163,10 +163,10 @@ export const Preloader = () => {
             {/* Logo */}
             <div className="preloader-logo relative z-20 w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
                 <Image
-                    src="/logoAnimation.jpg"
+                    src="/logo.png"
                     alt="Logo"
                     fill
-                    className="object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.3)] dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] mix-blend-multiply dark:mix-blend-screen"
+                    className="object-contain"
                     priority
                 />
             </div>
