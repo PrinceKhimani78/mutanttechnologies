@@ -11,6 +11,8 @@ import { Post } from "@/lib/types";
 import { notFound } from 'next/navigation';
 import { Metadata } from "next";
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 // Helper for safe client creation during build
 async function getSupabase() {
     const { createClient } = await import('@supabase/supabase-js');

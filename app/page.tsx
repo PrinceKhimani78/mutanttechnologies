@@ -16,6 +16,8 @@ const model = "page";
 import { supabase } from "@/lib/supabase";
 import { Service } from "@/lib/types";
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 export default async function Home() {
   let content = undefined;
 
