@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { PublishButton } from '@/components/admin/PublishButton';
 import Link from 'next/link';
 import { Plus, Edit, Trash2, LogOut, Loader2 } from 'lucide-react';
 import { Post } from '@/lib/types';
