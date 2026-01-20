@@ -5,29 +5,67 @@ import { PortfolioProject } from "@/lib/types";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import { Metadata } from "next";
-import { getPageContent } from "@/lib/cms";
+'use client';
 
-export const revalidate = 60; // Revalidate every 60 seconds
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Project } from '@/lib/types';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
+import { ExternalLink } from "lucide-react"; // Keep ExternalLink as it's used in the project card
 
-export const metadata: Metadata = {
-    title: "Portfolio | Mutant Technologies",
-    description: "Explore our featured projects and case studies showcasing creativity and technical excellence.",
-    alternates: {
-        canonical: '/portfolio',
-    },
-};
+// Remove static revalidation - now using client-side fetching
+// export const revalidate = 60;
 
-export default async function Portfolio() {
-    const { data, error } = await supabase
-        .from('portfolio')
-        .select('*')
-        .order('created_at', { ascending: false });
+// Remove metadata export - metadata is typically defined in server components or layout files for client components
+// export const metadata: Metadata = {
+//     title: "Portfolio | Mutant Technologies",
+//     description: "Explore our featured projects and case studies showcasing creativity and technical excellence.",
+//     alternates: {
+//         canonical: '/portfolio',
+//     },
+// };
 
-    if (error) {
-        console.error('Error fetching projects:', error);
+export default function PortfolioPage() {
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [loading, setLoading] = useState(true);
+    // No explicit error state in the instruction, so we'll just log it.
+
+    useEffect(() => {
+        async function fetchProjects() {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('projects') // Changed from 'portfolio' to 'projects' as per instruction
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching projects:', error);
+                // Optionally set an error state here if you want to display it
+            } else if (data) {
+                setProjects(data as Project[]); // Cast data to Project[]
+            }
+            setLoading(false);
+        }
+
+        fetchProjects();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background">
+                <Navbar />
+                <div className="container mx-auto px-6 py-32 text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                    <p className="mt-4 text-gray-500">Loading projects...</p>
+                </div>
+                <Footer />
+            </div>
+        );
     }
 
-    const projects = (data || []) as PortfolioProject[];
     const pageContent = await getPageContent('portfolio');
     const header = pageContent?.header || {};
 

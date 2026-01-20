@@ -4,30 +4,71 @@ import Link from 'next/link';
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types";
-import { Metadata } from "next";
+import { Navbar } from '@/components/Navbar';
+import { Footer } from '@/components/Footer';
 
-export const revalidate = 60; // Revalidate every 60 seconds
+// Remove static revalidation - now using client-side fetching
+// export const revalidate = 60;
 
-export const metadata: Metadata = {
-    title: "Blog | Mutant Technologies",
-    description: "Explore insights and updates from the world of digital innovation, web development, and marketing.",
-    alternates: {
-        canonical: '/blog',
-    },
-};
+// Metadata should be defined in a layout.tsx or server component for client components
+// export const metadata: Metadata = {
+//     title: "Blog | Mutant Technologies",
+//     description: "Explore insights and updates from the world of digital innovation, web development, and marketing.",
+//     alternates: {
+//         canonical: '/blog',
+//     },
+// };
 
-export default async function Blog() {
-    const { data: posts, error } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false });
+export default function BlogPage() {
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null); // Added error state
 
-    if (error) {
-        console.error('Error fetching public posts:', error);
+    useEffect(() => {
+        async function fetchPosts() {
+            const { data, error: fetchError } = await supabase
+                .from('posts')
+                .select('*')
+                .eq('is_published', true)
+                .order('created_at', { ascending: false });
+
+            if (fetchError) {
+                console.error('Error fetching public posts:', fetchError);
+                setError(fetchError.message);
+            } else if (data) {
+                setPosts(data as Post[]);
+            }
+            setLoading(false);
+        }
+
+        fetchPosts();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background">
+                <Navbar />
+                <div className="container mx-auto px-6 py-32 text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                </div>
+                <Footer />
+            </div>
+        );
     }
 
-    const safePosts = (posts || []) as Post[];
+    if (error) {
+        return (
+            <div className="min-h-screen bg-background text-foreground">
+                <Navbar />
+                <div className="container mx-auto px-6 py-32 text-center">
+                    <p className="text-red-500">Error loading posts: {error}</p>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    const safePosts = posts; // Now `posts` is already `Post[]` from state
 
     return (
         <main className="bg-background min-h-screen text-foreground transition-colors duration-300">
