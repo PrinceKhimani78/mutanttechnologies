@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { Service } from '@/lib/types';
 import { Footer } from '@/components/Footer';
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 // Required for Static Export
 export async function generateStaticParams() {
     try {

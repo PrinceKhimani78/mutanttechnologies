@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types";
 import { Metadata } from "next";
 
-// export const revalidate = 0; // Removed for static export compatibility
+export const revalidate = 60; // Revalidate every 60 seconds
 
 export const metadata: Metadata = {
     title: "Blog | Mutant Technologies",
