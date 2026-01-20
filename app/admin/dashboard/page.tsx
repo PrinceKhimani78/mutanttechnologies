@@ -110,6 +110,15 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
+                {/* Publish Section */}
+                <div className="mb-10 bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/20 rounded-2xl p-8">
+                    <h3 className="text-xl font-bold mb-2">Publish Changes to Live Site</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                        After making changes to portfolio, blog, or other content, click the button below to deploy to your live website.
+                    </p>
+                    <PublishButton />
+                </div>
+
                 {posts.length === 0 ? (
                     <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 border-dashed">
                         <p className="text-gray-500 mb-4">No posts yet.</p>
