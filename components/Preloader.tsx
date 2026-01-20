@@ -163,7 +163,7 @@ export const Preloader = () => {
             {/* Logo */}
             <div className="preloader-logo relative z-20 w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
                 <Image
-                    src="/logo.png"
+                    src="/logoAnimation.jpg"
                     alt="Logo"
                     fill
                     className="object-contain"

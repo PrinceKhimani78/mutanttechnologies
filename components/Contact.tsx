@@ -134,8 +134,8 @@ export const Contact = () => {
                         ) : (
                             <>
                                 <h3 className="text-2xl font-bold mb-6">Send us a message</h3>
-                                <form className="space-y-6" onSubmit={handleSubmit}>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <form className="space-y-6" onSubmit={handleSubmit} suppressHydrationWarning>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6" suppressHydrationWarning>
                                         <div suppressHydrationWarning>
                                             <label className="block text-sm font-medium text-gray-400 mb-2">Name</label>
                                             <input suppressHydrationWarning required name="name" type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="John Doe" />
