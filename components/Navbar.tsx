@@ -113,7 +113,7 @@ export const Navbar = () => {
                             src="/logo.png"
                             alt="Mutant Technologies"
                             fill
-                            className="object-contain object-left transition-all duration-300 dark:brightness-0 dark:invert"
+                            className="object-contain object-left transition-all duration-300 dark:brightness-[2]"
                             priority
                         />
                     </Link>
