@@ -1,11 +1,12 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import Link from 'next/link';
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types";
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 
 // Remove static revalidation - now using client-side fetching
 // export const revalidate = 60;
@@ -22,7 +23,7 @@ import { Footer } from '@/components/Footer';
 export default function BlogPage() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null); // Added error state
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchPosts() {
