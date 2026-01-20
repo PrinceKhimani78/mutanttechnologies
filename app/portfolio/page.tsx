@@ -62,19 +62,19 @@ export default function PortfolioPage() {
             <Navbar />
 
             <div className="pt-40 pb-20 px-6 w-full max-w-[2400px] mx-auto">
-                {/* Header Section */}
-                <div className="text-center mb-24">
-                    <h1 className="text-6xl md:text-8xl font-oswald font-bold uppercase mb-6 tracking-tight text-foreground">
-                        {header.title ? header.title.split(' ').map((word: string, i: number) => (
-                            <span key={i} className={i === 1 ? "font-serif italic text-primary font-light" : ""}>{word} </span>
-                        )) : (
-                            <>Our <span className="font-serif italic text-primary font-light">Work</span></>
-                        )}
-                    </h1>
-                    <p className="text-xl text-gray-600 dark:text-zinc-400 max-w-2xl mx-auto font-light">
-                        {header.subtitle || "Featured projects and case studies."}
-                    </p>
-                </div>
+                {/* Hero Section */}
+                <section className="relative py-20 px-6">
+                    <div className="container mx-auto">
+                        <div className="max-w-3xl">
+                            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                                Our Portfolio
+                            </h1>
+                            <p className="text-xl text-gray-600 dark:text-gray-400">
+                                Explore our featured projects and case studies showcasing creativity and technical excellence.
+                            </p>
+                        </div>
+                    </div>
+                </section>
 
                 {/* Projects Grid */}
                 {projects.length === 0 ? (
