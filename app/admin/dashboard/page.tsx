@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { PublishButton } from '@/components/admin/PublishButton';
 import Link from 'next/link';
 import { Plus, Edit, Trash2, LogOut, Loader2 } from 'lucide-react';
 import { Post } from '@/lib/types';
@@ -110,13 +109,34 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Publish Section */}
+                {/* Deployment Instructions */}
                 <div className="mb-10 bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/20 rounded-2xl p-8">
-                    <h3 className="text-xl font-bold mb-2">Publish Changes to Live Site</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                        After making changes to portfolio, blog, or other content, click the button below to deploy to your live website.
+                    <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                        <span>🚀</span> Deploy Changes to Live Site
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        After making changes to portfolio, blog, or other content, run this command in Terminal:
                     </p>
-                    <PublishButton />
+
+                    <div className="bg-zinc-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4 flex items-center justify-between">
+                        <code>./deploy-admin-changes.sh</code>
+                        <button
+                            onClick={() => navigator.clipboard.writeText('./deploy-admin-changes.sh')}
+                            className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
+                        >
+                            Copy
+                        </button>
+                    </div>
+
+                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-2">
+                        <p className="font-medium">💡 How it works:</p>
+                        <ol className="list-decimal list-inside ml-2 space-y-1">
+                            <li>Open Terminal in your project folder</li>
+                            <li>Run the command above</li>
+                            <li>GitHub Actions rebuilds your site (2-3 minutes)</li>
+                            <li>Changes appear on live site automatically</li>
+                        </ol>
+                    </div>
                 </div>
 
                 {posts.length === 0 ? (
