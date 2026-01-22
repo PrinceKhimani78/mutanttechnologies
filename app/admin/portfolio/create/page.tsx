@@ -1,5 +1,11 @@
+'use client';
+
+import { supabase } from "@/lib/supabase";
+import { useState } from "react";
+import { Loader2, ArrowLeft, Upload, Image as ImageIcon } from "lucide-react";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { uploadImage } from "@/lib/uploadImage";
-import { Image as ImageIcon } from "lucide-react";
 
 export default function CreatePortfolio() {
     const router = useRouter();
