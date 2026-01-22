@@ -43,6 +43,9 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "overrides": {
     "isolated-vm": "5.0.1"
   }
