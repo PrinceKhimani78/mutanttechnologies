@@ -51,14 +51,22 @@ export default function RootLayout({
     '@type': 'Organization',
     name: 'Mutant Technologies',
     url: 'https://www.mutanttechnologies.com',
-    logo: 'https://www.mutanttechnologies.com/logo.png', // Ensure this exists or update path
+    logo: 'https://www.mutanttechnologies.com/logo.png',
+    founder: 'Prince Khimani',
+    foundingDate: '2023', // Update if different
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Ahmedabad',
+      addressRegion: 'Gujarat',
+      addressCountry: 'India'
+    },
     sameAs: [
       'https://www.linkedin.com/company/mutant-technologies',
       'https://www.instagram.com/mutanttechnologies',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+91-1234567890', // Update with actual
+      telephone: '+91-9510103770', // Update with actual
       contactType: 'customer service',
     },
   };

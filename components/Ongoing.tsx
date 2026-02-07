@@ -42,7 +42,7 @@ export const Ongoing = ({
         const fetchProjects = async () => {
             const { supabase } = await import('@/lib/supabase');
             const { data } = await supabase
-                .from('ongoing_projects')
+                .from('portfolio')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -58,7 +58,12 @@ export const Ongoing = ({
     // Let's just use the `projects` state and initialize it with defaults if we want, 
     // OR just use defaults if fetch returns empty.
 
-    const displayProjects = projects.length > 0 ? projects : [
+    const displayProjects = projects.length > 0 ? projects.map(p => ({
+        ...p,
+        image: p.image_url || "/ongoing-1.jpg",
+        color: p.color || "bg-primary",
+        year: p.created_at ? new Date(p.created_at).getFullYear().toString() : "2024"
+    })) : [
         {
             title: "Neon Horizon",
             category: "Web Application",
@@ -133,14 +138,20 @@ export const Ongoing = ({
             <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                     <div className="max-w-2xl">
-                        <h2 ref={titleRef} className="text-foreground text-5xl md:text-7xl font-oswald uppercase font-bold tracking-tight mb-6">
-                            {(title || "").split(' ').map((word, i) => i === (title || "").split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
-                        </h2>
+                        <div className="relative mb-6">
+                            {/* Watermark effect */}
+                            <span className="absolute -top-12 -left-4 text-gray-100 dark:text-zinc-800/20 text-[6vw] font-oswald font-black pointer-events-none select-none uppercase">
+                                Projects
+                            </span>
+                            <h2 ref={titleRef} className="text-foreground text-5xl md:text-7xl font-oswald uppercase font-bold tracking-tight relative z-10">
+                                {(title || "").split(' ').map((word, i) => i === (title || "").split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
+                            </h2>
+                        </div>
                         <p className="text-gray-600 dark:text-zinc-400 text-lg md:text-xl font-light">
                             {description}
                         </p>
                     </div>
-                    <Link href="/projects" className="group flex items-center gap-2 text-dark-slate dark:text-white border border-gray-300 dark:border-zinc-700 px-6 py-3 rounded-full hover:bg-dark-slate dark:hover:bg-white hover:text-white dark:hover:text-black transition-all duration-300">
+                    <Link href="/portfolio" className="group flex items-center gap-2 text-dark-slate dark:text-white border border-gray-300 dark:border-zinc-700 px-6 py-3 rounded-full hover:bg-dark-slate dark:hover:bg-white hover:text-white dark:hover:text-black transition-all duration-300">
                         View All Projects
                         <ArrowUpRight className="w-5 h-5 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
                     </Link>
@@ -171,7 +182,7 @@ export const Ongoing = ({
                                 <p className="text-gray-600 dark:text-zinc-400 leading-relaxed mb-6">
                                     {project.description}
                                 </p>
-                                <Link href="#" className="inline-flex items-center gap-2 text-dark-slate dark:text-white font-bold tracking-wider text-sm uppercase group/link">
+                                <Link href={project.project_url || "/portfolio"} className="inline-flex items-center gap-2 text-dark-slate dark:text-white font-bold tracking-wider text-sm uppercase group/link">
                                     Read Case Study
                                     <ArrowUpRight className="w-4 h-4 text-primary group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
                                 </Link>

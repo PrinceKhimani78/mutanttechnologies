@@ -3,10 +3,15 @@ import { About } from "@/components/About";
 import { Footer } from "@/components/Footer";
 import { getPageContent } from "@/lib/cms";
 
-export const metadata = {
-    title: "About Us",
-    description: "Learn about Mutant Technologies, our mission, vision, and the team driving digital innovation.",
-};
+import { getMetadata } from "@/lib/seo";
+import { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+    return await getMetadata('/about', {
+        title: "About Us | Mutant Technologies",
+        description: "Learn about Mutant Technologies, our mission, vision, and the team driving digital innovation.",
+    });
+}
 
 export default async function AboutPage() {
     const data = await getPageContent('about');

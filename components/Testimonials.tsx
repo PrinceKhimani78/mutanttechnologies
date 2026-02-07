@@ -36,26 +36,32 @@ const fetchTestimonials = async () => {
     return data || [];
 };
 
-export const Testimonials = ({ scroller }: { scroller?: string }) => {
+export const Testimonials = ({ scroller, initialData = [] }: { scroller?: string; initialData?: any[] }) => {
     const marqueeRef = useRef<HTMLDivElement>(null);
-    const [testimonials, setTestimonials] = useState<any[]>([]);
+    const [testimonials, setTestimonials] = useState<any[]>(initialData);
 
     useEffect(() => {
         const fetchTestimonials = async () => {
-            const { supabase } = await import('@/lib/supabase');
-            const { data } = await supabase
-                .from('testimonials')
-                .select('*')
-                .order('created_at', { ascending: false });
+            try {
+                const { supabase } = await import('@/lib/supabase');
+                const { data, error } = await supabase
+                    .from('testimonials')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            if (data && data.length > 0) {
-                setTestimonials(data);
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setTestimonials(data);
+                }
+            } catch (err) {
+                console.error("Error fetching testimonials:", err);
             }
         };
+        // If we have initialData, we might still want to fetch for fresh data if cached
         fetchTestimonials();
     }, []);
 
-    // Use default testimonials if DB is empty
+    // Use default testimonials if both DB and initialData are empty
     // @ts-ignore
     const items = testimonials.length > 0 ? testimonials : defaultTestimonials;
 

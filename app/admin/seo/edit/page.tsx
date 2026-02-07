@@ -11,17 +11,26 @@ function SEOEditContent() {
     const searchParams = useSearchParams();
     const id = searchParams.get('id');
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(id ? true : false);
     const [saving, setSaving] = useState(false);
-    const [formData, setFormData] = useState<any>(null);
+    const [formData, setFormData] = useState<any>(id ? null : {
+        page_slug: '',
+        title: '',
+        description: '',
+        canonical_url: '',
+        og_title: '',
+        og_description: '',
+        og_image: '',
+        twitter_card: 'summary_large_image',
+        twitter_image: '',
+        robots: 'index, follow'
+    });
 
     useEffect(() => {
         if (id) {
             fetchMetadata();
-        } else {
-            router.push('/admin/seo');
         }
-    }, [id, router]);
+    }, [id]);
 
     const fetchMetadata = async () => {
         const { data, error } = await supabase
@@ -45,21 +54,33 @@ function SEOEditContent() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.page_slug) {
+            alert('Page Slug is required');
+            return;
+        }
         setSaving(true);
 
-        const { error } = await supabase
-            .from('page_metadata')
-            .update(formData)
-            .eq('id', id);
-
-        if (error) {
-            console.error('Error saving metadata:', error);
-            alert('Failed to save metadata');
-        } else {
+        try {
+            if (id) {
+                const { error } = await supabase
+                    .from('page_metadata')
+                    .update(formData)
+                    .eq('id', id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase
+                    .from('page_metadata')
+                    .insert([formData]);
+                if (error) throw error;
+            }
             router.push('/admin/seo');
             router.refresh();
+        } catch (error) {
+            console.error('Error saving metadata:', error);
+            alert('Failed to save metadata');
+        } finally {
+            setSaving(false);
         }
-        setSaving(false);
     };
 
     if (loading) {
@@ -98,6 +119,16 @@ function SEOEditContent() {
                         </h2>
 
                         <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Page Slug (e.g. /about or /services/web-design)</label>
+                                <input
+                                    className="w-full p-3 bg-gray-50 dark:bg-zinc-950 border rounded-xl font-mono text-sm"
+                                    value={formData.page_slug || ''}
+                                    onChange={(e) => handleChange('page_slug', e.target.value)}
+                                    placeholder="/your-page-path"
+                                />
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Meta Title</label>
                                 <input

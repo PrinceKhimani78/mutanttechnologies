@@ -15,8 +15,17 @@ const model = "page";
 
 import { supabase } from "@/lib/supabase";
 import { Service } from "@/lib/types";
+import { getMetadata } from "@/lib/seo";
+import { Metadata } from "next";
 
 export const revalidate = 60; // Revalidate every 60 seconds
+
+export async function generateMetadata(): Promise<Metadata> {
+  return await getMetadata('/', {
+    title: "Mutant Technologies - Shine Bright Online",
+    description: "We blend creativity and technology to boost your digital presence.",
+  });
+}
 
 export default async function Home() {
   let content = undefined;
@@ -41,6 +50,11 @@ export default async function Home() {
     .select('*')
     .order('id');
 
+  const { data: testimonials } = await supabase
+    .from('testimonials')
+    .select('*')
+    .order('created_at', { ascending: false });
+
   return (
     <main className="min-h-screen overflow-hidden">
       <Navbar />
@@ -53,7 +67,7 @@ export default async function Home() {
           <ServiceMarquee />
           <Ongoing />
           <Services services={(services || []) as Service[]} />
-          <Testimonials />
+          <Testimonials initialData={testimonials || []} />
           <About />
           <Contact />
         </>

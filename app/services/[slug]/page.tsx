@@ -32,9 +32,8 @@ export async function generateStaticParams() {
     return fallbackSlugs.map(slug => ({ slug }));
 }
 
+import { getMetadata } from '@/lib/seo';
 import { Metadata } from 'next';
-
-// ... existing generateStaticParams ...
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
@@ -51,16 +50,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         };
     }
 
-    return {
+    return await getMetadata(`/services/${slug}`, {
         title: `${service.title} | Services | Mutant Technologies`,
         description: service.short_description || service.description,
         openGraph: {
             title: service.title,
             description: service.short_description || service.description,
             type: 'website',
-            images: [], // Add service image if available
         },
-    };
+    });
 }
 
 export default async function ServiceDetail({ params }: { params: Promise<{ slug: string }> }) {
