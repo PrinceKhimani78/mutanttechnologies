@@ -104,7 +104,7 @@ export const Ongoing = ({
             const tl = gsap.timeline({
                 scrollTrigger: {
                     trigger: containerRef.current,
-                    start: "top 70%",
+                    start: "top 80%",
                     toggleActions: "play none none reverse"
                 }
             });
@@ -140,7 +140,7 @@ export const Ongoing = ({
                     <div className="max-w-2xl">
                         <div className="relative mb-6">
                             {/* Watermark effect */}
-                            <span className="absolute -top-12 -left-4 text-gray-100 dark:text-zinc-800/20 text-[6vw] font-oswald font-black pointer-events-none select-none uppercase">
+                            <span className="absolute -top-16 md:-top-20 -left-6 text-gray-100 dark:text-zinc-800/10 text-[10vw] md:text-[8vw] font-oswald font-black pointer-events-none select-none uppercase opacity-50 dark:opacity-20 z-0">
                                 Projects
                             </span>
                             <h2 ref={titleRef} className="text-foreground text-5xl md:text-7xl font-oswald uppercase font-bold tracking-tight relative z-10">

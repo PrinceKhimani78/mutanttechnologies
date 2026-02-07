@@ -38,11 +38,23 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
         setFormData(prev => ({ ...prev, [key]: value }));
     };
 
-    // Helper for JSON array fields (simple string arrays like features, tools)
-    const handleArrayChange = (key: 'features' | 'tools', value: string) => {
-        // Simple comma-separated input for now
-        const array = value.split(',').map(s => s.trim()).filter(Boolean);
-        handleChange(key, array);
+    // Helper for complex array fields (features, tools, etc.)
+    const handleFeatureChange = (index: number, field: string, value: any) => {
+        const newFeatures = [...(formData.features || [])];
+        if (typeof newFeatures[index] === 'string') {
+            newFeatures[index] = { title: newFeatures[index] as string, description: '', image: '' };
+        }
+        (newFeatures[index] as any)[field] = value;
+        handleChange('features', newFeatures);
+    };
+
+    const addFeature = () => {
+        handleChange('features', [...(formData.features || []), { title: '', description: '', image: '' }]);
+    };
+
+    const removeFeature = (index: number) => {
+        const newFeatures = (formData.features || []).filter((_, i) => i !== index);
+        handleChange('features', newFeatures);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -120,17 +132,90 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
             </div>
 
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-6">
-                <h2 className="text-xl font-bold border-b pb-4 mb-4">Content & Lists</h2>
+                <h2 className="text-xl font-bold border-b pb-4 mb-4">Page Media (Images)</h2>
 
-                <div>
-                    <label className="block text-sm font-bold mb-2">Features (Comma separated)</label>
-                    <textarea
-                        className="w-full p-3 border rounded-lg bg-transparent"
-                        rows={3}
-                        defaultValue={formData.features?.join(', ')}
-                        onChange={(e) => handleArrayChange('features', e.target.value)}
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-bold mb-2">Hero Image URL</label>
+                        <input
+                            className="w-full p-3 border rounded-lg bg-transparent"
+                            value={formData.hero_image || ''}
+                            onChange={(e) => handleChange('hero_image', e.target.value)}
+                            placeholder="https://..."
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold mb-2">Benefits Image URL</label>
+                        <input
+                            className="w-full p-3 border rounded-lg bg-transparent"
+                            value={formData.benefits_image || ''}
+                            onChange={(e) => handleChange('benefits_image', e.target.value)}
+                            placeholder="https://..."
+                        />
+                    </div>
                 </div>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-6">
+                <h2 className="text-xl font-bold border-b pb-4 mb-4">Detailed Features</h2>
+                <p className="text-sm text-gray-500 mb-4 text-zinc-400">Add features that will be displayed in the stacked cards section.</p>
+
+                <div className="space-y-4">
+                    {(formData.features || []).map((feature: any, idx: number) => {
+                        const isObject = typeof feature === 'object' && feature !== null;
+                        const featureData = isObject ? feature : { title: feature, description: '', image: '' };
+
+                        return (
+                            <div key={idx} className="p-4 border rounded-xl space-y-4 relative bg-gray-50/50 dark:bg-zinc-800/20">
+                                <button
+                                    type="button"
+                                    onClick={() => removeFeature(idx)}
+                                    className="absolute top-4 right-4 text-red-500 hover:text-red-700 font-bold"
+                                >
+                                    Remove
+                                </button>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase mb-1">Feature Title</label>
+                                        <input
+                                            className="w-full p-2 border rounded bg-white dark:bg-zinc-900"
+                                            value={featureData.title}
+                                            onChange={(e) => handleFeatureChange(idx, 'title', e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold uppercase mb-1">Feature Image (Optional)</label>
+                                        <input
+                                            className="w-full p-2 border rounded bg-white dark:bg-zinc-900"
+                                            value={featureData.image || ''}
+                                            onChange={(e) => handleFeatureChange(idx, 'image', e.target.value)}
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase mb-1">Description</label>
+                                    <textarea
+                                        className="w-full p-2 border rounded bg-white dark:bg-zinc-900"
+                                        rows={2}
+                                        value={featureData.description}
+                                        onChange={(e) => handleFeatureChange(idx, 'description', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    <Button type="button" variant="outline" className="w-full" onClick={addFeature}>
+                        + Add Feature
+                    </Button>
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-6">
+                <h2 className="text-xl font-bold border-b pb-4 mb-4">Other Lists</h2>
 
                 <div>
                     <label className="block text-sm font-bold mb-2">Tools (Comma separated)</label>
@@ -138,7 +223,10 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
                         className="w-full p-3 border rounded-lg bg-transparent"
                         rows={3}
                         defaultValue={formData.tools?.join(', ')}
-                        onChange={(e) => handleArrayChange('tools', e.target.value)}
+                        onChange={(e) => {
+                            const array = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                            handleChange('tools', array);
+                        }}
                     />
                 </div>
             </div>

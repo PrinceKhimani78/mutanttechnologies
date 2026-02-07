@@ -70,8 +70,8 @@ export const ServiceMarquee = ({ text: propText, scroller }: { text?: string; sc
     }
 
     return (
-        <div className="relative flex h-[200px] overflow-hidden bg-gray-50 dark:bg-dark-slate/10 items-center py-10">
-            <div ref={slider} className="absolute whitespace-nowrap flex">
+        <div className="relative flex h-[250px] md:h-[350px] overflow-hidden bg-gray-50 dark:bg-dark-slate/10 items-center py-12 md:py-20">
+            <div ref={slider} className="absolute whitespace-nowrap flex items-center">
                 <p ref={firstText} className="text-[10vw] font-oswald font-bold text-dark-slate/5 dark:text-white/5 uppercase pr-8">
                     {text}
                 </p>

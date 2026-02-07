@@ -31,7 +31,7 @@ export interface Service {
     icon: string; // Stored as string name in DB
     color: string;
     bg_gradient: string;
-    features: string[]; // JSONB in DB, parsed as string[]
+    features: (string | { title: string; description: string; image?: string })[]; // Support both for compatibility
     content: string;
     tools: string[]; // JSONB in DB
     process: { step: string; title: string; description: string }[]; // JSONB in DB
@@ -41,4 +41,5 @@ export interface Service {
     hero_image?: string;
     benefits_image?: string;
     feature_mockup_image?: string;
+    video_url?: string; // Additional field for future use
 }

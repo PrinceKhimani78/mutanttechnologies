@@ -332,7 +332,12 @@ export default function ServiceDetailClient({ service, scroller }: ServiceDetail
                 </div>
 
                 <div className="pinned-services-container relative w-full">
-                    {service.features.map((feature: string, index: number) => {
+                    {service.features.map((feature: any, index: number) => {
+                        const isObject = typeof feature === 'object' && feature !== null;
+                        const title = isObject ? feature.title : feature;
+                        const description = isObject ? feature.description : `Professional ${service.title.toLowerCase()} solution tailored to your specific requirements.`;
+                        const featureImage = isObject ? feature.image : service.feature_mockup_image;
+
                         const colors = [
                             { bg: "#020617", text: "#fff" }, // Dark Slate
                             { bg: "#ffffff", text: "#000" }, // White
@@ -356,12 +361,13 @@ export default function ServiceDetailClient({ service, scroller }: ServiceDetail
                                         {/* Text Side */}
                                         <div className="w-full lg:w-1/2 flex flex-col justify-center text-center lg:text-left">
                                             <div className="w-16 h-1 bg-current mb-6 lg:mb-8 opacity-50 mx-auto lg:mx-0"></div>
-                                            <h3 className="text-4xl md:text-5xl lg:text-7xl font-bold font-heading mb-6 lg:mb-8 leading-tight">{feature}</h3>
+                                            <h3 className="text-4xl md:text-5xl lg:text-7xl font-bold font-heading mb-6 lg:mb-8 leading-tight">
+                                                {title}
+                                            </h3>
                                             <p className="text-lg md:text-xl lg:text-2xl opacity-90 mb-8 lg:mb-10 leading-relaxed font-light">
-                                                Professional {service.title.toLowerCase()} solution tailored to your specific requirements.
+                                                {description}
                                             </p>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                                                {/* Fake sub-features since we don't have deep data */}
                                                 {["Industry Standard", "Fully Customizable", "Expert Support"].map(f => (
                                                     <div key={f} className="flex items-start gap-3 justify-center lg:justify-start">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-current mt-2.5 shrink-0"></div>
@@ -376,16 +382,16 @@ export default function ServiceDetailClient({ service, scroller }: ServiceDetail
                                             <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
                                                 {/* Mockup Frame */}
                                                 <div className="w-full h-full bg-white relative overflow-hidden rounded-2xl">
-                                                    {service.feature_mockup_image ? (
+                                                    {featureImage ? (
                                                         <Image
-                                                            src={service.feature_mockup_image}
-                                                            alt={`${feature} Mockup`}
+                                                            src={featureImage}
+                                                            alt={`${title} Mockup`}
                                                             fill
                                                             className="object-cover"
                                                         />
                                                     ) : (
                                                         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-zinc-300">
-                                                            <div className="text-4xl font-heading opacity-20 text-center px-4">{feature}<br />Mockup</div>
+                                                            <div className="text-4xl font-heading opacity-20 text-center px-4">{title}<br />Mockup</div>
                                                         </div>
                                                     )}
                                                     {/* Decorative Overlay for visual flare */}
