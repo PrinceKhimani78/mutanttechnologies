@@ -2,7 +2,13 @@
 import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Link from 'next/link';
 import { Button } from './ui/button';
+
+if (typeof window !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+}
 import { trackEvent } from '@/lib/gtm';
 import { ParticleBackground } from './ParticleBackground';
 
@@ -11,18 +17,20 @@ interface HeroProps {
     title2?: string;
     subtitle?: string;
     buttonText?: string;
+    scroller?: string;
 }
 
 export const Hero = ({
     title1 = "SHINE",
     title2 = "BRIGHT",
     subtitle = "We blend creativity and technology to boost your digital presence.",
-    buttonText = "Start Project"
+    buttonText = "Start Project",
+    scroller
 }: HeroProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
 
-    // Dynamic Content State
+    // Dynamic Content State - Initialize with props
     const [content, setContent] = useState({
         title1,
         title2,
@@ -30,23 +38,45 @@ export const Hero = ({
         button_text: buttonText
     });
 
+    // Update state when props change (for live preview)
     useEffect(() => {
+        setContent({
+            title1: title1 || "SHINE",
+            title2: title2 || "BRIGHT",
+            subtitle: subtitle || "We blend creativity and technology to boost your digital presence.",
+            button_text: buttonText || "Start Project"
+        });
+    }, [title1, title2, subtitle, buttonText]);
+
+    useEffect(() => {
+        // Only fetch if we are NOT in preview mode (heuristic: if props are defaults)
+        // Actually, better to just fetch and merge, but props should overrule.
         const fetchContent = async () => {
             const { getPageContent } = await import('@/lib/cms');
             const data = await getPageContent('home');
 
             if (data?.hero) {
-                // Merge defects with DB content
+                // Only update if props weren't explicitly provided? 
+                // For simplicity in preview, we'll let props win if they change.
                 setContent(prev => ({
                     ...prev,
                     ...data.hero
                 }));
             }
         };
-        fetchContent();
-    }, []);
+        // Only fetch if we are not being controlled (simplistic check)
+        if (title1 === "SHINE" && title2 === "BRIGHT") {
+            fetchContent();
+        }
+    }, [title1, title2]);
 
     useGSAP(() => {
+        // Disable GSAP animations in Visual Editor to prevent errors
+        if (scroller) {
+            console.log('Hero: Skipping GSAP animations in Visual Editor context');
+            return;
+        }
+
         const tl = gsap.timeline({ paused: true });
 
         // Text Reveal Animation
@@ -108,13 +138,13 @@ export const Hero = ({
                 <div ref={titleRef} className="overflow-hidden mb-6">
                     <h1 className="font-oswald text-[12vw] leading-[0.9] font-bold uppercase text-dark-slate tracking-tighter pb-4">
                         <span className="inline-block">
-                            {content.title1.split("").map((char, i) => (
+                            {(content.title1 || "").split("").map((char, i) => (
                                 <span key={i} className="hero-char inline-block">{char}</span>
                             ))}
                         </span>
                         <br />
                         <span className="relative inline-block pb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
-                            {content.title2.split("").map((char, i) => (
+                            {(content.title2 || "").split("").map((char, i) => (
                                 <span key={i} className="hero-char inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
                                     {char}
                                 </span>

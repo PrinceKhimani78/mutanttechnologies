@@ -23,7 +23,17 @@ const defaultProjects = [
     // ... others
 ];
 
-export const Ongoing = () => {
+interface OngoingProps {
+    title?: string;
+    description?: string;
+    scroller?: string;
+}
+
+export const Ongoing = ({
+    title = "Ongoing Works",
+    description = "Witness the future in the making. Here are some of the cutting-edge projects currently on our workbench.",
+    scroller
+}: OngoingProps) => {
     const containerRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLHeadingElement>(null);
     const [projects, setProjects] = useState<any[]>([]);
@@ -76,29 +86,41 @@ export const Ongoing = () => {
     ];
 
     useGSAP(() => {
-        const tl = gsap.timeline({
-            scrollTrigger: {
-                trigger: containerRef.current,
-                start: "top 70%",
-                toggleActions: "play none none reverse",
+        try {
+            // Disable GSAP animations in Visual Editor to prevent errors
+            if (scroller) {
+                console.log('Ongoing: Skipping GSAP animations in Visual Editor context');
+                return;
             }
-        });
 
-        tl.from(titleRef.current, {
-            y: 50,
-            opacity: 0,
-            duration: 1,
-            ease: "power3.out"
-        })
-            .from(".project-card", {
-                y: 100,
+            console.log('Ongoing: useGSAP', { hasContainer: !!containerRef.current, hasTitle: !!titleRef.current, scroller });
+            if (!containerRef.current || !titleRef.current) return;
+
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: containerRef.current,
+                    start: "top 70%",
+                    toggleActions: "play none none reverse"
+                }
+            });
+
+            tl.from(titleRef.current, {
+                y: 50,
                 opacity: 0,
-                stagger: 0.2,
                 duration: 1,
                 ease: "power3.out"
-            }, "-=0.5");
-
-    }, { scope: containerRef });
+            })
+                .from(".project-card", {
+                    y: 100,
+                    opacity: 0,
+                    stagger: 0.2,
+                    duration: 1,
+                    ease: "power3.out"
+                }, "-=0.5");
+        } catch (error) {
+            console.error('Ongoing: GSAP Error', error);
+        }
+    }, { scope: containerRef, dependencies: [projects, scroller] });
 
     return (
         <section ref={containerRef} className="py-12 md:py-24 bg-background relative overflow-hidden">
@@ -112,10 +134,10 @@ export const Ongoing = () => {
                 <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                     <div className="max-w-2xl">
                         <h2 ref={titleRef} className="text-foreground text-5xl md:text-7xl font-oswald uppercase font-bold tracking-tight mb-6">
-                            Ongoing <span className="text-primary">Works</span>
+                            {(title || "").split(' ').map((word, i) => i === (title || "").split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
                         </h2>
                         <p className="text-gray-600 dark:text-zinc-400 text-lg md:text-xl font-light">
-                            Witness the future in the making. Here are some of the cutting-edge projects currently on our workbench.
+                            {description}
                         </p>
                     </div>
                     <Link href="/projects" className="group flex items-center gap-2 text-dark-slate dark:text-white border border-gray-300 dark:border-zinc-700 px-6 py-3 rounded-full hover:bg-dark-slate dark:hover:bg-white hover:text-white dark:hover:text-black transition-all duration-300">

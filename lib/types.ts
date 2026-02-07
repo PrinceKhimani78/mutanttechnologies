@@ -37,4 +37,8 @@ export interface Service {
     process: { step: string; title: string; description: string }[]; // JSONB in DB
     benefits: { title: string; description: string }[]; // JSONB in DB
     created_at: string;
+    // Image fields for service detail pages
+    hero_image?: string;
+    benefits_image?: string;
+    feature_mockup_image?: string;
 }

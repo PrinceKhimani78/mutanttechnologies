@@ -2,37 +2,59 @@
 import { useRef, useEffect, useState } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-export const ServiceMarquee = () => {
+if (typeof window !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+}
+
+export const ServiceMarquee = ({ text: propText, scroller }: { text?: string; scroller?: string }) => {
     const firstText = useRef<HTMLDivElement>(null);
     const secondText = useRef<HTMLDivElement>(null);
     const slider = useRef<HTMLDivElement>(null);
-    const [text, setText] = useState("Web Development • SEO • Digital Marketing • Cyber Security •");
+    const [text, setText] = useState(propText || "Web Development • SEO • Digital Marketing • Cyber Security •");
 
     let xPercent = 0;
     let direction = -1;
 
+    // Update state when prop changes (for live preview)
     useEffect(() => {
-        const fetchSettings = async () => {
-            const { getSiteSettings } = await import('@/lib/cms');
-            const { data } = await getSiteSettings();
-            if (data?.marquee_text) {
-                // Ensure text ends with a separator for seamless loop visually
-                let marquee = data.marquee_text.trim();
-                if (!marquee.endsWith('•') && !marquee.endsWith('|')) {
-                    marquee += ' •';
+        if (propText) {
+            setText(propText);
+        }
+    }, [propText]);
+
+    useEffect(() => {
+        // Only fetch if NOT in preview mode (heuristic: no propText)
+        if (!propText) {
+            const fetchSettings = async () => {
+                const { getSiteSettings } = await import('@/lib/cms');
+                const { data } = await getSiteSettings();
+                if (data?.marquee_text) {
+                    let marquee = data.marquee_text.trim();
+                    if (!marquee.endsWith('•') && !marquee.endsWith('|')) {
+                        marquee += ' •';
+                    }
+                    setText(marquee);
                 }
-                setText(marquee);
-            }
-        };
-        fetchSettings();
-    }, []);
+            };
+            fetchSettings();
+        }
+    }, [propText]);
 
     useGSAP(() => {
+        // Disable GSAP animations in Visual Editor to prevent errors
+        if (scroller) {
+            console.log('ServiceMarquee: Skipping GSAP animations in Visual Editor context');
+            return;
+        }
         requestAnimationFrame(animate);
     }, []);
 
     const animate = () => {
+        // Skip animation if in Visual Editor
+        if (scroller) return;
+
         if (xPercent <= -100) {
             xPercent = 0;
         }

@@ -2,10 +2,31 @@
 import { useRef, useState, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Button } from './ui/button';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
-export const Contact = () => {
+if (typeof window !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+}
+
+interface ContactProps {
+    title?: string;
+    description?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    scroller?: string;
+}
+
+export const Contact = ({
+    title = "Let's Start a Conversation",
+    description = "Ready to transform your digital presence? Reach out to us for a free consultation.",
+    phone = "(+91) 7016228551",
+    email = "contact@mutanttechnologies.com",
+    address = "B-113 RK iconic Sheetal Park, Rajkot, Gujarat",
+    scroller
+}: ContactProps) => {
     const containerRef = useRef(null);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -38,10 +59,14 @@ export const Contact = () => {
     };
 
     const [contactInfo, setContactInfo] = useState({
-        phone: '(+91) 7016228551',
-        email: 'contact@mutanttechnologies.com',
-        address: 'B-113 RK iconic Sheetal Park, Rajkot, Gujarat'
+        phone,
+        email,
+        address
     });
+
+    useEffect(() => {
+        setContactInfo({ phone, email, address });
+    }, [phone, email, address]);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -59,18 +84,31 @@ export const Contact = () => {
     }, []);
 
     useGSAP(() => {
-        gsap.from(".contact-item", {
-            scrollTrigger: {
-                trigger: containerRef.current,
-                start: "top 70%",
-            },
-            y: 30,
-            opacity: 0,
-            stagger: 0.1,
-            duration: 0.8,
-            ease: "power2.out"
-        });
-    }, { scope: containerRef });
+        try {
+            // Disable GSAP animations in Visual Editor to prevent errors
+            if (scroller) {
+                console.log('Contact: Skipping GSAP animations in Visual Editor context');
+                return;
+            }
+
+            console.log('Contact: useGSAP', { hasContainer: !!containerRef.current, scroller });
+            if (!containerRef.current) return;
+
+            gsap.from(".contact-item", {
+                scrollTrigger: {
+                    trigger: containerRef.current,
+                    start: "top 70%"
+                },
+                y: 30,
+                opacity: 0,
+                stagger: 0.1,
+                duration: 0.8,
+                ease: "power2.out"
+            });
+        } catch (error) {
+            console.error('Contact: GSAP Error', error);
+        }
+    }, { scope: containerRef, dependencies: [scroller] });
 
     return (
         <section id="contact" ref={containerRef} className="py-12 md:py-24 bg-[#111827] text-white relative overflow-hidden">
@@ -82,10 +120,10 @@ export const Contact = () => {
 
                     <div className="space-y-8">
                         <h2 className="contact-item text-4xl md:text-5xl font-bold">
-                            Let's Start a <span className="text-primary">Conversation</span>
+                            {title.split(' ').map((word, i) => i === title.split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
                         </h2>
                         <p className="contact-item text-gray-400 text-lg">
-                            Ready to transform your digital presence? Reach out to us for a free consultation.
+                            {description}
                         </p>
 
                         <div className="space-y-6 pt-4">

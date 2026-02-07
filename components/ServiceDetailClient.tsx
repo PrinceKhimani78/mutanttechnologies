@@ -12,12 +12,14 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Service } from '@/lib/types';
 import { ProposalForm } from './ProposalForm';
+import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 gsap.registerPlugin(ScrollTrigger);
 
 interface ServiceDetailClientProps {
     service: Service;
+    scroller?: any; // For Visual Editor - disables GSAP animations
 }
 
 const navLogos = ["NEXUS", "VORTEX", "APEX", "ECHO", "QUANTUM", "HORIZON", "PULSE"];
@@ -29,11 +31,17 @@ const genericCaseStudies = [
     { title: "MediCore", category: "Healthcare", image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop" }
 ];
 
-export default function ServiceDetailClient({ service }: ServiceDetailClientProps) {
+export default function ServiceDetailClient({ service, scroller }: ServiceDetailClientProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
 
     useGSAP(() => {
+        // Skip animations in Visual Editor
+        if (scroller) {
+            console.log('[ServiceDetailClient] Skipping GSAP animations in Visual Editor');
+            return;
+        }
+
         const tl = gsap.timeline();
 
         // 1. Hero Animations
@@ -84,16 +92,19 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
     const Icon = LucideIcons[service.icon] || LucideIcons.Monitor;
 
     return (
-        <main ref={containerRef} className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-orange-500 selection:text-white transition-colors duration-300">
-            <Navbar />
+        <main ref={containerRef} className={cn("bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-orange-500 selection:text-white transition-colors duration-300", scroller && "overflow-x-hidden")}>
+            {!scroller && <Navbar />}
 
             {/* 1. HERO SECTION */}
-            <section className="relative min-h-[90vh] bg-[#020617] text-white pt-24 pb-12 lg:pt-32 lg:pb-20 overflow-hidden flex items-center">
+            <section className={cn(
+                "relative bg-[#020617] text-white overflow-hidden flex",
+                scroller ? "items-start min-h-[400px] pt-20 pb-12" : "items-center min-h-[90vh] pt-24 pb-12 lg:pt-32 lg:pb-20"
+            )}>
 
                 {/* Background Glows */}
                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] lg:w-[800px] h-[400px] lg:h-[800px] rounded-full blur-[80px] lg:blur-[120px] pointer-events-none opacity-20 bg-linear-to-br ${service.bg_gradient || 'from-blue-600 to-purple-600'}`} />
 
-                <div className="container mx-auto px-6 relative z-10">
+                <div className={cn("container mx-auto px-6 relative z-10", scroller && "max-w-full")}>
                     <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
                         <div className="lg:w-[60%] hero-content text-center lg:text-left">
 
@@ -102,7 +113,10 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
                                 <span className="text-xs lg:text-sm font-medium uppercase tracking-wider">{service.title} Services</span>
                             </div>
 
-                            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold leading-[1.1] mb-6 lg:mb-8 tracking-tight font-heading ">
+                            <h1 className={cn(
+                                "font-bold leading-[1.1] mb-6 lg:mb-8 tracking-tight font-heading ",
+                                scroller ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl lg:text-7xl"
+                            )}>
                                 {service.title} that <br />
                                 <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-400 to-orange-600">
                                     Drive Results
@@ -126,12 +140,21 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
                         <div className="lg:w-[40%] hero-image relative w-full px-4 sm:px-0">
                             <div className="relative z-10 transform lg:rotate-[-5deg] hover:rotate-0 transition-transform duration-700 ease-out">
                                 <div className="bg-zinc-900 rounded-[24px] lg:rounded-[32px] overflow-hidden border-4 lg:border-8 border-zinc-800 shadow-2xl aspect-[3/4] sm:aspect-[4/3] lg:aspect-[3/4]">
-                                    <div className="h-full w-full bg-zinc-950 p-8 flex flex-col relative overflow-hidden group items-center justify-center">
-                                        <div className={`absolute inset-0 bg-linear-to-br ${service.bg_gradient} opacity-20`}></div>
-                                        <Icon className="w-32 h-32 text-zinc-700 relative z-10" />
-                                        <div className="mt-8 text-2xl font-bold text-zinc-500 z-10">{service.title}</div>
-                                        <div className="font-mono text-zinc-700 text-sm mt-2 z-10">{service.id}</div>
-                                    </div>
+                                    {service.hero_image ? (
+                                        <Image
+                                            src={service.hero_image}
+                                            alt={service.title}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full bg-zinc-950 p-8 flex flex-col relative overflow-hidden group items-center justify-center">
+                                            <div className={`absolute inset-0 bg-linear-to-br ${service.bg_gradient} opacity-20`}></div>
+                                            <Icon className="w-32 h-32 text-zinc-700 relative z-10" />
+                                            <div className="mt-8 text-2xl font-bold text-zinc-500 z-10">{service.title}</div>
+                                            <div className="font-mono text-zinc-700 text-sm mt-2 z-10">{service.id}</div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -140,7 +163,7 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
             </section>
 
             {/* 2. LOGO MARQUEE */}
-            <section className="py-16 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800">
+            <section className={cn("py-16 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800", scroller && "py-8")}>
                 <p className="text-center text-zinc-500 dark:text-zinc-400 font-medium mb-10 tracking-widest text-sm">Trusted by 500+ global companies</p>
                 <div className="overflow-hidden relative w-full">
                     <div className="marquee-content flex gap-16 whitespace-nowrap min-w-full items-center">
@@ -148,22 +171,31 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
                             <span key={i} className="text-2xl font-bold text-zinc-300 dark:text-zinc-700 tracking-tighter">{logo}</span>
                         ))}
                     </div>
-                    <div className="absolute top-0 left-0 h-full w-32 bg-linear-to-r from-white dark:from-zinc-950 to-transparent z-10"></div>
-                    <div className="absolute top-0 right-0 h-full w-32 bg-linear-to-l from-white dark:from-zinc-950 to-transparent z-10"></div>
                 </div>
             </section>
 
             {/* 3. BENEFITS (Accordion Style) */}
             <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
-                <div className="container mx-auto px-6">
+                <div className={cn("container mx-auto px-6", scroller && "max-w-full")}>
                     <div className="flex flex-col lg:flex-row gap-16">
                         {/* Left: Sticky Image Placeholder */}
                         <div className="lg:w-1/2 reveal-up">
                             <div className="sticky top-32">
                                 <div className="bg-zinc-900 dark:bg-black rounded-3xl p-2 shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
                                     <div className="aspect-video bg-zinc-800 rounded-2xl overflow-hidden relative flex items-center justify-center">
-                                        <div className={`absolute inset-0 bg-linear-to-br ${service.bg_gradient} opacity-30`}></div>
-                                        <Icon className="w-24 h-24 text-white/20" />
+                                        {service.benefits_image ? (
+                                            <Image
+                                                src={service.benefits_image}
+                                                alt={`${service.title} Benefits`}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        ) : (
+                                            <>
+                                                <div className={`absolute inset-0 bg-linear-to-br ${service.bg_gradient} opacity-30`}></div>
+                                                <Icon className="w-24 h-24 text-white/20" />
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -251,7 +283,7 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
 
             {/* 5. DELIVERY / PROCESS BANNER */}
             <section className="py-24 bg-[#050505] text-white">
-                <div className="container mx-auto px-6">
+                <div className={cn("container mx-auto px-6", scroller && "max-w-full")}>
                     <div className="flex flex-col lg:flex-row gap-16 items-center">
                         <div className="lg:w-1/2">
                             <h2 className="text-4xl md:text-5xl font-bold font-heading mb-8">
@@ -344,9 +376,18 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
                                             <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-white/5 backdrop-blur-sm border border-white/10 p-4">
                                                 {/* Mockup Frame */}
                                                 <div className="w-full h-full bg-white relative overflow-hidden rounded-2xl">
-                                                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-zinc-300">
-                                                        <div className="text-4xl font-heading opacity-20 text-center px-4">{feature}<br />Mockup</div>
-                                                    </div>
+                                                    {service.feature_mockup_image ? (
+                                                        <Image
+                                                            src={service.feature_mockup_image}
+                                                            alt={`${feature} Mockup`}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-zinc-300">
+                                                            <div className="text-4xl font-heading opacity-20 text-center px-4">{feature}<br />Mockup</div>
+                                                        </div>
+                                                    )}
                                                     {/* Decorative Overlay for visual flare */}
                                                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/10 to-transparent pointer-events-none"></div>
                                                 </div>
@@ -362,7 +403,7 @@ export default function ServiceDetailClient({ service }: ServiceDetailClientProp
 
             {/* 7. FULL PROCESS */}
             <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
-                <div className="container mx-auto px-6">
+                <div className={cn("container mx-auto px-6", scroller && "max-w-full")}>
                     <h2 className="text-center text-4xl font-bold font-heading text-zinc-900 dark:text-white mb-20">Complete Lifecycle</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {/*@ts-ignore*/}

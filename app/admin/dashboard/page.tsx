@@ -5,7 +5,20 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Plus, Edit, Trash2, LogOut, Loader2 } from 'lucide-react';
+import {
+    Plus,
+    Edit,
+    Trash2,
+    LogOut,
+    Loader2,
+    Layout,
+    FileText,
+    Briefcase,
+    MessageSquare,
+    Settings,
+    ExternalLink,
+    Rocket
+} from 'lucide-react';
 import { Post } from '@/lib/types';
 
 export default function AdminDashboard() {
@@ -14,16 +27,18 @@ export default function AdminDashboard() {
     const router = useRouter();
 
     useEffect(() => {
-        fetchPosts();
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                router.push('/admin');
+                return;
+            }
+            fetchPosts();
+        };
+        checkSession();
     }, []);
 
     const fetchPosts = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            router.push('/admin');
-            return;
-        }
-
         const { data, error } = await supabase
             .from('posts')
             .select('*')
@@ -65,117 +80,109 @@ export default function AdminDashboard() {
         );
     }
 
+    const managementCards = [
+        { title: 'Services', icon: Layout, link: '/admin/services', desc: 'Manage service pages and features', color: 'text-blue-500' },
+        { title: 'Portfolio', icon: Briefcase, link: '/admin/portfolio', desc: 'Case studies and project showcases', color: 'text-purple-500' },
+        { title: 'Testimonials', icon: MessageSquare, link: '/admin/testimonials', desc: 'Client feedback and reviews', color: 'text-orange-500' },
+        { title: 'Page SEO', icon: Rocket, link: '/admin/seo', desc: 'Meta titles, descriptions & social', color: 'text-green-500' },
+        { title: 'Site Settings', icon: Settings, link: '/admin/settings', desc: 'Global configurations and contact info', color: 'text-zinc-500' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-foreground">
+        <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-foreground pb-20">
             {/* Header */}
-            <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 sticky top-0 z-10">
+            <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-gray-200 dark:border-zinc-800 sticky top-0 z-[60]">
                 <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-                    <h1 className="font-oswald text-2xl font-bold uppercase">Mutant Admin</h1>
                     <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">Welcome, Admin</span>
-                        <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10">
+                        <h1 className="font-oswald text-2xl font-bold uppercase tracking-tighter text-primary">Mutant Admin</h1>
+                        <span className="hidden sm:inline px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest rounded-full border border-primary/20">Control Center</span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-gray-400 hover:text-red-500 transition-colors">
                             <LogOut className="w-4 h-4 mr-2" /> Sign Out
                         </Button>
                     </div>
                 </div>
             </header>
 
-            {/* Content */}
-            <main className="container mx-auto px-6 py-12">
-                <div className="flex justify-between items-center mb-10">
-                    <h2 className="text-3xl font-bold">Blog Posts</h2>
-                    <div className="flex gap-4">
-                        <Button href="/admin/portfolio" variant="outline">
-                            Manage Portfolio
-                        </Button>
-                        <Button href="/admin/settings" variant="outline">
-                            Settings
-                        </Button>
-                        <Button href="/admin/pages" variant="outline">
-                            Pages
-                        </Button>
-                        <Button href="/admin/services" variant="outline">
-                            Services
-                        </Button>
-                        <Button href="/admin/testimonials" variant="outline">
-                            Testimonials
-                        </Button>
-                        <Button href="/admin/ongoing" variant="outline">
-                            Ongoing
-                        </Button>
-                        <Button href="/admin/create">
-                            <Plus className="w-5 h-5 mr-2" /> Create New Post
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Deployment Instructions */}
-                <div className="mb-10 bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/20 rounded-2xl p-8">
-                    <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
-                        <span>🚀</span> Deploy Changes to Live Site
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        After making changes to portfolio, blog, or other content, run this command in Terminal:
-                    </p>
-
-                    <div className="bg-zinc-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4 flex items-center justify-between">
-                        <code>./deploy-admin-changes.sh</code>
-                        <button
-                            onClick={() => navigator.clipboard.writeText('./deploy-admin-changes.sh')}
-                            className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-xs transition-colors"
+            <main className="container mx-auto px-6 py-12 max-w-6xl">
+                {/* Manager Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                    {managementCards.map((card, i) => (
+                        <Link
+                            key={i}
+                            href={card.link}
+                            className="group bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all"
                         >
-                            Copy
-                        </button>
-                    </div>
-
-                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-2">
-                        <p className="font-medium">💡 How it works:</p>
-                        <ol className="list-decimal list-inside ml-2 space-y-1">
-                            <li>Open Terminal in your project folder</li>
-                            <li>Run the command above</li>
-                            <li>GitHub Actions rebuilds your site (2-3 minutes)</li>
-                            <li>Changes appear on live site automatically</li>
-                        </ol>
-                    </div>
+                            <div className={`${card.color} bg-current/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                <card.icon className="w-6 h-6" />
+                            </div>
+                            <h3 className="font-bold text-lg mb-1">{card.title}</h3>
+                            <p className="text-xs text-gray-500 dark:text-zinc-400">{card.desc}</p>
+                        </Link>
+                    ))}
                 </div>
 
-                {posts.length === 0 ? (
-                    <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800 border-dashed">
-                        <p className="text-gray-500 mb-4">No posts yet.</p>
-                        <Button href="/admin/create" variant="outline">
-                            Write your first post
-                        </Button>
-                    </div>
-                ) : (
-                    <div className="grid gap-4">
-                        {posts.map((post) => (
-                            <div key={post.id} className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-gray-200 dark:border-zinc-800 flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-xl font-bold">{post.title}</h3>
-                                        <span className={`px-2 py-0.5 rounded-full text-xs font-mono border ${post.is_published
-                                            ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                            : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
-                                            }`}>
-                                            {post.is_published ? 'Published' : 'Draft'}
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-500 dark:text-zinc-400 text-sm mb-1">{post.excerpt || 'No excerpt'}</p>
-                                    <p className="text-xs text-gray-400 font-mono">{new Date(post.created_at).toLocaleDateString()}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button href={`/admin/edit?id=${post.id}`} variant="ghost" size="sm" className="px-2">
-                                        <Edit className="w-4 h-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(post.id)} className="text-gray-400 hover:text-red-500 px-2">
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
+                <div className="flex flex-col lg:flex-row gap-12">
+                    {/* Left: Blog Posts Manager */}
+                    <div className="flex-1">
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                                <FileText className="w-6 h-6 text-primary" /> Blog Posts
+                            </h2>
+                            <Button href="/admin/create" size="sm" className="text-xs uppercase tracking-widest font-bold">
+                                <Plus className="w-4 h-4 mr-2" /> New Post
+                            </Button>
+                        </div>
+
+                        {posts.length === 0 ? (
+                            <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-2xl border-2 border-dashed border-gray-200 dark:border-zinc-800">
+                                <p className="text-gray-500 font-medium">No blog posts found.</p>
                             </div>
-                        ))}
+                        ) : (
+                            <div className="space-y-4">
+                                {posts.map((post) => (
+                                    <div key={post.id} className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 flex items-center justify-between group hover:border-primary/30 transition-all">
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="font-bold truncate text-sm sm:text-base">{post.title}</h3>
+                                                {!post.is_published && (
+                                                    <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-500 text-[8px] font-bold uppercase rounded border border-yellow-500/20">Draft</span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-400 font-medium">{new Date(post.created_at).toLocaleDateString()}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button href={`/admin/edit?id=${post.id}`} variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-primary/10 hover:text-primary">
+                                                <Edit className="w-3.5 h-3.5" />
+                                            </Button>
+                                            <Button variant="ghost" size="sm" onClick={() => handleDelete(post.id)} className="h-8 w-8 p-0 rounded-full hover:bg-red-500/10 hover:text-red-500 text-gray-300">
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
+
+                    <div className="lg:w-80 space-y-6">
+                        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                            <h3 className="font-bold text-sm mb-4">Quick Links</h3>
+                            <div className="space-y-2">
+                                <a href="/" target="_blank" className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-xs text-gray-500 transition-colors">
+                                    View Live Website <ExternalLink className="w-3 h-3" />
+                                </a>
+                                <Link href="/admin/settings" className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-xs text-gray-500 transition-colors">
+                                    Site Settings <Settings className="w-3 h-3" />
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </main>
         </div>
     );
 }
+

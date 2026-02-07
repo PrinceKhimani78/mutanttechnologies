@@ -13,30 +13,45 @@ interface AboutProps {
         title?: string;
         subtitle?: string;
         description?: string;
+        dnaImage?: string;
     };
     features?: {
         title: string;
         desc: string;
         icon: string;
     }[];
+    scroller?: string;
 }
 
-export const About = ({ content, features = [] }: AboutProps) => {
+export const About = ({ content, features = [], scroller }: AboutProps) => {
     const containerRef = useRef(null);
 
     useGSAP(() => {
-        gsap.from(".about-item", {
-            scrollTrigger: {
-                trigger: containerRef.current,
-                start: "top 70%",
-            },
-            y: 50,
-            opacity: 0,
-            stagger: 0.2,
-            duration: 1,
-            ease: "power2.out"
-        });
-    }, { scope: containerRef });
+        try {
+            // Disable GSAP animations in Visual Editor to prevent errors
+            if (scroller) {
+                console.log('About: Skipping GSAP animations in Visual Editor context');
+                return;
+            }
+
+            console.log('About: useGSAP', { hasContainer: !!containerRef.current, scroller });
+            if (!containerRef.current) return;
+
+            gsap.from(".about-item", {
+                scrollTrigger: {
+                    trigger: containerRef.current,
+                    start: "top 70%"
+                },
+                y: 50,
+                opacity: 0,
+                stagger: 0.2,
+                duration: 1,
+                ease: "power3.out"
+            });
+        } catch (error) {
+            console.error('About: GSAP Error', error);
+        }
+    }, { scope: containerRef, dependencies: [scroller] });
 
     return (
         <section ref={containerRef} className="py-12 md:py-24 bg-background relative">
@@ -79,18 +94,28 @@ export const About = ({ content, features = [] }: AboutProps) => {
                     </div>
 
                     <div className="relative h-[600px] w-full hidden lg:block rounded-3xl overflow-hidden about-item shadow-2xl dark:shadow-none">
-                        {/* Abstract visual representation instead of a photo for now */}
+                        {/* Abstract visual representation or custom image */}
                         <div className="absolute inset-0 bg-white dark:bg-black flex items-center justify-center overflow-hidden border border-gray-100 dark:border-zinc-800 rounded-3xl">
-                            <div className="absolute w-[800px] h-[800px] bg-linear-to-r from-primary/10 to-purple-500/10 dark:from-primary/20 dark:to-purple-900/20 rounded-full blur-[100px] animate-pulse" />
-                            <div className="relative z-10 text-center p-12 border border-white/40 dark:border-white/5 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl max-w-sm shadow-lg dark:shadow-none">
-                                <h3 className="text-4xl font-bold mb-4 font-oswald uppercase text-dark-slate dark:text-white">Mutant DNA</h3>
-                                <div className="w-12 h-1 bg-primary mx-auto mb-6" />
-                                <p className="text-gray-700 dark:text-gray-300 font-mono tracking-widest text-sm uppercase space-y-2">
-                                    <span className="block">Creative // Core</span>
-                                    <span className="block">Adaptive // Logic</span>
-                                    <span className="block">Technical // Flow</span>
-                                </p>
-                            </div>
+                            {content?.dnaImage ? (
+                                <img
+                                    src={content.dnaImage}
+                                    alt="Mutant DNA"
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                            ) : (
+                                <>
+                                    <div className="absolute w-[800px] h-[800px] bg-linear-to-r from-primary/10 to-purple-500/10 dark:from-primary/20 dark:to-purple-900/20 rounded-full blur-[100px] animate-pulse" />
+                                    <div className="relative z-10 text-center p-12 border border-white/40 dark:border-white/5 bg-white/60 dark:bg-zinc-900/50 backdrop-blur-md rounded-2xl max-w-sm shadow-lg dark:shadow-none">
+                                        <h3 className="text-4xl font-bold mb-4 font-oswald uppercase text-dark-slate dark:text-white">Mutant DNA</h3>
+                                        <div className="w-12 h-1 bg-primary mx-auto mb-6" />
+                                        <p className="text-gray-700 dark:text-gray-300 font-mono tracking-widest text-sm uppercase space-y-2">
+                                            <span className="block">Creative // Core</span>
+                                            <span className="block">Adaptive // Logic</span>
+                                            <span className="block">Technical // Flow</span>
+                                        </p>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

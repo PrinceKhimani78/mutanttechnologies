@@ -36,7 +36,7 @@ const fetchTestimonials = async () => {
     return data || [];
 };
 
-export const Testimonials = () => {
+export const Testimonials = ({ scroller }: { scroller?: string }) => {
     const marqueeRef = useRef<HTMLDivElement>(null);
     const [testimonials, setTestimonials] = useState<any[]>([]);
 
@@ -60,6 +60,12 @@ export const Testimonials = () => {
     const items = testimonials.length > 0 ? testimonials : defaultTestimonials;
 
     useGSAP(() => {
+        // Disable GSAP animations in Visual Editor to prevent errors
+        if (scroller) {
+            console.log('Testimonials: Skipping GSAP animations in Visual Editor context');
+            return;
+        }
+
         // Clone the list to create seamless loop
         const list = marqueeRef.current;
         if (list && items.length > 0) {

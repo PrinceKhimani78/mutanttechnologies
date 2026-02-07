@@ -2,7 +2,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Link from 'next/link';
+
+if (typeof window !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+}
 import Image from 'next/image';
 import { Menu, X, ArrowRight, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
@@ -30,7 +35,7 @@ const servicesLinks = [
     { name: "AI Automations", href: "/services/ai-automations" },
 ];
 
-export const Navbar = () => {
+export const Navbar = ({ onNavigate }: { onNavigate?: (slug: string) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isServicesOpen, setIsServicesOpen] = useState(false);
     const navRef = useRef(null);
@@ -96,6 +101,15 @@ export const Navbar = () => {
         }
     }, [isOpen]);
 
+    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        if (onNavigate && href.startsWith('/')) {
+            e.preventDefault();
+            // Convert /about to about, /services to services, / to home
+            const slug = href === '/' ? 'home' : href.substring(1).split('/')[0];
+            onNavigate(slug);
+            setIsOpen(false);
+        }
+    };
 
     return (
         <>
@@ -108,7 +122,14 @@ export const Navbar = () => {
             >
                 <div className="w-full max-w-[2400px] mx-auto px-6 flex justify-between items-center">
                     {/* Logo */}
-                    <Link href="/" className="relative z-50 w-48 h-12 flex items-center" onClick={() => setIsOpen(false)}>
+                    <Link
+                        href="/"
+                        className="relative z-50 w-48 h-12 flex items-center"
+                        onClick={(e) => {
+                            setIsOpen(false);
+                            handleLinkClick(e, '/');
+                        }}
+                    >
                         <Image
                             src="/logo.png"
                             alt="Mutant Technologies"
@@ -135,6 +156,7 @@ export const Navbar = () => {
                                                     <Link
                                                         key={subItem.name}
                                                         href={subItem.href}
+                                                        onClick={(e) => handleLinkClick(e, subItem.href)}
                                                         className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-primary rounded-lg transition-colors font-medium"
                                                     >
                                                         {subItem.name}
@@ -149,6 +171,7 @@ export const Navbar = () => {
                                 <Link
                                     key={link.name}
                                     href={link.href}
+                                    onClick={(e) => handleLinkClick(e, link.href)}
                                     className="text-sm font-medium hover:text-primary transition-colors relative group"
                                 >
                                     {link.name}
@@ -207,7 +230,7 @@ export const Navbar = () => {
                                                     <Link
                                                         key={subItem.name}
                                                         href={subItem.href}
-                                                        onClick={() => setIsOpen(false)}
+                                                        onClick={(e) => handleLinkClick(e, subItem.href)}
                                                         className="text-lg text-gray-500 dark:text-zinc-400 hover:text-primary transition-colors font-medium flex items-center gap-2"
                                                     >
                                                         <span className="w-1.5 h-1.5 rounded-full bg-primary/50"></span>
@@ -220,7 +243,7 @@ export const Navbar = () => {
                                 ) : (
                                     <Link
                                         href={link.href}
-                                        onClick={() => setIsOpen(false)}
+                                        onClick={(e) => handleLinkClick(e, link.href)}
                                         className="text-2xl sm:text-4xl font-oswald font-bold uppercase text-foreground hover:text-primary transition-colors block"
                                     >
                                         {link.name}
