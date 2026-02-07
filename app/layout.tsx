@@ -25,7 +25,6 @@ export const metadata: Metadata = {
     default: "Mutant Technologies - Shine Bright Online",
   },
   description: "Creative, bold, future-focused digital agency. Web Development, SEO, Digital Marketing, and Cyber Security services.",
-  keywords: ["Digital Agency", "Web Development", "SEO", "Mutant Technologies", "Cyber Security"],
   authors: [{ name: "Mutant Technologies" }],
   metadataBase: new URL('https://www.mutanttechnologies.com'),
   alternates: {

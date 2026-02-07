@@ -8,8 +8,12 @@ import { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
     return await getMetadata('/about', {
-        title: "About Us | Mutant Technologies",
-        description: "Learn about Mutant Technologies, our mission, vision, and the team driving digital innovation.",
+        title: "About Mutant Technologies | Digital Innovation Agency",
+        description: "Learn about Mutant Technologies, our vision for digital innovation, and the expert team driving results through creativity and technology.",
+        openGraph: {
+            title: "About Mutant Technologies | Our Team & Vision",
+            description: "Discover how we blend creativity and technology to redefine the digital landscape.",
+        }
     });
 }
 

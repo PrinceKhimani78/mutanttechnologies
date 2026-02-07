@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Save, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Service } from '@/lib/types';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 
 interface ServiceFormProps {
     initialData?: Service;
@@ -134,25 +135,22 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-6">
                 <h2 className="text-xl font-bold border-b pb-4 mb-4">Page Media (Images)</h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-bold mb-2">Hero Image URL</label>
-                        <input
-                            className="w-full p-3 border rounded-lg bg-transparent"
-                            value={formData.hero_image || ''}
-                            onChange={(e) => handleChange('hero_image', e.target.value)}
-                            placeholder="https://..."
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold mb-2">Benefits Image URL</label>
-                        <input
-                            className="w-full p-3 border rounded-lg bg-transparent"
-                            value={formData.benefits_image || ''}
-                            onChange={(e) => handleChange('benefits_image', e.target.value)}
-                            placeholder="https://..."
-                        />
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <ImageUpload
+                        label="Hero Image"
+                        value={formData.hero_image || ''}
+                        onChange={(url) => handleChange('hero_image', url)}
+                    />
+                    <ImageUpload
+                        label="Benefits Image"
+                        value={formData.benefits_image || ''}
+                        onChange={(url) => handleChange('benefits_image', url)}
+                    />
+                    <ImageUpload
+                        label="Default Feature Mockup"
+                        value={formData.feature_mockup_image || ''}
+                        onChange={(url) => handleChange('feature_mockup_image', url)}
+                    />
                 </div>
             </div>
 
@@ -175,7 +173,7 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
                                     Remove
                                 </button>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-xs font-bold uppercase mb-1">Feature Title</label>
                                         <input
@@ -184,15 +182,12 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
                                             onChange={(e) => handleFeatureChange(idx, 'title', e.target.value)}
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase mb-1">Feature Image (Optional)</label>
-                                        <input
-                                            className="w-full p-2 border rounded bg-white dark:bg-zinc-900"
-                                            value={featureData.image || ''}
-                                            onChange={(e) => handleFeatureChange(idx, 'image', e.target.value)}
-                                            placeholder="https://..."
-                                        />
-                                    </div>
+                                    <ImageUpload
+                                        label="Feature Image (Optional)"
+                                        value={featureData.image || ''}
+                                        onChange={(url) => handleFeatureChange(idx, 'image', url)}
+                                        folder="features"
+                                    />
                                 </div>
 
                                 <div>
