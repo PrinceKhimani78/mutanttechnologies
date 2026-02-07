@@ -23,7 +23,7 @@ const navLinks = [
     { name: 'Blog', href: '/blog' },
 ];
 
-const servicesLinks = [
+const defaultServicesLinks = [
     { name: "Web Development", href: "/services/web-development" },
     { name: "App Development", href: "/services/app-development" },
     { name: "Digital Marketing", href: "/services/digital-marketing" },
@@ -38,9 +38,29 @@ const servicesLinks = [
 export const Navbar = ({ onNavigate }: { onNavigate?: (slug: string) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isServicesOpen, setIsServicesOpen] = useState(false);
+    const [servicesLinks, setServicesLinks] = useState(defaultServicesLinks);
     const navRef = useRef(null);
     const menuRef = useRef(null);
     const tlRef = useRef<gsap.core.Timeline | null>(null);
+
+    // Fetch dynamic services
+    useEffect(() => {
+        const fetchServices = async () => {
+            const { supabase } = await import('@/lib/supabase');
+            const { data } = await supabase
+                .from('services')
+                .select('title, slug')
+                .order('title');
+
+            if (data && data.length > 0) {
+                setServicesLinks(data.map(s => ({
+                    name: s.title,
+                    href: `/services/${s.slug}`
+                })));
+            }
+        };
+        fetchServices();
+    }, []);
 
     // Animate navbar on load
     useGSAP(() => {

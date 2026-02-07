@@ -9,11 +9,23 @@ export async function getMetadata(slug: string, defaults: Metadata = {}): Promis
             .eq('page_slug', slug)
             .single();
 
+        const normalizedSlug = slug.startsWith('/') ? slug : `/${slug}`;
+        const baseUrl = 'https://www.mutanttechnologies.com';
+        const pageUrl = `${baseUrl}${normalizedSlug === '/' ? '' : normalizedSlug}`;
+
         if (error || !data) {
             return {
                 title: defaults.title || 'Mutant Technologies - Shine Bright Online',
                 description: defaults.description || 'We blend creativity and technology to boost your digital presence.',
-                ...defaults
+                ...defaults,
+                alternates: {
+                    canonical: pageUrl,
+                    ...defaults.alternates
+                },
+                openGraph: {
+                    url: pageUrl,
+                    ...defaults.openGraph
+                }
             };
         }
 
@@ -26,12 +38,12 @@ export async function getMetadata(slug: string, defaults: Metadata = {}): Promis
             title: fullTitle,
             description: data.description || defaults.description,
             alternates: {
-                canonical: data.canonical_url || `https://www.mutanttechnologies.com${slug === '/' ? '' : slug}`,
+                canonical: data.canonical_url || pageUrl,
             },
             openGraph: {
                 title: data.og_title || pageTitle,
                 description: data.og_description || data.description || defaults.description,
-                url: `https://www.mutanttechnologies.com${slug === '/' ? '' : slug}`,
+                url: pageUrl,
                 images: data.og_image ? [{ url: data.og_image }] : (defaults.openGraph?.images || []),
                 type: 'website',
                 siteName: siteName,

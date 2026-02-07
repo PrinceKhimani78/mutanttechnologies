@@ -139,11 +139,11 @@ export const Ongoing = ({
                 <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                     <div className="max-w-2xl">
                         <div className="relative mb-6">
-                            {/* Watermark effect - intensified as requested */}
-                            <span className="absolute -top-16 md:-top-24 -left-8 text-gray-200 dark:text-zinc-800/30 text-[12vw] md:text-[10vw] font-oswald font-black pointer-events-none select-none uppercase z-0 opacity-80 dark:opacity-40">
-                                Projects
-                            </span>
-                            <h2 ref={titleRef} className="text-foreground text-5xl md:text-8xl font-oswald uppercase font-bold tracking-tight relative z-10 leading-none">
+                            {/* Watermark-style main heading */}
+                            <h2
+                                ref={titleRef}
+                                className="text-gray-200 dark:text-zinc-800/40 text-[12vw] md:text-[10vw] font-oswald font-black select-none uppercase z-0 leading-none tracking-tighter"
+                            >
                                 {title}
                             </h2>
                         </div>
