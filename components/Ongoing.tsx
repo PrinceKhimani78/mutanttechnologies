@@ -30,7 +30,7 @@ interface OngoingProps {
 }
 
 export const Ongoing = ({
-    title = "Ongoing Works",
+    title = "Projects",
     description = "Witness the future in the making. Here are some of the cutting-edge projects currently on our workbench.",
     scroller
 }: OngoingProps) => {
@@ -139,16 +139,16 @@ export const Ongoing = ({
                 <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                     <div className="max-w-2xl">
                         <div className="relative mb-6">
-                            {/* Watermark effect */}
-                            <span className="absolute -top-16 md:-top-20 -left-6 text-gray-100 dark:text-zinc-800/10 text-[10vw] md:text-[8vw] font-oswald font-black pointer-events-none select-none uppercase opacity-50 dark:opacity-20 z-0">
+                            {/* Watermark effect - intensified as requested */}
+                            <span className="absolute -top-16 md:-top-24 -left-8 text-gray-200 dark:text-zinc-800/30 text-[12vw] md:text-[10vw] font-oswald font-black pointer-events-none select-none uppercase z-0 opacity-80 dark:opacity-40">
                                 Projects
                             </span>
-                            <h2 ref={titleRef} className="text-foreground text-5xl md:text-7xl font-oswald uppercase font-bold tracking-tight relative z-10">
-                                {(title || "").split(' ').map((word, i) => i === (title || "").split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
+                            <h2 ref={titleRef} className="text-foreground text-5xl md:text-8xl font-oswald uppercase font-bold tracking-tight relative z-10 leading-none">
+                                {title}
                             </h2>
                         </div>
                         <p className="text-gray-600 dark:text-zinc-400 text-lg md:text-xl font-light">
-                            {description}
+                            Explore our latest work and upcoming digital experiences.
                         </p>
                     </div>
                     <Link href="/portfolio" className="group flex items-center gap-2 text-dark-slate dark:text-white border border-gray-300 dark:border-zinc-700 px-6 py-3 rounded-full hover:bg-dark-slate dark:hover:bg-white hover:text-white dark:hover:text-black transition-all duration-300">
@@ -156,41 +156,42 @@ export const Ongoing = ({
                         <ArrowUpRight className="w-5 h-5 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {displayProjects.map((project: any, idx: number) => (
-                        <div key={idx} className="project-card group relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:border-gray-400 dark:hover:border-zinc-600 transition-colors duration-500 shadow-sm dark:shadow-none">
-                            {/* Image Placeholder */}
-                            <div className={`h-64 w-full ${project.color} relative overflow-hidden`}>
-                                <div className="absolute inset-0 bg-gradient-to-t from-white/10 dark:from-zinc-900 to-transparent opacity-60"></div>
-                                {/* Placeholder Text for Image */}
-                                <div className="absolute inset-0 flex items-center justify-center text-white/50 font-oswald text-4xl font-bold uppercase tracking-widest rotate-[-15deg]">
-                                    {project.title}
-                                </div>
-                            </div>
-
-                            <div className="p-8">
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="text-sm font-mono text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
-                                        {project.category}
-                                    </span>
-                                    <span className="text-gray-500 dark:text-zinc-500 font-mono text-sm">{project.year}</span>
-                                </div>
-                                <h3 className="text-3xl font-oswald text-dark-slate dark:text-white font-bold mb-3 group-hover:text-primary transition-colors">
-                                    {project.title}
-                                </h3>
-                                <p className="text-gray-600 dark:text-zinc-400 leading-relaxed mb-6">
-                                    {project.description}
-                                </p>
-                                <Link href={project.project_url || "/portfolio"} className="inline-flex items-center gap-2 text-dark-slate dark:text-white font-bold tracking-wider text-sm uppercase group/link">
-                                    Read Case Study
-                                    <ArrowUpRight className="w-4 h-4 text-primary group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
-                                </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {displayProjects.map((project: any, idx: number) => (
+                    <div key={idx} className="project-card group relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:border-gray-400 dark:hover:border-zinc-600 transition-colors duration-500 shadow-sm dark:shadow-none">
+                        {/* Image Placeholder */}
+                        <div className={`h-64 w-full ${project.color} relative overflow-hidden`}>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white/10 dark:from-zinc-900 to-transparent opacity-60"></div>
+                            {/* Placeholder Text for Image */}
+                            <div className="absolute inset-0 flex items-center justify-center text-white/50 font-oswald text-4xl font-bold uppercase tracking-widest rotate-[-15deg]">
+                                {project.title}
                             </div>
                         </div>
-                    ))}
-                </div>
+
+                        <div className="p-8">
+                            <div className="flex justify-between items-start mb-4">
+                                <span className="text-sm font-mono text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
+                                    {project.category}
+                                </span>
+                                <span className="text-gray-500 dark:text-zinc-500 font-mono text-sm">{project.year}</span>
+                            </div>
+                            <h3 className="text-3xl font-oswald text-dark-slate dark:text-white font-bold mb-3 group-hover:text-primary transition-colors">
+                                {project.title}
+                            </h3>
+                            <p className="text-gray-600 dark:text-zinc-400 leading-relaxed mb-6">
+                                {project.description}
+                            </p>
+                            <Link href={project.project_url || "/portfolio"} className="inline-flex items-center gap-2 text-dark-slate dark:text-white font-bold tracking-wider text-sm uppercase group/link">
+                                Read Case Study
+                                <ArrowUpRight className="w-4 h-4 text-primary group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
+                            </Link>
+                        </div>
+                    </div>
+                ))}
             </div>
-        </section>
+        </div>
+        </section >
     );
 };

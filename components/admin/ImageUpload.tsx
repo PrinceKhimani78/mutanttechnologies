@@ -45,9 +45,9 @@ export function ImageUpload({
                 .getPublicUrl(filePath);
 
             onChange(publicUrl);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error uploading image:', error);
-            alert('Error uploading image');
+            alert(`Error uploading image: ${error.message || 'Unknown error'}`);
         } finally {
             setUploading(false);
         }
