@@ -98,7 +98,7 @@ export const ProposalForm = () => {
             <h3 className="text-3xl font-oswald font-bold uppercase mb-2 text-white">Let's Build It</h3>
             <p className="text-zinc-400 mb-8">Tell us about your project and we'll craft the perfect solution.</p>
 
-            <form id="proposal-submission-form" onSubmit={handleSubmit} className="space-y-6 relative z-10">
+            <form id="proposal-form" onSubmit={handleSubmit} className="space-y-6 relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2" suppressHydrationWarning>
                         <label className="text-xs font-bold uppercase tracking-wider text-zinc-500">Name</label>

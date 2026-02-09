@@ -186,7 +186,7 @@ export const Contact = ({
 
                                     <div suppressHydrationWarning>
                                         <label className="block text-sm font-medium text-gray-400 mb-2">Subject</label>
-                                        <input suppressHydrationWarning required name="subject" type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="Project Inquiry" />
+                                        <input suppressHydrationWarning required name="subject" type="text" maxLength={100} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition-colors text-white" placeholder="Project Inquiry" />
                                     </div>
 
                                     <div suppressHydrationWarning>

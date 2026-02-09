@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -131,7 +132,7 @@ export default function ServiceDetailClient({ service, scroller }: ServiceDetail
                                 <Button size="lg" className="bg-orange-600 hover:bg-orange-700 text-white rounded-full h-14 px-10 text-lg transition-transform hover:scale-105 w-full sm:w-auto whitespace-nowrap" onClick={() => document.getElementById('proposal-form')?.scrollIntoView({ behavior: 'smooth' })}>
                                     Start Project
                                 </Button>
-                                <Button size="lg" variant="outline" className="border-zinc-700 hover:bg-white/10 text-white rounded-full h-14 px-10 text-lg flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap">
+                                <Button size="lg" variant="outline" className="border-zinc-700 hover:bg-white/10 text-white rounded-full h-14 px-10 text-lg flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap" onClick={() => document.getElementById('process')?.scrollIntoView({ behavior: 'smooth' })}>
                                     <span className="w-5 h-5 border border-current rounded-sm flex items-center justify-center text-[10px]">P</span> View Process
                                 </Button>
                             </div>
@@ -256,9 +257,11 @@ export default function ServiceDetailClient({ service, scroller }: ServiceDetail
                             Recent Work <br />
                             <span className="text-orange-600">and Impact</span>
                         </h2>
-                        <Button className="mt-8 md:mt-0 rounded-full h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 whitespace-nowrap">
-                            View Portfolio <ArrowRight className="ml-2 w-4 h-4" />
-                        </Button>
+                        <Link href="/portfolio">
+                            <Button className="mt-8 md:mt-0 rounded-full h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 whitespace-nowrap">
+                                View Portfolio <ArrowRight className="ml-2 w-4 h-4" />
+                            </Button>
+                        </Link>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -408,7 +411,7 @@ export default function ServiceDetailClient({ service, scroller }: ServiceDetail
             </div>
 
             {/* 7. FULL PROCESS */}
-            <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
+            <section id="process" className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
                 <div className={cn("container mx-auto px-6", scroller && "max-w-full")}>
                     <h2 className="text-center text-4xl font-bold font-heading text-zinc-900 dark:text-white mb-20">Complete Lifecycle</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

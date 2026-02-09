@@ -137,7 +137,7 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ImageUpload
-                        label="Hero Image"
+                        label="Hero Image (Main Background)"
                         value={formData.hero_image || ''}
                         onChange={(url) => handleChange('hero_image', url)}
                     />

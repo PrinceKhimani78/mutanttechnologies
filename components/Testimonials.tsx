@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Quote, Star } from 'lucide-react';
@@ -105,10 +106,20 @@ export const Testimonials = ({ scroller, initialData = [] }: { scroller?: string
                     {items.map((t: any, i: number) => (
                         <div key={i} className="w-[400px] shrink-0 px-6">
                             <div className="bg-white dark:bg-zinc-800/50 border border-t-[6px] border-t-primary border-x-transparent border-b-transparent p-8 rounded-2xl h-full relative group hover:-translate-y-2 transition-transform duration-300 shadow-xl dark:shadow-none">
-                                <div className="flex gap-1 mb-6">
-                                    {[...Array(5)].map((_, i) => (
-                                        <Star key={i} className="w-5 h-5 fill-orange-500 text-orange-500" />
-                                    ))}
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-primary">
+                                        <Image
+                                            src={`https://i.pravatar.cc/150?u=${t.author}`}
+                                            alt={t.author}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div className="flex gap-1">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} className="w-4 h-4 fill-orange-500 text-orange-500" />
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <p className="text-gray-700 dark:text-zinc-300 text-lg leading-relaxed mb-8 flex-1">
