@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
-import { Loader2, ArrowLeft, Upload, Image as ImageIcon } from "lucide-react";
+import { Loader2, ArrowLeft, Upload, Image as ImageIcon, X, Trash2 } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { uploadImage } from "@/lib/uploadImage";
@@ -18,7 +18,8 @@ export default function CreatePortfolio() {
         description: '',
         category: '',
         project_url: '',
-        image_url: ''
+        image_url: '',
+        additional_images: [] as string[]
     });
 
     useEffect(() => {
@@ -40,7 +41,7 @@ export default function CreatePortfolio() {
         fetchCategories();
     }, []);
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isAdditional = false) => {
         if (!e.target.files || e.target.files.length === 0) return;
 
         setUploading(true);
@@ -51,9 +52,23 @@ export default function CreatePortfolio() {
         if (error) {
             alert(`Error uploading image: ${error}`);
         } else {
-            setFormData({ ...formData, image_url: url });
+            if (isAdditional) {
+                setFormData(prev => ({
+                    ...prev,
+                    additional_images: [...prev.additional_images, url]
+                }));
+            } else {
+                setFormData({ ...formData, image_url: url });
+            }
         }
         setUploading(false);
+    };
+
+    const handleRemoveAdditionalImage = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            additional_images: prev.additional_images.filter((_, i) => i !== index)
+        }));
     };
 
     const handleSave = async () => {
@@ -113,9 +128,9 @@ export default function CreatePortfolio() {
                         </select>
                     </div>
 
-                    {/* Image Upload */}
+                    {/* Primary Image Upload */}
                     <div>
-                        <label className="block text-sm font-bold uppercase text-gray-500 mb-2">Project Image</label>
+                        <label className="block text-sm font-bold uppercase text-gray-500 mb-2">Primary Image</label>
 
                         {formData.image_url ? (
                             <div className="relative aspect-video rounded-lg overflow-hidden mb-4 border border-gray-200 dark:border-zinc-800">
@@ -130,26 +145,48 @@ export default function CreatePortfolio() {
                         ) : (
                             <div className="border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-lg p-8 flex flex-col items-center justify-center text-gray-400 mb-4 hover:border-primary/50 transition-colors relative cursor-pointer">
                                 <ImageIcon className="w-8 h-8 mb-2" />
-                                <span className="text-xs">Click to upload image</span>
+                                <span className="text-xs">Click to upload primary image</span>
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={handleImageUpload}
+                                    onChange={(e) => handleImageUpload(e, false)}
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                     disabled={uploading}
                                 />
                             </div>
                         )}
+                    </div>
 
-                        {uploading && <p className="text-xs text-center text-primary animate-pulse mb-4">Uploading...</p>}
+                    {/* Additional Images (Max 4 more) */}
+                    <div>
+                        <label className="block text-sm font-bold uppercase text-gray-500 mb-2">Additional Images (Max 4)</label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            {formData.additional_images.map((url, idx) => (
+                                <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-zinc-800 group">
+                                    <img src={url} alt={`Additional ${idx + 1}`} className="w-full h-full object-cover" />
+                                    <button
+                                        onClick={() => handleRemoveAdditionalImage(idx)}
+                                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ))}
 
-                        <input
-                            type="text"
-                            className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-primary transition-colors text-sm"
-                            placeholder="Or enter image URL..."
-                            value={formData.image_url}
-                            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                        />
+                            {formData.additional_images.length < 4 && (
+                                <div className="border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-lg aspect-square flex flex-col items-center justify-center text-gray-400 hover:border-primary/50 transition-colors relative cursor-pointer">
+                                    <Upload className="w-4 h-4 mb-1" />
+                                    <span className="text-[10px]">Add Image</span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleImageUpload(e, true)}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        disabled={uploading}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Project URL */}

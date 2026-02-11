@@ -17,6 +17,7 @@ export interface PortfolioProject {
     title: string;
     description: string;
     image_url: string;
+    additional_images?: string[]; // Array of additional image URLs (max 4, total 5)
     project_url: string;
     category: string;
     created_at: string;
