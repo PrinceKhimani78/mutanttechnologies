@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Rocket, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { triggerDeploy } from '@/lib/deploy';
 
 interface PublishButtonProps {
     onSuccess?: () => void;
@@ -19,16 +20,7 @@ export function PublishButton({ onSuccess, onError }: PublishButtonProps) {
         setMessage('');
 
         try {
-            // Call the webhook on your cPanel server
-            const response = await fetch('https://www.mutanttechnologies.com/api/deploy-webhook.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Deploy-Secret': 'mutant-deploy-secret-2024', // Must match webhook secret
-                },
-            });
-
-            const data = await response.json();
+            const data = await triggerDeploy();
 
             if (data.success) {
                 setStatus('success');

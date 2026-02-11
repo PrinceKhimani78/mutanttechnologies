@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { uploadImage } from "@/lib/uploadImage";
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { triggerDeploy } from "@/lib/deploy";
 
 function EditPortfolioContent() {
     const router = useRouter();
@@ -15,6 +16,7 @@ function EditPortfolioContent() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [categories, setCategories] = useState<string[]>([]);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -24,18 +26,32 @@ function EditPortfolioContent() {
     });
 
     useEffect(() => {
-        const fetchProject = async () => {
+        const fetchProjectAndCategories = async () => {
             if (!id) return;
-            const { data, error } = await supabase.from('portfolio').select('*').eq('id', id).single();
-            if (error) {
+
+            // Fetch project data
+            const { data: projectData, error: projectError } = await supabase.from('portfolio').select('*').eq('id', id).single();
+            if (projectError) {
                 alert("Project not found");
                 router.push('/admin/portfolio');
-            } else {
-                setFormData(data);
+                return;
             }
+            setFormData(projectData);
+
+            // Fetch categories
+            const { data: servicesData, error: servicesError } = await supabase.from('services').select('title');
+            if (servicesError) {
+                console.error("Error fetching services:", servicesError);
+            } else {
+                const serviceTitles = servicesData.map(s => s.title);
+                const customCategories = ["GHL", "SMM", "SEO"];
+                const allCategories = Array.from(new Set([...serviceTitles, ...customCategories])).sort();
+                setCategories(allCategories);
+            }
+
             setLoading(false);
         };
-        fetchProject();
+        fetchProjectAndCategories();
     }, [id, router]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +83,8 @@ function EditPortfolioContent() {
             console.error('Error updating project:', error);
             alert('Failed to update project');
         } else {
+            // Trigger auto-deployment
+            await triggerDeploy();
             router.push('/admin/portfolio');
         }
         setSaving(false);
@@ -110,10 +128,9 @@ function EditPortfolioContent() {
                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                         >
                             <option value="">Select Category</option>
-                            <option value="Web Development">Web Development</option>
-                            <option value="Mobile App">Mobile App</option>
-                            <option value="Design">Design</option>
-                            <option value="Consulting">Consulting</option>
+                            {categories.map((cat) => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
                         </select>
                     </div>
 

@@ -20,6 +20,7 @@ import {
     Rocket
 } from 'lucide-react';
 import { Post } from '@/lib/types';
+import { PublishButton } from '@/components/admin/PublishButton';
 
 export default function AdminDashboard() {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -168,8 +169,13 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="lg:w-80 space-y-6">
-                        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800">
-                            <h3 className="font-bold text-sm mb-4">Quick Links</h3>
+                        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+                            <h3 className="font-bold text-sm mb-4 uppercase tracking-wider text-gray-500">Site Deployment</h3>
+                            <PublishButton />
+                        </div>
+
+                        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+                            <h3 className="font-bold text-sm mb-4 uppercase tracking-wider text-gray-500">Quick Links</h3>
                             <div className="space-y-2">
                                 <a href="/" target="_blank" className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 text-xs text-gray-500 transition-colors">
                                     View Live Website <ExternalLink className="w-3 h-3" />

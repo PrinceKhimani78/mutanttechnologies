@@ -1,16 +1,18 @@
 'use client';
 
 import { supabase } from "@/lib/supabase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, ArrowLeft, Upload, Image as ImageIcon } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { uploadImage } from "@/lib/uploadImage";
+import { triggerDeploy } from "@/lib/deploy";
 
 export default function CreatePortfolio() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [categories, setCategories] = useState<string[]>([]);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -18,6 +20,25 @@ export default function CreatePortfolio() {
         project_url: '',
         image_url: ''
     });
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const { data, error } = await supabase.from('services').select('title');
+            if (error) {
+                console.error("Error fetching services:", error);
+                return;
+            }
+
+            // Get service titles and add requested custom categories
+            const serviceTitles = data.map(s => s.title);
+            const customCategories = ["GHL", "SMM", "SEO"];
+
+            // Combine and remove duplicates
+            const allCategories = Array.from(new Set([...serviceTitles, ...customCategories])).sort();
+            setCategories(allCategories);
+        };
+        fetchCategories();
+    }, []);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
@@ -48,6 +69,8 @@ export default function CreatePortfolio() {
             console.error('Error creating project:', error);
             alert('Failed to create project');
         } else {
+            // Trigger auto-deployment
+            await triggerDeploy();
             router.push('/admin/portfolio');
         }
         setLoading(false);
@@ -84,10 +107,9 @@ export default function CreatePortfolio() {
                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                         >
                             <option value="">Select Category</option>
-                            <option value="Web Development">Web Development</option>
-                            <option value="Mobile App">Mobile App</option>
-                            <option value="Design">Design</option>
-                            <option value="Consulting">Consulting</option>
+                            {categories.map((cat) => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
                         </select>
                     </div>
 
