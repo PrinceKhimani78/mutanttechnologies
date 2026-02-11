@@ -114,17 +114,20 @@ export const Ongoing = ({
                         modules={[Autoplay, Navigation, Pagination]}
                         spaceBetween={30}
                         slidesPerView={1}
-                        autoplay={{ delay: 5000, disableOnInteraction: false }}
+                        centeredSlides={true}
+                        loop={true}
+                        speed={600}
+                        autoplay={{ delay: 4000, disableOnInteraction: false }}
                         pagination={{ clickable: true }}
                         breakpoints={{
-                            640: { slidesPerView: 1 },
+                            640: { slidesPerView: 1.2 },
                             768: { slidesPerView: 2 },
                             1024: { slidesPerView: 3 },
                         }}
                         className="portfolio-swiper !pb-14"
                     >
                         {displayProjects.map((project: any, idx: number) => (
-                            <SwiperSlide key={idx}>
+                            <SwiperSlide key={idx} className="transition-all duration-500 swiper-slide-custom">
                                 <div className="group relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-xl shadow-black/5 h-[450px]">
                                     {/* Image Base with subtle zoom on hover */}
                                     <div className="absolute inset-0 z-0 overflow-hidden">
@@ -203,6 +206,26 @@ export const Ongoing = ({
                     opacity: 1;
                     width: 24px;
                     border-radius: 4px;
+                }
+                /* Focus & Blur Effect */
+                .portfolio-swiper .swiper-slide {
+                    transition: all 0.5s ease;
+                    filter: blur(4px) grayscale(0.5);
+                    opacity: 0.4;
+                    transform: scale(0.9);
+                }
+                .portfolio-swiper .swiper-slide-active,
+                .portfolio-swiper .swiper-slide-duplicate-active {
+                    filter: blur(0) grayscale(0);
+                    opacity: 1;
+                    transform: scale(1.05);
+                    z-index: 10;
+                }
+                /* On mobile, center slides might not be as obvious so we adjust scale */
+                @media (max-width: 640px) {
+                    .portfolio-swiper .swiper-slide-active {
+                        transform: scale(1);
+                    }
                 }
             `}</style>
         </section>
