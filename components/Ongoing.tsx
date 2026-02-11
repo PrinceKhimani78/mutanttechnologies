@@ -8,20 +8,16 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
 
-gsap.registerPlugin(ScrollTrigger);
+// Import Swiper React components
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation, Pagination } from 'swiper/modules';
 
-// Default/Fallback projects
-const defaultProjects = [
-    {
-        title: "Neon Horizon",
-        category: "Web Application",
-        description: "A futuristic dashboard for managing IoT devices in smart cities.",
-        image: "/ongoing-1.jpg",
-        color: "bg-cyan-500",
-        year: "2024"
-    },
-    // ... others
-];
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface OngoingProps {
     title?: string;
@@ -53,15 +49,10 @@ export const Ongoing = ({
         fetchProjects();
     }, []);
 
-    const items = projects.length > 0 ? projects : projects; // Wait, logic: if projects empty use default.
-    // Actually the default list above was truncated in my display.
-    // Let's just use the `projects` state and initialize it with defaults if we want, 
-    // OR just use defaults if fetch returns empty.
-
     const displayProjects = projects.length > 0 ? projects.map(p => ({
         ...p,
         image: p.image_url || "/ongoing-1.jpg",
-        color: p.color || "bg-primary",
+        color: p.color || "bg-primary/20",
         year: p.created_at ? new Date(p.created_at).getFullYear().toString() : "2024"
     })) : [
         {
@@ -69,62 +60,24 @@ export const Ongoing = ({
             category: "Web Application",
             description: "A futuristic dashboard for managing IoT devices in smart cities.",
             image: "/ongoing-1.jpg",
-            color: "bg-cyan-500",
+            color: "bg-cyan-500/20",
             year: "2024"
-        },
-        {
-            title: "Vertex AI",
-            category: "Machine Learning",
-            description: "AI-driven analytics platform for predicting market trends.",
-            image: "/ongoing-2.jpg",
-            color: "bg-violet-500",
-            year: "2024"
-        },
-        {
-            title: "Cyber Shield",
-            category: "Security",
-            description: "Enterprise-grade firewall management and threat detection system.",
-            image: "/ongoing-3.jpg",
-            color: "bg-red-500",
-            year: "2025"
         }
     ];
 
     useGSAP(() => {
-        try {
-            // Disable GSAP animations in Visual Editor to prevent errors
-            if (scroller) {
-                console.log('Ongoing: Skipping GSAP animations in Visual Editor context');
-                return;
+        if (!containerRef.current || !titleRef.current || scroller) return;
+
+        gsap.from(titleRef.current, {
+            y: 50,
+            opacity: 0,
+            duration: 1,
+            ease: "power3.out",
+            scrollTrigger: {
+                trigger: titleRef.current,
+                start: "top 90%",
             }
-
-            console.log('Ongoing: useGSAP', { hasContainer: !!containerRef.current, hasTitle: !!titleRef.current, scroller });
-            if (!containerRef.current || !titleRef.current) return;
-
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: containerRef.current,
-                    start: "top 80%",
-                    toggleActions: "play none none reverse"
-                }
-            });
-
-            tl.from(titleRef.current, {
-                y: 50,
-                opacity: 0,
-                duration: 1,
-                ease: "power3.out"
-            })
-                .from(".project-card", {
-                    y: 100,
-                    opacity: 0,
-                    stagger: 0.2,
-                    duration: 1,
-                    ease: "power3.out"
-                }, "-=0.5");
-        } catch (error) {
-            console.error('Ongoing: GSAP Error', error);
-        }
+        });
     }, { scope: containerRef, dependencies: [projects, scroller] });
 
     return (
@@ -139,10 +92,9 @@ export const Ongoing = ({
                 <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                     <div className="max-w-2xl">
                         <div className="relative mb-6">
-                            {/* Watermark-style main heading */}
                             <h2
                                 ref={titleRef}
-                                className="text-gray-200 dark:text-zinc-800/40 text-[12vw] md:text-[10vw] font-oswald font-black select-none uppercase z-0 leading-none tracking-tighter"
+                                className="text-gray-200 dark:text-zinc-800/40 text-[12vw] md:text-[8vw] font-oswald font-black select-none uppercase z-0 leading-none tracking-tighter"
                             >
                                 {title}
                             </h2>
@@ -151,46 +103,102 @@ export const Ongoing = ({
                             Explore our latest work and upcoming digital experiences.
                         </p>
                     </div>
-                    <Link href="/portfolio" className="group flex items-center gap-2 text-dark-slate dark:text-white border border-gray-300 dark:border-zinc-700 px-6 py-3 rounded-full hover:bg-dark-slate dark:hover:bg-white hover:text-white dark:hover:text-black transition-all duration-300">
+                    <Link href="/portfolio" className="group flex items-center gap-2 text-dark-slate dark:text-white border border-gray-300 dark:border-zinc-700 px-6 py-3 rounded-full hover:bg-primary hover:text-white transition-all duration-300">
                         View All Projects
                         <ArrowUpRight className="w-5 h-5 group-hover:-translate-y-1 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {displayProjects.map((project: any, idx: number) => (
-                        <div key={idx} className="project-card group relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:border-gray-400 dark:hover:border-zinc-600 transition-colors duration-500 shadow-sm dark:shadow-none">
-                            {/* Image Placeholder */}
-                            <div className={`h-64 w-full ${project.color} relative overflow-hidden`}>
-                                <div className="absolute inset-0 bg-gradient-to-t from-white/10 dark:from-zinc-900 to-transparent opacity-60"></div>
-                                {/* Placeholder Text for Image */}
-                                <div className="absolute inset-0 flex items-center justify-center text-white/50 font-oswald text-4xl font-bold uppercase tracking-widest rotate-[-15deg]">
-                                    {project.title}
-                                </div>
-                            </div>
+                <div className="px-2">
+                    <Swiper
+                        modules={[Autoplay, Navigation, Pagination]}
+                        spaceBetween={30}
+                        slidesPerView={1}
+                        autoplay={{ delay: 5000, disableOnInteraction: false }}
+                        pagination={{ clickable: true }}
+                        breakpoints={{
+                            640: { slidesPerView: 1 },
+                            768: { slidesPerView: 2 },
+                            1024: { slidesPerView: 3 },
+                        }}
+                        className="portfolio-swiper !pb-14"
+                    >
+                        {displayProjects.map((project: any, idx: number) => (
+                            <SwiperSlide key={idx}>
+                                <div className="group relative bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-xl shadow-black/5 h-[450px]">
+                                    {/* Image Base */}
+                                    <div className="absolute inset-0 z-0">
+                                        {project.image_url ? (
+                                            <Image
+                                                src={project.image_url}
+                                                alt={project.title}
+                                                fill
+                                                className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                                            />
+                                        ) : (
+                                            <div className={cn("w-full h-full flex items-center justify-center text-gray-400", project.color)}>
+                                                <span className="font-oswald text-4xl font-bold opacity-30 select-none">{project.title}</span>
+                                            </div>
+                                        )}
+                                        {/* Overlay Gradients */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 z-10"></div>
+                                    </div>
 
-                            <div className="p-8">
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="text-sm font-mono text-primary px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
-                                        {project.category}
-                                    </span>
-                                    <span className="text-gray-500 dark:text-zinc-500 font-mono text-sm">{project.year}</span>
+                                    {/* Default Visible Content */}
+                                    <div className="absolute inset-x-0 bottom-0 p-8 z-20 flex flex-col justify-end h-full transform transition-transform duration-500 group-hover:-translate-y-12">
+                                        <div className="mb-4">
+                                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 backdrop-blur-md">
+                                                {project.category}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-3xl font-oswald text-white font-bold leading-tight uppercase tracking-tight">
+                                            {project.title}
+                                        </h3>
+                                    </div>
+
+                                    {/* Hover Reveal Content */}
+                                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-8 bg-primary/95 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-full group-hover:translate-y-0">
+                                        <h3 className="text-2xl font-oswald text-white font-bold mb-4 uppercase tracking-wider text-center">
+                                            {project.title}
+                                        </h3>
+                                        <p className="text-white/90 text-sm text-center font-light leading-relaxed mb-8 max-w-[240px]">
+                                            {project.description}
+                                        </p>
+
+                                        {project.project_url && (
+                                            <a
+                                                href={project.project_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group/btn flex items-center gap-3 bg-white text-primary px-8 py-3 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-black hover:text-white transition-all duration-300 shadow-xl"
+                                            >
+                                                View Live
+                                                <ArrowUpRight className="w-4 h-4 group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
-                                <h3 className="text-3xl font-oswald text-dark-slate dark:text-white font-bold mb-3 group-hover:text-primary transition-colors">
-                                    {project.title}
-                                </h3>
-                                <p className="text-gray-600 dark:text-zinc-400 leading-relaxed mb-6">
-                                    {project.description}
-                                </p>
-                                <Link href={project.project_url || "/portfolio"} className="inline-flex items-center gap-2 text-dark-slate dark:text-white font-bold tracking-wider text-sm uppercase group/link">
-                                    Read Case Study
-                                    <ArrowUpRight className="w-4 h-4 text-primary group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
                 </div>
             </div>
+
+            {/* Swiper Custom Styles */}
+            <style jsx global>{`
+                .portfolio-swiper .swiper-pagination-bullet {
+                    background: #ff5c00;
+                    opacity: 0.3;
+                    width: 8px;
+                    height: 8px;
+                    transition: all 0.3s;
+                }
+                .portfolio-swiper .swiper-pagination-bullet-active {
+                    opacity: 1;
+                    width: 24px;
+                    border-radius: 4px;
+                }
+            `}</style>
         </section>
     );
 };
