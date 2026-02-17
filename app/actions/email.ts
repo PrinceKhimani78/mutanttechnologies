@@ -2,8 +2,6 @@
 
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 interface EmailPayload {
     name: string;
     email: string;
@@ -16,13 +14,23 @@ interface EmailPayload {
 export async function sendEmail(payload: EmailPayload) {
     const { name, email, subject, service, message, type } = payload;
 
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        console.error('RESEND_API_KEY is missing from environment variables');
+        return { success: false, error: 'Email service configuration missing. Please check RESEND_API_KEY.' };
+    }
+
+    const resend = new Resend(apiKey);
+
     const emailSubject = type === 'proposal'
         ? `New Project Request: ${name} - ${service}`
         : `New Contact Message: ${name} - ${subject || 'No Subject'}`;
 
     try {
+        console.log(`Attempting to send ${type} email from ${email}`);
+
         const { data, error } = await resend.emails.send({
-            from: 'Mutant Website <onboarding@resend.dev>', // Replace with your verified domain in production
+            from: 'Mutant Website <onboarding@resend.dev>',
             to: ['prince@mutanttechnologies.com'],
             replyTo: email,
             subject: emailSubject,
@@ -39,13 +47,14 @@ ${message}
         });
 
         if (error) {
-            console.error('Resend error:', error);
+            console.error('Resend API error:', error);
             return { success: false, error: error.message };
         }
 
+        console.log('Email sent successfully:', data?.id);
         return { success: true, data };
     } catch (err: any) {
-        console.error('Server action error:', err);
-        return { success: false, error: err.message || 'Failed to send email' };
+        console.error('Unexpected server action error:', err);
+        return { success: false, error: err.message || 'An unexpected error occurred while sending the email.' };
     }
 }
