@@ -38,20 +38,23 @@ export const Contact = ({
         const formData = new FormData(form);
 
         try {
-            const res = await fetch('/mail.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: formData.get('name'),
-                    email: formData.get('email'),
-                    service: formData.get('subject'), // Map subject to service/title
-                    message: formData.get('message'),
-                    type: 'contact'
-                }),
+            const { sendEmail } = await import('@/app/actions/email');
+            const result = await sendEmail({
+                name: formData.get('name') as string,
+                email: formData.get('email') as string,
+                subject: formData.get('subject') as string,
+                message: formData.get('message') as string,
+                type: 'contact'
             });
-            if (res.ok) setStatus('success');
-            else setStatus('error');
+
+            if (result.success) {
+                setStatus('success');
+            } else {
+                console.error('Email send error:', result.error);
+                setStatus('error');
+            }
         } catch (e) {
+            console.error('Contact form error:', e);
             setStatus('error');
         } finally {
             setLoading(false);

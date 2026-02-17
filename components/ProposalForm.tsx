@@ -38,21 +38,16 @@ export const ProposalForm = () => {
 
         try {
             // Send data to PHP mailer handler
-            const res = await fetch('/mail.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: nameInput.value,
-                    email: emailInput.value,
-                    service: serviceSelect.value,
-                    message: messageInput.value,
-                    type: 'proposal'
-                }),
+            const { sendEmail } = await import('@/app/actions/email');
+            const result = await sendEmail({
+                name: nameInput.value,
+                email: emailInput.value,
+                service: serviceSelect.value,
+                message: messageInput.value,
+                type: 'proposal'
             });
 
-            if (res.ok) {
+            if (result.success) {
                 setStatus('success');
 
                 // Track Google Tag Manager Event
@@ -62,6 +57,7 @@ export const ProposalForm = () => {
                     service_interest: serviceSelect.value
                 });
             } else {
+                console.error("Proposal form error:", result.error);
                 setStatus('error');
             }
         } catch (err) {
