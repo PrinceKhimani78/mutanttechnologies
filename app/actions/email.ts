@@ -14,10 +14,10 @@ interface EmailPayload {
 export async function sendEmail(payload: EmailPayload) {
     const { name, email, subject, service, message, type } = payload;
 
-    const apiKey = process.env.RESEND_API_KEY;
+    const apiKey = process.env.RESEND_API_KEY || process.env.Newemailkey;
     if (!apiKey) {
-        console.error('RESEND_API_KEY is missing from environment variables');
-        return { success: false, error: 'Email service configuration missing. Please check RESEND_API_KEY.' };
+        console.error('RESEND_API_KEY or Newemailkey is missing from environment variables');
+        return { success: false, error: 'Email service configuration missing. Please check RESEND_API_KEY in your dashboard.' };
     }
 
     const resend = new Resend(apiKey);
