@@ -1,4 +1,5 @@
 import { RenderBuilderContent } from "@/components/builder-page";
+import { notFound } from "next/navigation";
 
 const model = "page";
 
@@ -34,10 +35,12 @@ interface PageProps {
     params: Promise<{
         page: string[];
     }>;
+    searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function Page(props: PageProps) {
     const params = await props.params;
+    const searchParams = await props.searchParams;
     let content = undefined;
 
     try {
@@ -53,6 +56,13 @@ export default async function Page(props: PageProps) {
             .toPromise();
     } catch (err) {
         console.error("Builder fetch error:", err);
+    }
+
+    const isPreviewing = !!searchParams['builder.preview'];
+
+    // CRITICAL SEO FIX: Force actual HTTP 404 for search engines
+    if (!content && !isPreviewing) {
+        notFound();
     }
 
     return (
