@@ -5,6 +5,7 @@ import { CustomCursor } from "@/components/CustomCursor";
 import { Preloader } from "@/components/Preloader";
 import { ThemeProvider } from "@/components/theme-provider";
 import { GoogleTagManager, GoogleAnalytics } from '@next/third-parties/google';
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -96,6 +97,7 @@ export default function RootLayout({
             {children}
           </SmoothScroll>
         </ThemeProvider>
+        <Analytics />
       </body>
       <GoogleTagManager gtmId="GTM-MG6PRBMP" />
       <GoogleAnalytics gaId="G-VYNDWPNV0G" />
