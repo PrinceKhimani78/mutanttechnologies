@@ -96,7 +96,7 @@ export const Testimonials = ({
 
         gsap.to(list, {
           x: -width,
-          duration: 60,
+          duration: 120,
           ease: "none",
           repeat: -1,
         });
