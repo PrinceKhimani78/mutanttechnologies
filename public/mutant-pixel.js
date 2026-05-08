@@ -32,11 +32,11 @@
     };
 
     // 5. Send the payload to the ingestion API
-    // We use sendBeacon if available, as it's reliable for tracking even if the page unloads
-    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    // We use a simple string for sendBeacon to avoid CORS preflight OPTIONS requests
+    const body = JSON.stringify(payload);
     
     if (navigator.sendBeacon) {
-        navigator.sendBeacon(backendUrl, blob);
+        navigator.sendBeacon(backendUrl, body);
     } else {
         // Fallback to fetch
         fetch(backendUrl, {
