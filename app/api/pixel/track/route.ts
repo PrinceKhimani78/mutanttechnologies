@@ -47,21 +47,45 @@ export async function POST(request: Request) {
             ip = '8.8.8.8'; // Mock Google IP for local testing
         }
 
-        // 2. Fetch Company Name using Free IP-API
+        // 2. Fetch High-End B2B Intelligence using Abstract API
         let company_name = 'Unknown';
         let city = 'Unknown';
         let country = 'Unknown';
 
         if (ip !== 'Unknown') {
             try {
-                // Using http because ip-api free tier is http only
-                const ipResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,org`);
-                const ipData = await ipResponse.json();
-                
-                if (ipData.status === 'success') {
-                    company_name = ipData.org || 'Unknown';
-                    city = ipData.city || 'Unknown';
-                    country = ipData.country || 'Unknown';
+                const abstractKey = process.env.ABSTRACT_API_KEY;
+                if (abstractKey) {
+                    const abstractRes = await fetch(`https://ipgeolocation.abstractapi.com/v1/?api_key=${abstractKey}&ip_address=${ip}`);
+                    const abstractData = await abstractRes.json();
+                    
+                    if (abstractData.ip_address) {
+                        city = abstractData.city || 'Unknown';
+                        country = abstractData.country_name || 'Unknown';
+                        
+                        const rawName = abstractData.connection?.organization_name || abstractData.connection?.isp_name || 'Unknown';
+                        
+                        // SMART B2B FILTER: 
+                        // If the connection belongs to a massive consumer ISP, we label it as a "Business Visitor" 
+                        // from that city to look cleaner in the B2B dashboard.
+                        const ispKeywords = ['broadband', 'telecom', 'airtel', 'jio', 'reliance', 'gtpl', 'bsnl', 'vodafone', 'communication', 'network', 'cable', 'internet'];
+                        const isISP = ispKeywords.some(keyword => rawName.toLowerCase().includes(keyword));
+                        
+                        if (isISP) {
+                            company_name = `Business Visitor (${city})`;
+                        } else {
+                            company_name = rawName;
+                        }
+                    }
+                } else {
+                    // Fallback to basic ip-api
+                    const ipResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,org`);
+                    const ipData = await ipResponse.json();
+                    if (ipData.status === 'success') {
+                        company_name = ipData.org || 'Unknown';
+                        city = ipData.city || 'Unknown';
+                        country = ipData.country || 'Unknown';
+                    }
                 }
             } catch (error) {
                 console.error("IP Lookup failed:", error);
@@ -86,7 +110,6 @@ export async function POST(request: Request) {
         if (existingVisitor) {
             visitorId = existingVisitor.id;
             
-            // Prepare update data
             const updateData: any = { 
                 last_visited_at: new Date().toISOString(),
                 ip_address: ip,
@@ -95,7 +118,6 @@ export async function POST(request: Request) {
                 country
             };
             
-            // Only update email if we don't have it yet, or if a new one is provided
             if (email) updateData.email = email;
             
             await supabase
