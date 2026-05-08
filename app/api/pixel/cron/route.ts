@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function GET(request: Request) {
     // Security: Only allow verified cron services (e.g. Vercel Cron) to trigger this
     // You must add CRON_SECRET to your .env
@@ -12,6 +9,13 @@ export async function GET(request: Request) {
     if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
+
+    // Initialize Resend inside the handler so it doesn't break Next.js build
+    if (!process.env.RESEND_API_KEY) {
+        console.error('RESEND_API_KEY is missing');
+        return NextResponse.json({ error: 'RESEND_API_KEY is not configured.' }, { status: 500 });
+    }
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
