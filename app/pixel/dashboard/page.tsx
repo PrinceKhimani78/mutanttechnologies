@@ -74,7 +74,8 @@ export default function ClientDashboard() {
     };
 
     const copyScript = () => {
-        const script = `<script src="https://mutanttechnologies.com/mutant-pixel.js" data-client-id="${client?.id}"></script>`;
+        const domain = typeof window !== 'undefined' ? window.location.origin : 'https://www.mutanttechnologies.com';
+        const script = `<script src="${domain}/mutant-pixel.js" data-client-id="${client?.id}"></script>`;
         navigator.clipboard.writeText(script);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -106,7 +107,7 @@ export default function ClientDashboard() {
                     
                     <div className="bg-zinc-900 rounded-2xl p-6 mb-8 font-mono text-sm overflow-x-auto relative shadow-inner">
                         <code className="text-emerald-400">
-                            &lt;script src="https://mutanttechnologies.com/mutant-pixel.js" data-client-id="{client.id}"&gt;&lt;/script&gt;
+                            &lt;script src="https://www.mutanttechnologies.com/mutant-pixel.js" data-client-id="{client.id}"&gt;&lt;/script&gt;
                         </code>
                         <button 
                             onClick={copyScript}

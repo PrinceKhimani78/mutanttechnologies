@@ -76,7 +76,8 @@ export default function AdminPixelClients() {
     };
 
     const copyScript = (clientId: string) => {
-        const script = `<script src="https://mutanttechnologies.com/mutant-pixel.js" data-client-id="${clientId}"></script>`;
+        const domain = typeof window !== 'undefined' ? window.location.origin : 'https://www.mutanttechnologies.com';
+        const script = `<script src="${domain}/mutant-pixel.js" data-client-id="${clientId}"></script>`;
         navigator.clipboard.writeText(script);
         setCopiedScriptId(clientId);
         setTimeout(() => setCopiedScriptId(null), 2000);
