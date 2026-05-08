@@ -6,6 +6,7 @@ import { Preloader } from "@/components/Preloader";
 import { ThemeProvider } from "@/components/theme-provider";
 import { GoogleTagManager, GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -97,6 +98,7 @@ export default function RootLayout({
       </body>
       <GoogleTagManager gtmId="GTM-MG6PRBMP" />
       <GoogleAnalytics gaId="G-VYNDWPNV0G" />
+      <Script src="/mutant-pixel.js" data-client-id="fb180af3-1b5c-4f58-a8b5-3f0d297a1b73" strategy="afterInteractive" />
     </html>
   );
 }
