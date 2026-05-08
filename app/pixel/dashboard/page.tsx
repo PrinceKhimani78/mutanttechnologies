@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Loader2, Copy, CheckCircle2, AlertCircle, Users, Activity, Flame, Search, MapPin, Clock } from 'lucide-react';
+import { 
+    Loader2, Copy, CheckCircle2, AlertCircle, Users, Activity, 
+    Flame, Search, MapPin, Clock, ExternalLink, X, ChevronRight, 
+    MousePointer2, Mail, UserCheck, Target
+} from 'lucide-react';
 
 export default function ClientDashboard() {
     const [client, setClient] = useState<any>(null);
@@ -14,6 +18,12 @@ export default function ClientDashboard() {
     const [verifyError, setVerifyError] = useState('');
     const [copied, setCopied] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    
+    // Modal state for visitor details
+    const [selectedVisitor, setSelectedVisitor] = useState<any>(null);
+    const [visitorEvents, setVisitorEvents] = useState<any[]>([]);
+    const [loadingEvents, setLoadingEvents] = useState(false);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -46,6 +56,24 @@ export default function ClientDashboard() {
             }
         }
         setLoading(false);
+    };
+
+    const fetchEvents = async (visitor: any) => {
+        setSelectedVisitor(visitor);
+        setLoadingEvents(true);
+        setVisitorEvents([]);
+        
+        try {
+            const res = await fetch(`/api/pixel/events?visitor_id=${visitor.id}`);
+            const data = await res.json();
+            if (data.success) {
+                setVisitorEvents(data.events);
+            }
+        } catch (e) {
+            console.error("Failed to fetch events");
+        } finally {
+            setLoadingEvents(false);
+        }
     };
 
     const handleVerify = async () => {
@@ -138,21 +166,22 @@ export default function ClientDashboard() {
 
     // DASHBOARD STATE
     const totalVisitors = visitors.length;
-    const returnVisitors = visitors.filter(v => v.first_visited_at !== v.last_visited_at).length;
+    const identifiedLeads = visitors.filter(v => v.email).length;
     
     const today = new Date();
     today.setHours(0,0,0,0);
-    const newLeadsToday = visitors.filter(v => new Date(v.first_visited_at) >= today).length;
+    const hotLeadsToday = visitors.filter(v => new Date(v.last_visited_at) >= today).length;
 
     const filteredVisitors = visitors.filter(v => 
-        v.company_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        v.city.toLowerCase().includes(searchQuery.toLowerCase())
+        v.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        v.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans pb-12">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans pb-12 relative">
             {/* Header */}
-            <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200 dark:border-zinc-800 py-4 px-6 sm:px-8 flex flex-wrap justify-between items-center gap-4">
+            <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-200 dark:border-zinc-800 py-4 px-6 sm:px-8 flex flex-wrap justify-between items-center gap-4">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-primary to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
                         <Activity className="w-6 h-6 text-white" />
@@ -177,16 +206,16 @@ export default function ClientDashboard() {
                             <Users className="w-7 h-7" />
                         </div>
                         <h3 className="text-4xl font-bold mb-2 tracking-tight">{totalVisitors}</h3>
-                        <p className="text-base text-gray-500 font-medium">Total Companies Identified</p>
+                        <p className="text-base text-gray-500 font-medium">Companies Identified</p>
                     </div>
 
                     <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                        <div className="absolute -right-6 -top-6 w-32 h-32 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-all"></div>
-                        <div className="w-14 h-14 bg-green-50 dark:bg-green-500/10 rounded-2xl flex items-center justify-center text-green-600 dark:text-green-400 mb-6">
-                            <Activity className="w-7 h-7" />
+                        <div className="absolute -right-6 -top-6 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-all"></div>
+                        <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6">
+                            <UserCheck className="w-7 h-7" />
                         </div>
-                        <h3 className="text-4xl font-bold mb-2 tracking-tight">{returnVisitors}</h3>
-                        <p className="text-base text-gray-500 font-medium">High Intent Returning Leads</p>
+                        <h3 className="text-4xl font-bold mb-2 tracking-tight">{identifiedLeads}</h3>
+                        <p className="text-base text-gray-500 font-medium">Individual Leads (Resolved)</p>
                     </div>
 
                     <div className="bg-gradient-to-br from-primary via-primary to-orange-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
@@ -194,8 +223,8 @@ export default function ClientDashboard() {
                         <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md mb-6 border border-white/20">
                             <Flame className="w-7 h-7 text-white" />
                         </div>
-                        <h3 className="text-4xl font-bold mb-2 tracking-tight">{newLeadsToday}</h3>
-                        <p className="text-base text-white/90 font-medium">Hot Leads Today</p>
+                        <h3 className="text-4xl font-bold mb-2 tracking-tight">{hotLeadsToday}</h3>
+                        <p className="text-base text-white/90 font-medium">Active Intent Today</p>
                     </div>
                 </div>
 
@@ -203,14 +232,14 @@ export default function ClientDashboard() {
                 <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
                     <div className="p-6 sm:p-8 border-b border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                         <div>
-                            <h2 className="text-2xl font-bold mb-1">Live Intelligence Feed</h2>
-                            <p className="text-sm text-gray-500">Real-time companies actively browsing your site.</p>
+                            <h2 className="text-2xl font-bold mb-1">Lead Intelligence Feed</h2>
+                            <p className="text-sm text-gray-500">Click on any visitor to see their intent and activity history.</p>
                         </div>
                         <div className="relative w-full sm:w-80">
                             <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input 
                                 type="text"
-                                placeholder="Search companies or cities..."
+                                placeholder="Search leads, cities, or emails..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
@@ -225,31 +254,43 @@ export default function ClientDashboard() {
                                     <Search className="w-8 h-8 text-gray-400" />
                                 </div>
                                 <h3 className="text-xl font-semibold mb-2">No leads found</h3>
-                                <p className="text-gray-500">We couldn't find any companies matching your search.</p>
+                                <p className="text-gray-500">We couldn't find any visitors matching your search.</p>
                             </div>
                         ) : (
                             filteredVisitors.map((visitor) => {
-                                const isReturnVisitor = visitor.first_visited_at !== visitor.last_visited_at;
+                                const isResolved = !!visitor.email;
                                 return (
-                                    <div key={visitor.id} className="p-6 sm:p-8 hover:bg-gray-50/80 dark:hover:bg-zinc-950/80 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 group">
+                                    <div 
+                                        key={visitor.id} 
+                                        onClick={() => fetchEvents(visitor)}
+                                        className="p-6 sm:p-8 hover:bg-gray-50/80 dark:hover:bg-zinc-950/80 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 group cursor-pointer border-l-4 border-transparent hover:border-primary"
+                                    >
                                         <div className="flex items-start gap-5">
-                                            <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-xl font-bold text-gray-400 group-hover:bg-primary group-hover:text-white transition-all shrink-0 shadow-sm">
-                                                {visitor.company_name.charAt(0)}
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold transition-all shrink-0 shadow-sm ${isResolved ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-400 group-hover:bg-primary group-hover:text-white'}`}>
+                                                {isResolved ? <UserCheck className="w-7 h-7" /> : visitor.company_name?.charAt(0) || '?'}
                                             </div>
                                             <div>
                                                 <div className="flex flex-wrap items-center gap-3 mb-2">
-                                                    <h3 className="font-bold text-xl leading-none text-gray-900 dark:text-white">{visitor.company_name}</h3>
-                                                    {isReturnVisitor && (
-                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase bg-green-50 border border-green-200 text-green-700 dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-400">
-                                                            Returning Interest
+                                                    <h3 className="font-bold text-xl leading-none text-gray-900 dark:text-white">
+                                                        {visitor.company_name !== 'Unknown' ? visitor.company_name : (visitor.email || 'Anonymous Visitor')}
+                                                    </h3>
+                                                    {isResolved && (
+                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400">
+                                                            Identified
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-4 text-sm text-gray-500 font-medium">
+                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
                                                     <span className="flex items-center gap-1.5">
                                                         <MapPin className="w-4 h-4" />
                                                         {visitor.city !== 'Unknown' ? `${visitor.city}, ${visitor.country}` : 'Unknown Location'}
                                                     </span>
+                                                    {visitor.email && (
+                                                        <span className="flex items-center gap-1.5 text-primary">
+                                                            <Mail className="w-4 h-4" />
+                                                            {visitor.email}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -258,8 +299,9 @@ export default function ClientDashboard() {
                                                 <Clock className="w-4 h-4" />
                                                 {new Date(visitor.last_visited_at).toLocaleDateString()}
                                             </span>
-                                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100 sm:mt-1">
+                                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100 sm:mt-1 flex items-center gap-1">
                                                 {new Date(visitor.last_visited_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-primary transition-colors ml-1 hidden sm:block" />
                                             </span>
                                         </div>
                                     </div>
@@ -269,6 +311,130 @@ export default function ClientDashboard() {
                     </div>
                 </div>
             </main>
+
+            {/* ACTIVITY MODAL */}
+            {selectedVisitor && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-zinc-900 w-full max-w-3xl max-h-[90vh] rounded-[2rem] shadow-2xl border border-gray-100 dark:border-zinc-800 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Modal Header */}
+                        <div className="p-8 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-start">
+                            <div className="flex items-center gap-5">
+                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg shadow-primary/20 ${selectedVisitor.email ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-zinc-800'}`}>
+                                    {selectedVisitor.email ? <UserCheck className="w-8 h-8" /> : selectedVisitor.company_name?.charAt(0) || '?'}
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold leading-tight">{selectedVisitor.company_name !== 'Unknown' ? selectedVisitor.company_name : 'Anonymous Visitor'}</h2>
+                                    <div className="flex flex-col gap-1 mt-1">
+                                        <div className="flex items-center gap-3 text-gray-500 text-sm font-medium">
+                                            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {selectedVisitor.city}, {selectedVisitor.country}</span>
+                                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Last seen {new Date(selectedVisitor.last_visited_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                        </div>
+                                        {selectedVisitor.email && (
+                                            <span className="text-primary font-bold text-sm flex items-center gap-1.5">
+                                                <Mail className="w-4 h-4" />
+                                                {selectedVisitor.email}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedVisitor(null)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-bold flex items-center gap-2">
+                                    <Target className="w-5 h-5 text-primary" />
+                                    Intent Timeline
+                                </h3>
+                                <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-100 dark:bg-zinc-800 px-3 py-1 rounded-full">
+                                    {visitorEvents.length} Actions Tracked
+                                </span>
+                            </div>
+
+                            {loadingEvents ? (
+                                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                                    <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+                                    <p className="font-medium">Decoding intent...</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {visitorEvents.map((event, idx) => {
+                                        const isClick = event.event_type === 'click';
+                                        const isIdentity = event.event_type === 'identity';
+                                        
+                                        let timeSpent = null;
+                                        if (idx < visitorEvents.length - 1) {
+                                            const current = new Date(event.created_at).getTime();
+                                            const prev = new Date(visitorEvents[idx + 1].created_at).getTime();
+                                            const diff = Math.abs(current - prev);
+                                            const minutes = Math.floor(diff / 60000);
+                                            const seconds = Math.floor((diff % 60000) / 1000);
+                                            timeSpent = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+                                        }
+
+                                        return (
+                                            <div key={event.id} className="relative pl-8 pb-4 group">
+                                                {/* Timeline Line */}
+                                                {idx !== visitorEvents.length - 1 && (
+                                                    <div className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-gray-100 dark:bg-zinc-800 group-hover:bg-primary/20 transition-colors"></div>
+                                                )}
+                                                {/* Timeline Dot */}
+                                                <div className={`absolute left-0 top-1.5 w-[24px] h-[24px] rounded-full border-2 border-white dark:border-zinc-900 flex items-center justify-center z-10 ${isClick ? 'bg-orange-500' : isIdentity ? 'bg-emerald-500' : 'bg-gray-100 dark:bg-zinc-800'}`}>
+                                                    {isClick ? <MousePointer2 className="w-3 h-3 text-white" /> : isIdentity ? <UserCheck className="w-3 h-3 text-white" /> : <Activity className="w-3 h-3 text-gray-400" />}
+                                                </div>
+
+                                                <div className={`rounded-2xl p-4 border transition-all ${isClick ? 'bg-orange-50/30 dark:bg-orange-500/5 border-orange-100 dark:border-orange-500/20' : isIdentity ? 'bg-emerald-50/30 dark:bg-emerald-500/5 border-emerald-100 dark:border-emerald-500/20' : 'bg-gray-50/50 dark:bg-zinc-950/50 border-gray-100/50 dark:border-zinc-800/50'}`}>
+                                                    <div className="flex justify-between items-start gap-4 mb-1">
+                                                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                                            {isClick ? `Clicked "${event.metadata?.text || 'Element'}"` : 
+                                                             isIdentity ? `Identified as ${selectedVisitor.email}` : 
+                                                             `Viewed ${event.url.replace(/^https?:\/\/(www\.)?/, '').substring(0, 50)}...`}
+                                                        </p>
+                                                        <span className="text-[10px] font-bold text-gray-400 shrink-0">
+                                                            {new Date(event.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'})}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-3 mt-2">
+                                                        {timeSpent && !isIdentity && (
+                                                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1">
+                                                                <Clock className="w-2.5 h-2.5" /> Spent {timeSpent}
+                                                            </span>
+                                                        )}
+                                                        {!isIdentity && (
+                                                            <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                                                                <ExternalLink className="w-2.5 h-2.5" /> {event.url.split('/').pop() || 'Homepage'}
+                                                            </span>
+                                                        )}
+                                                        {isClick && (
+                                                            <span className="text-[10px] font-bold text-orange-600 bg-orange-100 dark:bg-orange-500/20 px-2 py-0.5 rounded">
+                                                                Interaction
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Modal Footer */}
+                        <div className="p-6 bg-gray-50/50 dark:bg-zinc-950/50 border-t border-gray-100 dark:border-zinc-800 text-center">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Behavioral intelligence active</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

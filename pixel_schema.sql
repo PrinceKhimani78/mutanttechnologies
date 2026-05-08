@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.pixel_visitors (
     company_name TEXT, -- Identified via IP-API
     city TEXT,
     country TEXT,
+    email TEXT, -- Identity Resolution
     first_visited_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     last_visited_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     UNIQUE(client_id, anonymous_id)
@@ -30,6 +31,8 @@ CREATE TABLE IF NOT EXISTS public.pixel_events (
     url TEXT NOT NULL,
     referrer TEXT,
     user_agent TEXT,
+    event_type TEXT DEFAULT 'pageview', -- 'pageview', 'click', 'form_capture'
+    metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

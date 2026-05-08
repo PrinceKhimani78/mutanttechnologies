@@ -23,7 +23,16 @@ export async function OPTIONS(request: Request) {
 export async function POST(request: Request) {
     try {
         const payload = await request.json();
-        const { client_id, anonymous_id, url, referrer, user_agent } = payload;
+        const { 
+            client_id, 
+            anonymous_id, 
+            url, 
+            referrer, 
+            user_agent,
+            event_type = 'pageview',
+            email,
+            metadata = {}
+        } = payload;
 
         if (!client_id || !anonymous_id) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400, headers: corsHeaders });
@@ -61,15 +70,13 @@ export async function POST(request: Request) {
 
         // 3. Connect to Supabase
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        // Best practice: Use Service Role Key for backend inserts to bypass RLS.
-        // Fallback to anon key if not provided (will require RLS insert policies).
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         // 4. Check if visitor exists
         const { data: existingVisitor } = await supabase
             .from('pixel_visitors')
-            .select('id')
+            .select('id, email')
             .eq('client_id', client_id)
             .eq('anonymous_id', anonymous_id)
             .single();
@@ -78,29 +85,38 @@ export async function POST(request: Request) {
 
         if (existingVisitor) {
             visitorId = existingVisitor.id;
-            // Update last visited
+            
+            // Prepare update data
+            const updateData: any = { 
+                last_visited_at: new Date().toISOString(),
+                ip_address: ip,
+                company_name,
+                city,
+                country
+            };
+            
+            // Only update email if we don't have it yet, or if a new one is provided
+            if (email) updateData.email = email;
+            
             await supabase
                 .from('pixel_visitors')
-                .update({ 
-                    last_visited_at: new Date().toISOString(),
-                    ip_address: ip,
-                    company_name,
-                    city,
-                    country
-                })
+                .update(updateData)
                 .eq('id', visitorId);
         } else {
             // Create new visitor
+            const insertData: any = {
+                client_id,
+                anonymous_id,
+                ip_address: ip,
+                company_name,
+                city,
+                country
+            };
+            if (email) insertData.email = email;
+
             const { data: newVisitor, error: visitorError } = await supabase
                 .from('pixel_visitors')
-                .insert({
-                    client_id,
-                    anonymous_id,
-                    ip_address: ip,
-                    company_name,
-                    city,
-                    country
-                })
+                .insert(insertData)
                 .select('id')
                 .single();
                 
@@ -111,7 +127,7 @@ export async function POST(request: Request) {
             }
         }
 
-        // 5. Insert the Event (Page View)
+        // 5. Insert the Event
         if (visitorId) {
             await supabase
                 .from('pixel_events')
@@ -120,7 +136,9 @@ export async function POST(request: Request) {
                     visitor_id: visitorId,
                     url,
                     referrer,
-                    user_agent
+                    user_agent,
+                    event_type,
+                    metadata
                 });
         }
 
