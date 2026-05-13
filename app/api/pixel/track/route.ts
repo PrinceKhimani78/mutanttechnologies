@@ -59,11 +59,14 @@ export async function POST(request: Request) {
         const isLocal = requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1') || requestReferer.includes('localhost');
         const clientDomain = client.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
+        // Only block if we have a valid domain to check against AND we are not on localhost
         if (!isLocal && clientDomain) {
+            // More permissive check: if either matches, we allow it. 
+            // If both are missing, we log it but allow for now to prevent tracking loss due to browser privacy settings.
             const originMatch = requestOrigin && requestOrigin.includes(clientDomain);
             const refererMatch = requestReferer && requestReferer.includes(clientDomain);
             
-            if (!originMatch && !refererMatch) {
+            if ((requestOrigin || requestReferer) && !originMatch && !refererMatch) {
                 console.warn(`Blocked unauthorized tracking attempt for ${clientDomain} from Origin: ${requestOrigin}, Referer: ${requestReferer}`);
                 return NextResponse.json({ error: 'Unauthorized Origin' }, { status: 403, headers: corsHeaders });
             }

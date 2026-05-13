@@ -46,7 +46,14 @@ export default function AdminPixelClients() {
     const fetchClients = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/pixel/admin/clients');
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            const res = await fetch('/api/pixel/admin/clients', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (data.success) {
                 setClients(data.clients);

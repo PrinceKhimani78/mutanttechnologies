@@ -44,7 +44,14 @@ export default function AdminPixelDashboard() {
         setLoading(true);
 
         try {
-            const res = await fetch(`/api/pixel/admin/dashboard?client_id=${selectedClientId}`);
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            const res = await fetch(`/api/pixel/admin/dashboard?client_id=${selectedClientId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             
             if (data.success) {
