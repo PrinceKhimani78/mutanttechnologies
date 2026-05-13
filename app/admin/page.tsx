@@ -2,25 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Suspense } from 'react';
 
-export default function AdminLogin() {
+function AdminLoginForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectTo = searchParams.get('redirect') || '/admin/dashboard';
 
     useEffect(() => {
         const checkUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                router.push('/admin/dashboard');
+                router.push(redirectTo);
             }
         };
         checkUser();
-    }, [router]);
+    }, [router, redirectTo]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -36,7 +39,7 @@ export default function AdminLogin() {
             setError(error.message);
             setLoading(false);
         } else {
-            router.push('/admin/dashboard');
+            router.push(redirectTo);
         }
     };
 
@@ -84,5 +87,13 @@ export default function AdminLogin() {
                 </form>
             </div>
         </div>
+    );
+}
+
+export default function AdminLogin() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center">Loading...</div>}>
+            <AdminLoginForm />
+        </Suspense>
     );
 }

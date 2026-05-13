@@ -38,7 +38,38 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400, headers: corsHeaders });
         }
 
-        // 1. Get the IP Address
+        // 1. Connect to Supabase to verify client and origin
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { data: client } = await supabase
+            .from('pixel_clients')
+            .select('website_url')
+            .eq('id', client_id)
+            .single();
+
+        if (!client) {
+            return NextResponse.json({ error: 'Invalid client ID' }, { status: 400, headers: corsHeaders });
+        }
+
+        // Domain Strictness Check
+        const requestOrigin = request.headers.get('origin') || '';
+        const requestReferer = request.headers.get('referer') || '';
+        const isLocal = requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1') || requestReferer.includes('localhost');
+        const clientDomain = client.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+        if (!isLocal && clientDomain) {
+            const originMatch = requestOrigin && requestOrigin.includes(clientDomain);
+            const refererMatch = requestReferer && requestReferer.includes(clientDomain);
+            
+            if (!originMatch && !refererMatch) {
+                console.warn(`Blocked unauthorized tracking attempt for ${clientDomain} from Origin: ${requestOrigin}, Referer: ${requestReferer}`);
+                return NextResponse.json({ error: 'Unauthorized Origin' }, { status: 403, headers: corsHeaders });
+            }
+        }
+
+        // 2. Get the IP Address
         const forwardedFor = request.headers.get('x-forwarded-for');
         let ip = forwardedFor ? forwardedFor.split(',')[0] : request.headers.get('x-real-ip') || 'Unknown';
         
@@ -47,55 +78,26 @@ export async function POST(request: Request) {
             ip = '8.8.8.8'; // Mock Google IP for local testing
         }
 
-        // 2. Fetch High-End B2B Intelligence using Abstract API
+        // 3. Fetch Company Name using Free IP-API
         let company_name = 'Unknown';
         let city = 'Unknown';
         let country = 'Unknown';
 
         if (ip !== 'Unknown') {
             try {
-                const abstractKey = process.env.ABSTRACT_API_KEY;
-                if (abstractKey) {
-                    const abstractRes = await fetch(`https://ipgeolocation.abstractapi.com/v1/?api_key=${abstractKey}&ip_address=${ip}`);
-                    const abstractData = await abstractRes.json();
-                    
-                    if (abstractData.ip_address) {
-                        city = abstractData.city || 'Unknown';
-                        country = abstractData.country_name || 'Unknown';
-                        
-                        const rawName = abstractData.connection?.organization_name || abstractData.connection?.isp_name || 'Unknown';
-                        
-                        // SMART B2B FILTER: 
-                        // If the connection belongs to a massive consumer ISP, we label it as a "Business Visitor" 
-                        // from that city to look cleaner in the B2B dashboard.
-                        const ispKeywords = ['broadband', 'telecom', 'airtel', 'jio', 'reliance', 'gtpl', 'bsnl', 'vodafone', 'communication', 'network', 'cable', 'internet'];
-                        const isISP = ispKeywords.some(keyword => rawName.toLowerCase().includes(keyword));
-                        
-                        if (isISP) {
-                            company_name = `Business Visitor (${city})`;
-                        } else {
-                            company_name = rawName;
-                        }
-                    }
-                } else {
-                    // Fallback to basic ip-api
-                    const ipResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,org`);
-                    const ipData = await ipResponse.json();
-                    if (ipData.status === 'success') {
-                        company_name = ipData.org || 'Unknown';
-                        city = ipData.city || 'Unknown';
-                        country = ipData.country || 'Unknown';
-                    }
+                // Using http because ip-api free tier is http only
+                const ipResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,org`);
+                const ipData = await ipResponse.json();
+                
+                if (ipData.status === 'success') {
+                    company_name = ipData.org || 'Unknown';
+                    city = ipData.city || 'Unknown';
+                    country = ipData.country || 'Unknown';
                 }
             } catch (error) {
                 console.error("IP Lookup failed:", error);
             }
         }
-
-        // 3. Connect to Supabase
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
 
         // 4. Check if visitor exists
         const { data: existingVisitor } = await supabase
@@ -110,6 +112,7 @@ export async function POST(request: Request) {
         if (existingVisitor) {
             visitorId = existingVisitor.id;
             
+            // Prepare update data
             const updateData: any = { 
                 last_visited_at: new Date().toISOString(),
                 ip_address: ip,
@@ -118,6 +121,7 @@ export async function POST(request: Request) {
                 country
             };
             
+            // Only update email if we don't have it yet, or if a new one is provided
             if (email) updateData.email = email;
             
             await supabase

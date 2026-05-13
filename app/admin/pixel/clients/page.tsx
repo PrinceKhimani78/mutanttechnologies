@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Loader2, Copy, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPixelClients() {
     const [clients, setClients] = useState<any[]>([]);
@@ -19,10 +20,28 @@ export default function AdminPixelClients() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [copiedScriptId, setCopiedScriptId] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
-        fetchClients();
-    }, []);
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            // Strict admin check
+            const adminEmails = ['admin@mutant.tech', 'prince@mutant.tech', 'princekhimani@gmail.com', 'princekhimani186@gmail.com', 'princekhimani78@gmail.com', 'prince@mutanttechnologies.com'];
+            
+            if (!session) {
+                router.push('/admin?redirect=/admin/pixel/clients');
+                return;
+            }
+            
+            if (!session.user.email || !adminEmails.includes(session.user.email)) {
+                router.push('/admin/dashboard'); // Prevent infinite loop if authenticated but not admin
+                return;
+            }
+            fetchClients();
+        };
+        checkSession();
+    }, [router]);
 
     const fetchClients = async () => {
         setLoading(true);

@@ -64,7 +64,14 @@ export default function ClientDashboard() {
         setVisitorEvents([]);
         
         try {
-            const res = await fetch(`/api/pixel/events?visitor_id=${visitor.id}`);
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
+            const res = await fetch(`/api/pixel/events?visitor_id=${visitor.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (data.success) {
                 setVisitorEvents(data.events);

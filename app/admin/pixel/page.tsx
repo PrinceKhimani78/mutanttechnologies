@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPixelDashboard() {
     const [stats, setStats] = useState({
@@ -14,9 +15,28 @@ export default function AdminPixelDashboard() {
     const [recentTraffic, setRecentTraffic] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const router = useRouter();
+
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            // Strict admin check
+            const adminEmails = ['admin@mutant.tech', 'prince@mutant.tech', 'princekhimani@gmail.com', 'princekhimani186@gmail.com', 'princekhimani78@gmail.com', 'prince@mutanttechnologies.com'];
+            
+            if (!session) {
+                router.push('/admin?redirect=/admin/pixel');
+                return;
+            }
+            
+            if (!session.user.email || !adminEmails.includes(session.user.email)) {
+                router.push('/admin/dashboard'); // Prevent infinite loop if authenticated but not admin
+                return;
+            }
+            fetchDashboardData();
+        };
+        checkSession();
+    }, [router]);
 
     const fetchDashboardData = async () => {
         setLoading(true);
