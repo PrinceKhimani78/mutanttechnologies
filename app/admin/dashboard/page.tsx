@@ -34,6 +34,15 @@ export default function AdminDashboard() {
                 router.push('/admin');
                 return;
             }
+
+            const adminEmails = ['admin@mutant.tech', 'prince@mutant.tech', 'princekhimani@gmail.com', 'princekhimani186@gmail.com', 'princekhimani78@gmail.com', 'prince@mutanttechnologies.com'];
+            
+            if (!session.user.email || !adminEmails.includes(session.user.email)) {
+                // If they are not an admin, they must be a pixel client. Redirect them to their portal.
+                router.push('/pixel/dashboard');
+                return;
+            }
+
             fetchPosts();
         };
         checkSession();

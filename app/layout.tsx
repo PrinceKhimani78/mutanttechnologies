@@ -98,7 +98,7 @@ export default function RootLayout({
       </body>
       <GoogleTagManager gtmId="GTM-MG6PRBMP" />
       <GoogleAnalytics gaId="G-VYNDWPNV0G" />
-      <Script src="/mutant-pixel.js" data-client-id="fb180af3-1b5c-4f58-a8b5-3f0d297a1b73" strategy="afterInteractive" />
+      <Script src="https://www.mutanttechnologies.com/mutant-pixel.js" data-client-id="bdcbd54a-51b9-499f-8598-34c79124f9a4" strategy="afterInteractive" />
     </html>
   );
 }
