@@ -21,6 +21,12 @@ export async function OPTIONS(request: Request) {
 }
 
 export async function POST(request: Request) {
+    const corsHeaders = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
+
     try {
         const payload = await request.json();
         const { 
@@ -123,29 +129,18 @@ export async function POST(request: Request) {
             throw new Error(rpcError.message);
         }
 
-        const origin = request.headers.get('origin') || '*';
-        const dynamicCorsHeaders = {
-            'Access-Control-Allow-Origin': origin,
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Allow-Credentials': 'true',
-        };
-
         return NextResponse.json({ 
             success: true,
             config: config || {}
-        }, { headers: dynamicCorsHeaders });
-    } catch (error) {
+        }, { headers: corsHeaders });
+    } catch (error: any) {
         console.error("Pixel Track Error:", error);
-        const origin = request.headers.get('origin') || '*';
-        return NextResponse.json({ error: 'Internal Server Error' }, { 
-            status: 500, 
-            headers: {
-                'Access-Control-Allow-Origin': origin,
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-                'Access-Control-Allow-Credentials': 'true',
-            } 
+        return NextResponse.json({ 
+            success: false, 
+            error: error.message || 'Internal Server Error'
+        }, { 
+            status: 500,
+            headers: { 'Access-Control-Allow-Origin': '*' }
         });
     }
 }
