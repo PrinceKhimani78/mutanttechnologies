@@ -39,12 +39,21 @@ export async function GET(request: Request) {
                 .order('intent_score', { ascending: false })
                 .limit(5);
 
-            if (visitorError) continue;
-            if (!recentVisitors || recentVisitors.length === 0) continue;
+            if (visitorError) {
+                summary.push({ client: client.company_name, success: false, reason: 'Database error fetching visitors' });
+                continue;
+            }
+            if (!recentVisitors || recentVisitors.length === 0) {
+                summary.push({ client: client.company_name, success: false, reason: 'No visitors in last 24h' });
+                continue;
+            }
 
             // 3. Get User Email
             const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(client.user_id);
-            if (userError || !user?.email) continue;
+            if (userError || !user?.email) {
+                summary.push({ client: client.company_name, success: false, reason: 'User email not found or permission denied' });
+                continue;
+            }
 
             // 4. Send Email
             const visitorRows = recentVisitors.map(v => `
@@ -59,7 +68,7 @@ export async function GET(request: Request) {
                 </div>
             `).join('');
 
-            await resend.emails.send({
+            const { data: emailData, error: emailError } = await resend.emails.send({
                 from: 'Mutant Pixel <alerts@mutanttechnologies.com>',
                 to: user.email,
                 subject: `🔥 Daily Lead Digest: ${client.company_name}`,
@@ -83,10 +92,18 @@ export async function GET(request: Request) {
                 `
             });
 
-            summary.push({ client: client.company_name, visitors: recentVisitors.length });
+            if (emailError) {
+                summary.push({ client: client.company_name, success: false, reason: 'Resend Error: ' + emailError.message });
+            } else {
+                summary.push({ client: client.company_name, success: true, visitors: recentVisitors.length, email_id: emailData?.id });
+            }
         }
 
-        return NextResponse.json({ success: true, summary });
+        return NextResponse.json({ 
+            success: true, 
+            message: `Processed ${summary.length} reports.`,
+            summary 
+        });
     } catch (error: any) {
         console.error('Digest Cron Error:', error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
