@@ -15,15 +15,34 @@ export async function GET(request: Request) {
     }
 
     try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+        const supabaseUrl = 'https://kvwvhytbatyfkcppwace.supabase.co';
+        const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2d3ZoeXRiYXR5ZmtjcHB3YWNlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODAyMDg2MCwiZXhwIjoyMDgzNTk2ODYwfQ.5F1DRADaBBsX9OgsbInxvbFymjSQ7niJzHqDD6cKn08';
         
-        // Initialize Supabase with the user's JWT token so Row Level Security (RLS) applies
-        const supabase = createClient(supabaseUrl, anonKey, {
-            global: { headers: { Authorization: authHeader } }
-        });
+        // 1. Verify User
+        const token = authHeader.split(' ')[1];
+        const supabaseAuth = createClient(supabaseUrl, serviceRoleKey);
+        const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
 
-        const { data: events, error } = await supabase
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // 2. Check if user is Admin
+        const adminEmails = ['admin@mutant.tech', 'prince@mutant.tech', 'princekhimani@gmail.com', 'princekhimani186@gmail.com', 'princekhimani78@gmail.com', 'prince@mutanttechnologies.com'];
+        const isAdmin = user.email && adminEmails.includes(user.email);
+
+        let supabaseToUse;
+        if (isAdmin) {
+            // Admin uses service role to see everything
+            supabaseToUse = supabaseAuth;
+        } else {
+            // Regular client uses their own JWT (enforces RLS)
+            supabaseToUse = createClient(supabaseUrl, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2d3ZoeXRiYXR5ZmtjcHB3YWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwMjA4NjAsImV4cCI6MjA4MzU5Njg2MH0._cyx79QgRKSyH0aYyqmQBXBuSHW2JeItIxWJmCbLEN4', {
+                global: { headers: { Authorization: authHeader } }
+            });
+        }
+
+        const { data: events, error } = await supabaseToUse
             .from('pixel_events')
             .select('*')
             .eq('visitor_id', visitorId)
