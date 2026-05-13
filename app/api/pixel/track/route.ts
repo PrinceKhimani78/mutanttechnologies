@@ -90,76 +90,37 @@ export async function POST(request: Request) {
             } catch (e) {}
         }
 
-        // 3. Extract UTMs - Ensure null instead of undefined for DB
-        const utm_source = payload.utm_source || null;
-        const utm_medium = payload.utm_medium || null;
-        const utm_campaign = payload.utm_campaign || null;
-        const utm_term = payload.utm_term || null;
-        const utm_content = payload.utm_content || null;
-
-        // 4. Intent Scoring Logic
+        // 4. Calculate Intent Score Boost
         let scoreBoost = 0;
         if (event_type === 'pageview') scoreBoost = 1;
         if (event_type === 'click') scoreBoost = 5;
         if (event_type === 'identity') scoreBoost = 50;
 
-        // 5. Handle Visitor Logic
-        const { data: existingVisitor, error: visitorFetchError } = await supabase
-            .from('pixel_visitors')
-            .select('id, intent_score, first_utm_source')
-            .eq('client_id', client_id)
-            .eq('anonymous_id', anonymous_id)
-            .maybeSingle();
+        // 5. Use Stored Procedure for Atomic Tracking
+        const { data: config, error: rpcError } = await supabase.rpc('track_visitor_event_v2', {
+            p_client_id: client_id,
+            p_anonymous_id: anonymous_id,
+            p_ip_address: ip,
+            p_company_name: company_name,
+            p_city: city,
+            p_country: country,
+            p_email: email || null,
+            p_url: url,
+            p_referrer: referrer || '',
+            p_user_agent: user_agent,
+            p_event_type: event_type,
+            p_metadata: metadata || {},
+            p_score_boost: scoreBoost,
+            p_utm_source: payload.utm_source || null,
+            p_utm_medium: payload.utm_medium || null,
+            p_utm_campaign: payload.utm_campaign || null,
+            p_utm_term: payload.utm_term || null,
+            p_utm_content: payload.utm_content || null
+        });
 
-        if (visitorFetchError) {
-            console.error("Visitor Fetch Error:", visitorFetchError);
-        }
-
-        let visitorId = null;
-
-        if (existingVisitor) {
-            visitorId = existingVisitor.id;
-            const updateData: any = { 
-                last_visited_at: new Date().toISOString(),
-                intent_score: (existingVisitor.intent_score || 0) + scoreBoost,
-                last_utm_source: utm_source,
-                ip_address: ip,
-                company_name, city, country
-            };
-            if (email) updateData.email = email;
-            if (!existingVisitor.first_utm_source && utm_source) updateData.first_utm_source = utm_source;
-            
-            const { error: updateError } = await supabase.from('pixel_visitors').update(updateData).eq('id', visitorId);
-            if (updateError) console.error("Visitor Update Error:", updateError);
-        } else {
-            const insertData: any = {
-                client_id, anonymous_id, ip_address: ip, company_name, city, country,
-                intent_score: scoreBoost,
-                first_utm_source: utm_source,
-                last_utm_source: utm_source
-            };
-            if (email) insertData.email = email;
-            const { data: newV, error: insertError } = await supabase.from('pixel_visitors').insert(insertData).select('id').maybeSingle();
-            if (insertError) console.error("Visitor Insert Error:", insertError);
-            if (newV) visitorId = newV.id;
-        }
-
-        // 6. Fetch Integration IDs for the Container
-        const { data: config } = await supabase
-            .from('pixel_clients')
-            .select('ga_id, meta_id, google_ads_id, tiktok_id')
-            .eq('id', client_id)
-            .single();
-
-        // 7. Insert Event with UTMs
-        if (visitorId) {
-            const { error: eventError } = await supabase
-                .from('pixel_events')
-                .insert({
-                    client_id, visitor_id: visitorId, url, referrer, user_agent, event_type, metadata,
-                    utm_source, utm_medium, utm_campaign, utm_term, utm_content
-                });
-            if (eventError) console.error("Event Insert Error:", eventError);
+        if (rpcError) {
+            console.error("Tracking RPC Error:", rpcError);
+            throw new Error(rpcError.message);
         }
 
         const origin = request.headers.get('origin') || '*';
