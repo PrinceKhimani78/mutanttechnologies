@@ -13,6 +13,8 @@ export default function AdminPixelDashboard() {
         activeClients: 0
     });
     const [recentTraffic, setRecentTraffic] = useState<any[]>([]);
+    const [clients, setClients] = useState<any[]>([]);
+    const [selectedClientId, setSelectedClientId] = useState<string>('all');
     const [loading, setLoading] = useState(true);
 
     const router = useRouter();
@@ -36,13 +38,13 @@ export default function AdminPixelDashboard() {
             fetchDashboardData();
         };
         checkSession();
-    }, [router]);
+    }, [router, selectedClientId]);
 
     const fetchDashboardData = async () => {
         setLoading(true);
 
         try {
-            // 1. Fetch total clients
+            // 1. Fetch total clients and client list
             const { count: clientsCount } = await supabase
                 .from('pixel_clients')
                 .select('*', { count: 'exact', head: true });
@@ -52,30 +54,37 @@ export default function AdminPixelDashboard() {
                 .select('*', { count: 'exact', head: true })
                 .eq('installation_status', 'verified');
 
-            // 2. Fetch total visitors
-            const { count: visitorsCount } = await supabase
-                .from('pixel_visitors')
-                .select('*', { count: 'exact', head: true });
+            const { data: clientsData } = await supabase
+                .from('pixel_clients')
+                .select('id, company_name')
+                .order('company_name');
+            
+            if (clientsData) setClients(clientsData);
+
+            // 2. Fetch visitors & traffic (filtered if needed)
+            let visitorsQuery = supabase.from('pixel_visitors').select('*', { count: 'exact', head: true });
+            let trafficQuery = supabase.from('pixel_visitors').select(`
+                id,
+                company_name,
+                city,
+                country,
+                last_visited_at,
+                pixel_clients ( company_name )
+            `).order('last_visited_at', { ascending: false }).limit(20);
+
+            if (selectedClientId !== 'all') {
+                visitorsQuery = visitorsQuery.eq('client_id', selectedClientId);
+                trafficQuery = trafficQuery.eq('client_id', selectedClientId);
+            }
+
+            const { count: visitorsCount } = await visitorsQuery;
+            const { data: trafficData } = await trafficQuery;
 
             setStats({
                 totalClients: clientsCount || 0,
                 activeClients: verifiedClients || 0,
                 totalVisitors: visitorsCount || 0
             });
-
-            // 3. Fetch recent global traffic with client names
-            const { data: trafficData } = await supabase
-                .from('pixel_visitors')
-                .select(`
-                    id,
-                    company_name,
-                    city,
-                    country,
-                    last_visited_at,
-                    pixel_clients ( company_name )
-                `)
-                .order('last_visited_at', { ascending: false })
-                .limit(20);
 
             if (trafficData) {
                 setRecentTraffic(trafficData);
@@ -93,14 +102,28 @@ export default function AdminPixelDashboard() {
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-3xl font-oswald font-bold uppercase">Pixel Global Dashboard</h1>
-                <Link 
-                    href="/admin/pixel/clients"
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors"
-                >
-                    Manage Clients
-                </Link>
+                <div className="flex items-center gap-4">
+                    <select
+                        value={selectedClientId}
+                        onChange={(e) => setSelectedClientId(e.target.value)}
+                        className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                        <option value="all">Global View (All Clients)</option>
+                        {clients.map(client => (
+                            <option key={client.id} value={client.id}>
+                                {client.company_name}
+                            </option>
+                        ))}
+                    </select>
+                    <Link 
+                        href="/admin/pixel/clients"
+                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors shrink-0"
+                    >
+                        Manage Clients
+                    </Link>
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -114,7 +137,9 @@ export default function AdminPixelDashboard() {
                     <p className="text-4xl font-bold">{stats.activeClients}</p>
                 </div>
                 <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 p-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Total Visitors Tracked</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-2">
+                        {selectedClientId === 'all' ? 'Total Visitors Tracked' : 'Client Visitors'}
+                    </h3>
                     <p className="text-4xl font-bold">{stats.totalVisitors}</p>
                 </div>
             </div>
@@ -122,7 +147,9 @@ export default function AdminPixelDashboard() {
             {/* Recent Global Traffic */}
             <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 dark:border-zinc-800">
-                    <h2 className="text-lg font-semibold">Live Network Traffic (All Clients)</h2>
+                    <h2 className="text-lg font-semibold">
+                        {selectedClientId === 'all' ? 'Live Network Traffic (All Clients)' : 'Live Network Traffic (Filtered)'}
+                    </h2>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
