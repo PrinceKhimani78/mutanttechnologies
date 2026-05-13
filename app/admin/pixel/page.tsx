@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, ExternalLink, Filter, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminPixelDashboard() {
@@ -44,8 +43,14 @@ export default function AdminPixelDashboard() {
         setLoading(true);
 
         try {
+            const { data: { user } } = await supabase.auth.getUser();
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
+
+            if (!user || !token) {
+                console.error("No valid user or token found");
+                return;
+            }
 
             const res = await fetch(`/api/pixel/admin/dashboard?client_id=${selectedClientId}`, {
                 headers: {
@@ -68,33 +73,53 @@ export default function AdminPixelDashboard() {
         setLoading(false);
     };
 
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.push('/admin');
+    };
+
     if (loading) {
         return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-gray-400" /></div>;
     }
 
     return (
-        <div className="p-8 max-w-7xl mx-auto space-y-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-3xl font-oswald font-bold uppercase">Pixel Global Dashboard</h1>
-                <div className="flex items-center gap-4">
-                    <select
-                        value={selectedClientId}
-                        onChange={(e) => setSelectedClientId(e.target.value)}
-                        className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                        <option value="all">Global View (All Clients)</option>
-                        {clients.map(client => (
-                            <option key={client.id} value={client.id}>
-                                {client.company_name}
-                            </option>
-                        ))}
-                    </select>
-                    <Link 
-                        href="/admin/pixel/clients"
-                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors shrink-0"
+        <div className="min-h-screen bg-[#fcfcfc] dark:bg-black text-black dark:text-white p-4 md:p-8 font-sans">
+            {/* Header */}
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 className="text-4xl font-oswald font-bold uppercase tracking-tighter">Pixel Global Dashboard</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">Real-time leads and traffic intelligence across all clients.</p>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative">
+                        <select 
+                            value={selectedClientId} 
+                            onChange={(e) => setSelectedClientId(e.target.value)}
+                            className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium min-w-[200px]"
+                        >
+                            <option value="all">Global View (All Clients)</option>
+                            {clients.map(client => (
+                                <option key={client.id} value={client.id}>{client.company_name}</option>
+                            ))}
+                        </select>
+                        <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    
+                    <button 
+                        onClick={() => router.push('/admin/pixel/clients')}
+                        className="bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95"
                     >
                         Manage Clients
-                    </Link>
+                    </button>
+
+                    <button 
+                        onClick={handleSignOut}
+                        className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 font-bold py-2.5 px-4 rounded-xl transition-all active:scale-95 flex items-center gap-2"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                    </button>
                 </div>
             </div>
 

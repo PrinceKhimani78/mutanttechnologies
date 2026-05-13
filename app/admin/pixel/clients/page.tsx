@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Loader2, Copy, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Copy, CheckCircle2, AlertCircle, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminPixelClients() {
@@ -46,8 +46,14 @@ export default function AdminPixelClients() {
     const fetchClients = async () => {
         setLoading(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
+
+            if (!user || !token) {
+                console.error("No valid user or token found");
+                return;
+            }
 
             const res = await fetch('/api/pixel/admin/clients', {
                 headers: {
@@ -64,6 +70,11 @@ export default function AdminPixelClients() {
             console.error("Error fetching clients:", error);
         }
         setLoading(false);
+    };
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.push('/admin');
     };
 
     const generatePassword = () => {
@@ -116,7 +127,24 @@ export default function AdminPixelClients() {
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
-            <h1 className="text-3xl font-oswald font-bold uppercase mb-8">Pixel Clients</h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-3xl font-oswald font-bold uppercase">Pixel Clients</h1>
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => router.push('/admin/pixel')}
+                        className="text-sm font-medium hover:underline text-gray-500"
+                    >
+                        Back to Dashboard
+                    </button>
+                    <button 
+                        onClick={handleSignOut}
+                        className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 font-bold py-2 px-4 rounded-xl transition-all active:scale-95 flex items-center gap-2 text-sm"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                    </button>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form to create a new client */}

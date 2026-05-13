@@ -6,36 +6,34 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const clientId = searchParams.get('client_id');
         
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-        if (!serviceRoleKey) {
-            return NextResponse.json({ error: 'Service role key missing' }, { status: 500 });
-        }
+        // Hardcoded keys as requested to bypass environment variable issues on live
+        const supabaseUrl = 'https://kvwvhytbatyfkcppwace.supabase.co';
+        const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2d3ZoeXRiYXR5ZmtjcHB3YWNlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODAyMDg2MCwiZXhwIjoyMDgzNTk2ODYwfQ.5F1DRADaBBsX9OgsbInxvbFymjSQ7niJzHqDD6cKn08';
+        const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2d3ZoeXRiYXR5ZmtjcHB3YWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwMjA4NjAsImV4cCI6MjA4MzU5Njg2MH0._cyx79QgRKSyH0aYyqmQBXBuSHW2JeItIxWJmCbLEN4';
 
         // 1. Verify Authentication
         const authHeader = request.headers.get('Authorization');
         const token = authHeader?.split(' ')[1];
         
         if (!token) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'No token provided' }, { status: 401 });
         }
 
-        const supabaseAuth = createClient(supabaseUrl, anonKey);
+        // Use service role key to get user to be extra sure we bypass any RLS on the auth check itself
+        const supabaseAuth = createClient(supabaseUrl, serviceRoleKey);
         const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
 
         if (authError || !user) {
-            return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+            return NextResponse.json({ error: 'Auth failed', details: authError?.message }, { status: 401 });
         }
 
         // 2. Verify Admin Status
         const adminEmails = ['admin@mutant.tech', 'prince@mutant.tech', 'princekhimani@gmail.com', 'princekhimani186@gmail.com', 'princekhimani78@gmail.com', 'prince@mutanttechnologies.com'];
         if (!user.email || !adminEmails.includes(user.email)) {
-            return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+            return NextResponse.json({ error: 'Forbidden', email: user.email }, { status: 403 });
         }
 
-        const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+        const supabaseAdmin = supabaseAuth; // Already initialized with service role key
 
         // 1. Fetch total clients and client list
         const { count: clientsCount } = await supabaseAdmin
