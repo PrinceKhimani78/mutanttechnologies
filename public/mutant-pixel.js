@@ -32,52 +32,45 @@
         };
     };
 
-    // 5. Integration Loader (The "Smart Container")
-    const loadIntegrations = async () => {
-        try {
-            const configUrl = `${scriptUrl.origin}/api/pixel/config?client_id=${clientId}`;
-            const res = await fetch(configUrl);
-            const config = await res.json();
+    // 5. Integration Injector
+    const injectIntegrations = (config) => {
+        if (!config || window.mutant_pixel_loaded) return;
+        window.mutant_pixel_loaded = true;
 
-            if (!config.success) return;
+        // Google Analytics (GTAG)
+        if (config.ga_id) {
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${config.ga_id}`;
+            document.head.appendChild(script);
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', config.ga_id);
+        }
 
-            // Google Analytics (GTAG)
-            if (config.ga_id) {
-                const script = document.createElement('script');
-                script.async = true;
-                script.src = `https://www.googletagmanager.com/gtag/js?id=${config.ga_id}`;
-                document.head.appendChild(script);
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', config.ga_id);
-            }
+        // Meta Pixel
+        if (config.meta_id) {
+            !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+            n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+            document,'script','https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', config.meta_id);
+            fbq('track', 'PageView');
+        }
 
-            // Meta Pixel
-            if (config.meta_id) {
-                !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-                n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-                document,'script','https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', config.meta_id);
-                fbq('track', 'PageView');
-            }
-
-            // TikTok Pixel
-            if (config.tiktok_id) {
-                !function (w, d, t) { w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","trackSelf","untrackSelf"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n;var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
-                ttq.load(config.tiktok_id);
-                ttq.page();
-                }(window, document, 'ttq');
-            }
-        } catch (e) {
-            console.warn('Mutant Pixel: Integrations failed to load', e);
+        // TikTok Pixel
+        if (config.tiktok_id) {
+            !function (w, d, t) { w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","trackSelf","untrackSelf"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n;var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+            ttq.load(config.tiktok_id);
+            ttq.page();
+            }(window, document, 'ttq');
         }
     };
 
     // 6. Track Function
-    const track = (extra = {}) => {
+    const track = async (extra = {}) => {
         const payload = {
             client_id: clientId,
             anonymous_id: anonymousId,
@@ -85,26 +78,27 @@
             referrer: document.referrer || '',
             user_agent: navigator.userAgent,
             timestamp: new Date().toISOString(),
-            ...getUTMs(), // Automatically inject UTMs into every event
+            ...getUTMs(),
             ...extra
         };
 
-        const body = JSON.stringify(payload);
-        
-        if (navigator.sendBeacon) {
-            navigator.sendBeacon(backendUrl, body);
-        } else {
-            fetch(backendUrl, {
+        try {
+            const res = await fetch(backendUrl, {
                 method: 'POST',
-                body,
+                body: JSON.stringify(payload),
                 headers: { 'Content-Type': 'application/json' },
                 keepalive: true
-            }).catch(() => {});
+            });
+            const data = await res.json();
+            if (data.success && data.config) {
+                injectIntegrations(data.config);
+            }
+        } catch (e) {
+            // Silently fail to not disrupt user experience
         }
     };
 
     // 7. Initialize
-    loadIntegrations();
     track({ event_type: 'pageview' });
 
     // 8. Identity Resolution: Capture emails from form fields

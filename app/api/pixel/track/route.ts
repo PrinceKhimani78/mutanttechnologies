@@ -144,7 +144,14 @@ export async function POST(request: Request) {
             if (newV) visitorId = newV.id;
         }
 
-        // 6. Insert Event with UTMs
+        // 6. Fetch Integration IDs for the Container
+        const { data: config } = await supabase
+            .from('pixel_clients')
+            .select('ga_id, meta_id, google_ads_id, tiktok_id')
+            .eq('id', client_id)
+            .single();
+
+        // 7. Insert Event with UTMs
         if (visitorId) {
             const { error: eventError } = await supabase
                 .from('pixel_events')
@@ -163,7 +170,10 @@ export async function POST(request: Request) {
             'Access-Control-Allow-Credentials': 'true',
         };
 
-        return NextResponse.json({ success: true }, { headers: dynamicCorsHeaders });
+        return NextResponse.json({ 
+            success: true,
+            config: config || {}
+        }, { headers: dynamicCorsHeaders });
     } catch (error) {
         console.error("Pixel Track Error:", error);
         const origin = request.headers.get('origin') || '*';
