@@ -8,14 +8,12 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-export async function OPTIONS(request: Request) {
-    const origin = request.headers.get('origin') || '*';
+export async function OPTIONS() {
     return NextResponse.json({}, { 
         headers: {
-            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Allow-Credentials': 'true',
         } 
     });
 }
@@ -48,35 +46,6 @@ export async function POST(request: Request) {
         const supabaseUrl = 'https://kvwvhytbatyfkcppwace.supabase.co';
         const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2d3ZoeXRiYXR5ZmtjcHB3YWNlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODAyMDg2MCwiZXhwIjoyMDgzNTk2ODYwfQ.5F1DRADaBBsX9OgsbInxvbFymjSQ7niJzHqDD6cKn08';
         const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-        const { data: client } = await supabase
-            .from('pixel_clients')
-            .select('website_url')
-            .eq('id', client_id)
-            .single();
-
-        if (!client) {
-            return NextResponse.json({ error: 'Invalid client ID' }, { status: 400, headers: corsHeaders });
-        }
-
-        // Domain Strictness Check
-        const requestOrigin = request.headers.get('origin') || '';
-        const requestReferer = request.headers.get('referer') || '';
-        const isLocal = requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1') || requestReferer.includes('localhost');
-        const clientDomain = client.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '');
-
-        // Only block if we have a valid domain to check against AND we are not on localhost
-        if (!isLocal && clientDomain) {
-            // More permissive check: if either matches, we allow it. 
-            // If both are missing, we log it but allow for now to prevent tracking loss due to browser privacy settings.
-            const originMatch = requestOrigin && requestOrigin.includes(clientDomain);
-            const refererMatch = requestReferer && requestReferer.includes(clientDomain);
-            
-            if ((requestOrigin || requestReferer) && !originMatch && !refererMatch) {
-                console.warn(`Blocked unauthorized tracking attempt for ${clientDomain} from Origin: ${requestOrigin}, Referer: ${requestReferer}`);
-                return NextResponse.json({ error: 'Unauthorized Origin' }, { status: 403, headers: corsHeaders });
-            }
-        }
 
         // 2. IP and Location
         const forwardedFor = request.headers.get('x-forwarded-for');
