@@ -116,6 +116,45 @@ export default function ClientDashboard() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const [activeTab, setActiveTab] = useState<'visitors' | 'integrations'>('visitors');
+    const [integrationIds, setIntegrationIds] = useState({
+        ga_id: '',
+        meta_id: '',
+        google_ads_id: '',
+        tiktok_id: ''
+    });
+    const [savingIntegrations, setSavingIntegrations] = useState(false);
+
+    useEffect(() => {
+        if (client) {
+            setIntegrationIds({
+                ga_id: client.ga_id || '',
+                meta_id: client.meta_id || '',
+                google_ads_id: client.google_ads_id || '',
+                tiktok_id: client.tiktok_id || ''
+            });
+        }
+    }, [client]);
+
+    const saveIntegrations = async () => {
+        setSavingIntegrations(true);
+        try {
+            const { error } = await supabase
+                .from('pixel_clients')
+                .update(integrationIds)
+                .eq('id', client.id);
+            
+            if (!error) {
+                await loadData();
+                alert('Integrations updated successfully!');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSavingIntegrations(false);
+        }
+    };
+
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.push('/pixel');
@@ -198,61 +237,81 @@ export default function ClientDashboard() {
                         <span className="text-sm text-gray-500 font-medium">Lead Intelligence Dashboard</span>
                     </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-full px-6 border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800">
-                    Sign Out
-                </Button>
+                
+                <div className="flex items-center gap-3">
+                    <div className="bg-gray-100 dark:bg-zinc-800 p-1 rounded-full flex gap-1">
+                        <button 
+                            onClick={() => setActiveTab('visitors')}
+                            className={`px-6 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'visitors' ? 'bg-white dark:bg-zinc-700 shadow-sm' : 'text-gray-500'}`}
+                        >
+                            Visitors
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('integrations')}
+                            className={`px-6 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'integrations' ? 'bg-white dark:bg-zinc-700 shadow-sm' : 'text-gray-500'}`}
+                        >
+                            Integrations
+                        </button>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={handleLogout} className="rounded-full px-6 border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800">
+                        Sign Out
+                    </Button>
+                </div>
             </header>
             
             <main className="p-6 sm:p-8 max-w-7xl mx-auto space-y-8 mt-4">
                 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                        <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-all"></div>
-                        <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
-                            <Users className="w-7 h-7" />
+                {activeTab === 'visitors' ? (
+                    <>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                            <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-all"></div>
+                            <div className="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-6">
+                                <Users className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-4xl font-bold mb-2 tracking-tight">{totalVisitors}</h3>
+                            <p className="text-base text-gray-500 font-medium">Companies Identified</p>
                         </div>
-                        <h3 className="text-4xl font-bold mb-2 tracking-tight">{totalVisitors}</h3>
-                        <p className="text-base text-gray-500 font-medium">Companies Identified</p>
+
+                        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                            <div className="absolute -right-6 -top-6 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-all"></div>
+                            <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6">
+                                <UserCheck className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-4xl font-bold mb-2 tracking-tight">{identifiedLeads}</h3>
+                            <p className="text-base text-gray-500 font-medium">Individual Leads (Resolved)</p>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-primary via-primary to-orange-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
+                            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full blur-3xl group-hover:bg-white/30 transition-all"></div>
+                            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md mb-6 border border-white/20">
+                                <Flame className="w-7 h-7 text-white" />
+                            </div>
+                            <h3 className="text-4xl font-bold mb-2 tracking-tight">{hotLeadsToday}</h3>
+                            <p className="text-base text-white/90 font-medium">Active Intent Today</p>
+                        </div>
                     </div>
 
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-8 border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                        <div className="absolute -right-6 -top-6 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-all"></div>
-                        <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-6">
-                            <UserCheck className="w-7 h-7" />
+                    {/* Lead Feed */}
+                    <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
+                        <div className="p-6 sm:p-8 border-b border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                            <div>
+                                <h2 className="text-2xl font-bold mb-1">Lead Intelligence Feed</h2>
+                                <p className="text-sm text-gray-500">Click on any visitor to see their intent and activity history.</p>
+                            </div>
+                            <div className="relative w-full sm:w-80">
+                                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input 
+                                    type="text"
+                                    placeholder="Search leads, cities, or emails..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
+                                />
+                            </div>
                         </div>
-                        <h3 className="text-4xl font-bold mb-2 tracking-tight">{identifiedLeads}</h3>
-                        <p className="text-base text-gray-500 font-medium">Individual Leads (Resolved)</p>
-                    </div>
 
-                    <div className="bg-gradient-to-br from-primary via-primary to-orange-500 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
-                        <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/20 rounded-full blur-3xl group-hover:bg-white/30 transition-all"></div>
-                        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md mb-6 border border-white/20">
-                            <Flame className="w-7 h-7 text-white" />
-                        </div>
-                        <h3 className="text-4xl font-bold mb-2 tracking-tight">{hotLeadsToday}</h3>
-                        <p className="text-base text-white/90 font-medium">Active Intent Today</p>
-                    </div>
-                </div>
-
-                {/* Lead Feed */}
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
-                    <div className="p-6 sm:p-8 border-b border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                        <div>
-                            <h2 className="text-2xl font-bold mb-1">Lead Intelligence Feed</h2>
-                            <p className="text-sm text-gray-500">Click on any visitor to see their intent and activity history.</p>
-                        </div>
-                        <div className="relative w-full sm:w-80">
-                            <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input 
-                                type="text"
-                                placeholder="Search leads, cities, or emails..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm font-medium"
-                            />
-                        </div>
-                    </div>
                     
                     <div className="divide-y divide-gray-50 dark:divide-zinc-800/50">
                         {filteredVisitors.length === 0 ? (
@@ -281,9 +340,12 @@ export default function ClientDashboard() {
                                                     <h3 className="font-bold text-xl leading-none text-gray-900 dark:text-white">
                                                         {visitor.company_name !== 'Unknown' ? visitor.company_name : (visitor.email || 'Anonymous Visitor')}
                                                     </h3>
-                                                    {isResolved && (
-                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400">
-                                                            Identified
+                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${visitor.intent_score > 50 ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500'}`}>
+                                                        {visitor.intent_score || 0} Intent
+                                                    </span>
+                                                    {visitor.first_utm_source && (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500 text-white uppercase">
+                                                            {visitor.first_utm_source}
                                                         </span>
                                                     )}
                                                 </div>
@@ -317,6 +379,67 @@ export default function ClientDashboard() {
                         )}
                     </div>
                 </div>
+                </>
+                ) : (
+                    <div className="max-w-3xl mx-auto">
+                        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-10 border border-gray-100 dark:border-zinc-800 shadow-sm">
+                            <h2 className="text-3xl font-bold mb-2 font-oswald uppercase">Smart Container</h2>
+                            <p className="text-gray-500 mb-8">Mutant Pixel can automatically load your other tracking pixels. One script, total control.</p>
+                            
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">Google Analytics (G-ID)</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="G-XXXXXXXXXX"
+                                        value={integrationIds.ga_id}
+                                        onChange={(e) => setIntegrationIds({...integrationIds, ga_id: e.target.value})}
+                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">Meta Pixel ID</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="1234567890"
+                                        value={integrationIds.meta_id}
+                                        onChange={(e) => setIntegrationIds({...integrationIds, meta_id: e.target.value})}
+                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">Google Ads Conversion ID</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="AW-123456789"
+                                        value={integrationIds.google_ads_id}
+                                        onChange={(e) => setIntegrationIds({...integrationIds, google_ads_id: e.target.value})}
+                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">TikTok Pixel ID</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="CXXXXXXXXXXXXXXXXXXX"
+                                        value={integrationIds.tiktok_id}
+                                        onChange={(e) => setIntegrationIds({...integrationIds, tiktok_id: e.target.value})}
+                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+                                    />
+                                </div>
+                                
+                                <Button 
+                                    onClick={saveIntegrations} 
+                                    disabled={savingIntegrations}
+                                    className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20 mt-4"
+                                >
+                                    {savingIntegrations ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CheckCircle2 className="w-5 h-5 mr-2" />}
+                                    Save Integrations
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
 
             {/* ACTIVITY MODAL */}

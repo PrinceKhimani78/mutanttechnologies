@@ -38,10 +38,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400, headers: corsHeaders });
         }
 
-        // 1. Connect to Supabase to verify client and origin
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        // 1. Connect to Supabase
+        const supabaseUrl = 'https://kvwvhytbatyfkcppwace.supabase.co';
+        const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2d3ZoeXRiYXR5ZmtjcHB3YWNlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODAyMDg2MCwiZXhwIjoyMDgzNTk2ODYwfQ.5F1DRADaBBsX9OgsbInxvbFymjSQ7niJzHqDD6cKn08';
+        const supabase = createClient(supabaseUrl, serviceRoleKey);
 
         const { data: client } = await supabase
             .from('pixel_clients')
@@ -72,40 +72,37 @@ export async function POST(request: Request) {
             }
         }
 
-        // 2. Get the IP Address
+        // 2. IP and Location
         const forwardedFor = request.headers.get('x-forwarded-for');
         let ip = forwardedFor ? forwardedFor.split(',')[0] : request.headers.get('x-real-ip') || 'Unknown';
-        
-        // Handle local dev IPs
-        if (ip === '::1' || ip === '127.0.0.1') {
-            ip = '8.8.8.8'; // Mock Google IP for local testing
-        }
+        if (ip === '::1' || ip === '127.0.0.1') ip = '8.8.8.8';
 
-        // 3. Fetch Company Name using Free IP-API
-        let company_name = 'Unknown';
-        let city = 'Unknown';
-        let country = 'Unknown';
-
+        let company_name = 'Unknown', city = 'Unknown', country = 'Unknown';
         if (ip !== 'Unknown') {
             try {
-                // Using http because ip-api free tier is http only
-                const ipResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,country,city,org`);
+                const ipResponse = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,city,org`);
                 const ipData = await ipResponse.json();
-                
                 if (ipData.status === 'success') {
                     company_name = ipData.org || 'Unknown';
                     city = ipData.city || 'Unknown';
                     country = ipData.country || 'Unknown';
                 }
-            } catch (error) {
-                console.error("IP Lookup failed:", error);
-            }
+            } catch (e) {}
         }
 
-        // 4. Check if visitor exists
+        // 3. Extract UTMs
+        const { utm_source, utm_medium, utm_campaign, utm_term, utm_content } = payload;
+
+        // 4. Intent Scoring Logic
+        let scoreBoost = 0;
+        if (event_type === 'pageview') scoreBoost = 1;
+        if (event_type === 'click') scoreBoost = 5;
+        if (event_type === 'identity') scoreBoost = 50;
+
+        // 5. Handle Visitor Logic
         const { data: existingVisitor } = await supabase
             .from('pixel_visitors')
-            .select('id, email')
+            .select('id, intent_score, first_utm_source')
             .eq('client_id', client_id)
             .eq('anonymous_id', anonymous_id)
             .single();
@@ -114,60 +111,36 @@ export async function POST(request: Request) {
 
         if (existingVisitor) {
             visitorId = existingVisitor.id;
-            
-            // Prepare update data
             const updateData: any = { 
                 last_visited_at: new Date().toISOString(),
+                intent_score: (existingVisitor.intent_score || 0) + scoreBoost,
+                last_utm_source: utm_source || undefined,
                 ip_address: ip,
-                company_name,
-                city,
-                country
+                company_name, city, country
             };
-            
-            // Only update email if we don't have it yet, or if a new one is provided
             if (email) updateData.email = email;
+            if (!existingVisitor.first_utm_source && utm_source) updateData.first_utm_source = utm_source;
             
-            await supabase
-                .from('pixel_visitors')
-                .update(updateData)
-                .eq('id', visitorId);
+            await supabase.from('pixel_visitors').update(updateData).eq('id', visitorId);
         } else {
-            // Create new visitor
             const insertData: any = {
-                client_id,
-                anonymous_id,
-                ip_address: ip,
-                company_name,
-                city,
-                country
+                client_id, anonymous_id, ip_address: ip, company_name, city, country,
+                intent_score: scoreBoost,
+                first_utm_source: utm_source || undefined,
+                last_utm_source: utm_source || undefined
             };
             if (email) insertData.email = email;
-
-            const { data: newVisitor, error: visitorError } = await supabase
-                .from('pixel_visitors')
-                .insert(insertData)
-                .select('id')
-                .single();
-                
-            if (visitorError) {
-                console.error("Error creating visitor:", visitorError);
-            } else if (newVisitor) {
-                visitorId = newVisitor.id;
-            }
+            const { data: newV } = await supabase.from('pixel_visitors').insert(insertData).select('id').single();
+            if (newV) visitorId = newV.id;
         }
 
-        // 5. Insert the Event
+        // 6. Insert Event with UTMs
         if (visitorId) {
             await supabase
                 .from('pixel_events')
                 .insert({
-                    client_id,
-                    visitor_id: visitorId,
-                    url,
-                    referrer,
-                    user_agent,
-                    event_type,
-                    metadata
+                    client_id, visitor_id: visitorId, url, referrer, user_agent, event_type, metadata,
+                    utm_source, utm_medium, utm_campaign, utm_term, utm_content
                 });
         }
 

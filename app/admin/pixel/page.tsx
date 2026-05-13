@@ -207,8 +207,20 @@ export default function AdminPixelDashboard() {
                                     >
                                         <td className="px-6 py-4 font-medium">
                                             <div className="flex flex-col">
-                                                <span>{visitor.company_name}</span>
-                                                {visitor.email && <span className="text-[10px] text-primary">{visitor.email}</span>}
+                                                <div className="flex items-center gap-2">
+                                                    <span>{visitor.company_name}</span>
+                                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${visitor.intent_score > 50 ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-500'}`}>
+                                                        {visitor.intent_score || 0}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    {visitor.email && <span className="text-[10px] text-primary">{visitor.email}</span>}
+                                                    {visitor.first_utm_source && (
+                                                        <span className="text-[8px] bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1 rounded font-bold uppercase">
+                                                            {visitor.first_utm_source}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-sm">
