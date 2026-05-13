@@ -45,12 +45,17 @@ export default function AdminPixelClients() {
 
     const fetchClients = async () => {
         setLoading(true);
-        const { data } = await supabase
-            .from('pixel_clients')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (data) setClients(data);
+        try {
+            const res = await fetch('/api/pixel/admin/clients');
+            const data = await res.json();
+            if (data.success) {
+                setClients(data.clients);
+            } else {
+                console.error("API Error fetching clients:", data.error);
+            }
+        } catch (error) {
+            console.error("Error fetching clients:", error);
+        }
         setLoading(false);
     };
 

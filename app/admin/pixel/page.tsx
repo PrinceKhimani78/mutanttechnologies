@@ -44,50 +44,15 @@ export default function AdminPixelDashboard() {
         setLoading(true);
 
         try {
-            // 1. Fetch total clients and client list
-            const { count: clientsCount } = await supabase
-                .from('pixel_clients')
-                .select('*', { count: 'exact', head: true });
-
-            const { count: verifiedClients } = await supabase
-                .from('pixel_clients')
-                .select('*', { count: 'exact', head: true })
-                .eq('installation_status', 'verified');
-
-            const { data: clientsData } = await supabase
-                .from('pixel_clients')
-                .select('id, company_name')
-                .order('company_name');
+            const res = await fetch(`/api/pixel/admin/dashboard?client_id=${selectedClientId}`);
+            const data = await res.json();
             
-            if (clientsData) setClients(clientsData);
-
-            // 2. Fetch visitors & traffic (filtered if needed)
-            let visitorsQuery = supabase.from('pixel_visitors').select('*', { count: 'exact', head: true });
-            let trafficQuery = supabase.from('pixel_visitors').select(`
-                id,
-                company_name,
-                city,
-                country,
-                last_visited_at,
-                pixel_clients ( company_name )
-            `).order('last_visited_at', { ascending: false }).limit(20);
-
-            if (selectedClientId !== 'all') {
-                visitorsQuery = visitorsQuery.eq('client_id', selectedClientId);
-                trafficQuery = trafficQuery.eq('client_id', selectedClientId);
-            }
-
-            const { count: visitorsCount } = await visitorsQuery;
-            const { data: trafficData } = await trafficQuery;
-
-            setStats({
-                totalClients: clientsCount || 0,
-                activeClients: verifiedClients || 0,
-                totalVisitors: visitorsCount || 0
-            });
-
-            if (trafficData) {
-                setRecentTraffic(trafficData);
+            if (data.success) {
+                setStats(data.stats);
+                setClients(data.clients);
+                setRecentTraffic(data.recentTraffic);
+            } else {
+                console.error("API Error fetching dashboard data:", data.error);
             }
         } catch (error) {
             console.error("Error fetching global pixel data:", error);
