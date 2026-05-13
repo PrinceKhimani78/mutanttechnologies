@@ -16,6 +16,7 @@ export default function AdminPixelDashboard() {
     });
     const [recentTraffic, setRecentTraffic] = useState<any[]>([]);
     const [clients, setClients] = useState<any[]>([]);
+    const [selectedClientId, setSelectedClientId] = useState<string>('all');
     const [loading, setLoading] = useState(true);
 
     // Modal state for visitor details
