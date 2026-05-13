@@ -387,46 +387,38 @@ export default function ClientDashboard() {
                             <p className="text-gray-500 mb-8">Mutant Pixel can automatically load your other tracking pixels. One script, total control.</p>
                             
                             <div className="space-y-6">
-                                <div>
-                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">Google Analytics (G-ID)</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="G-XXXXXXXXXX"
-                                        value={integrationIds.ga_id}
-                                        onChange={(e) => setIntegrationIds({...integrationIds, ga_id: e.target.value})}
-                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">Meta Pixel ID</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="1234567890"
-                                        value={integrationIds.meta_id}
-                                        onChange={(e) => setIntegrationIds({...integrationIds, meta_id: e.target.value})}
-                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">Google Ads Conversion ID</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="AW-123456789"
-                                        value={integrationIds.google_ads_id}
-                                        onChange={(e) => setIntegrationIds({...integrationIds, google_ads_id: e.target.value})}
-                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-bold mb-2 uppercase tracking-wider text-gray-400">TikTok Pixel ID</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="CXXXXXXXXXXXXXXXXXXX"
-                                        value={integrationIds.tiktok_id}
-                                        onChange={(e) => setIntegrationIds({...integrationIds, tiktok_id: e.target.value})}
-                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
-                                    />
-                                </div>
+                                {['ga_id', 'meta_id', 'google_ads_id', 'tiktok_id'].map((id) => (
+                                    <div key={id}>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="block text-sm font-bold uppercase tracking-wider text-gray-400">
+                                                {id === 'ga_id' ? 'Google Analytics (G-ID)' : 
+                                                 id === 'meta_id' ? 'Meta Pixel ID' : 
+                                                 id === 'google_ads_id' ? 'Google Ads Conversion ID' : 
+                                                 'TikTok Pixel ID'}
+                                            </label>
+                                            {integrationIds[id as keyof typeof integrationIds] && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                        <CheckCircle2 className="w-3 h-3" /> Installed
+                                                    </span>
+                                                    <button 
+                                                        onClick={() => setIntegrationIds({...integrationIds, [id]: ''})}
+                                                        className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <input 
+                                            type="text" 
+                                            placeholder={id === 'ga_id' ? 'G-XXXXXXXXXX' : id === 'meta_id' ? '1234567890' : id === 'google_ads_id' ? 'AW-123456789' : 'CXXXXXXXXXXXXXXXXXXX'}
+                                            value={integrationIds[id as keyof typeof integrationIds]}
+                                            onChange={(e) => setIntegrationIds({...integrationIds, [id]: e.target.value})}
+                                            className="w-full px-6 py-4 bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-2 focus:ring-primary/20 outline-none font-medium"
+                                        />
+                                    </div>
+                                ))}
                                 
                                 <Button 
                                     onClick={saveIntegrations} 
@@ -434,8 +426,41 @@ export default function ClientDashboard() {
                                     className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg shadow-primary/20 mt-4"
                                 >
                                     {savingIntegrations ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CheckCircle2 className="w-5 h-5 mr-2" />}
-                                    Save Integrations
+                                    Save Changes
                                 </Button>
+                                <div className="pt-8 border-t border-gray-100 dark:border-zinc-800 mt-8">
+                                    <h3 className="text-xl font-bold mb-2 font-oswald uppercase text-gray-400">Email Digest</h3>
+                                    <p className="text-sm text-gray-500 mb-6">Want to see your top leads in your inbox right now? Click the button below to send a manual digest.</p>
+                                    
+                                    <Button 
+                                        variant="outline"
+                                        onClick={async () => {
+                                            const btn = document.activeElement as HTMLButtonElement;
+                                            btn.disabled = true;
+                                            const originalText = btn.innerText;
+                                            btn.innerText = 'Sending...';
+                                            
+                                            try {
+                                                const res = await fetch('/api/pixel/cron/digest');
+                                                const data = await res.json();
+                                                if (data.success) {
+                                                    alert('Digest email sent successfully!');
+                                                } else {
+                                                    alert('Failed to send digest. Make sure you have visitors in the last 24 hours.');
+                                                }
+                                            } catch (e) {
+                                                alert('An error occurred while sending the digest.');
+                                            } finally {
+                                                btn.disabled = false;
+                                                btn.innerText = originalText;
+                                            }
+                                        }}
+                                        className="w-full h-12 rounded-2xl text-sm font-bold border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                                    >
+                                        <Mail className="w-4 h-4 mr-2" />
+                                        Send Daily Digest Now
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
