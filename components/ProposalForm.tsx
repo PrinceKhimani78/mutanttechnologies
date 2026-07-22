@@ -126,6 +126,7 @@ export const ProposalForm = () => {
                                 {service.title}
                             </option>
                         ))}
+                        <option value="White Label GoHighLevel Development" className="bg-zinc-900 text-white">White Label GoHighLevel Development</option>
                         <option value="Other" className="bg-zinc-900 text-white">Other</option>
                     </select>
                 </div>
