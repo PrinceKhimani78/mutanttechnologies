@@ -93,6 +93,7 @@ const testimonials = [
 ];
 
 import { Service } from '@/lib/types';
+import { Navbar } from '@/components/Navbar';
 
 export default function WhiteLabelGHLClient({ service }: { service?: Service }) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -164,6 +165,7 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
 
     return (
         <div ref={containerRef} className="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-orange-500 selection:text-white transition-colors duration-300">
+            <Navbar />
             
             {/* HERO SECTION */}
             <section className="relative min-h-[90vh] bg-[#020617] text-white pt-24 pb-12 lg:pt-32 lg:pb-20 overflow-hidden flex items-center">
