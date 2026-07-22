@@ -33,6 +33,7 @@ const defaultServicesLinks = [
   { name: "Brand Identity", href: "/services/brand-identity" },
   { name: "Cyber Security", href: "/services/cyber-security" },
   { name: "AI Automations", href: "/services/ai-automations" },
+  { name: "White Label GoHighLevel", href: "/services/white-label-gohighlevel" },
 ];
 
 export const Navbar = ({
@@ -57,12 +58,18 @@ export const Navbar = ({
         .order("title");
 
       if (data && data.length > 0) {
-        setServicesLinks(
-          data.map((s) => ({
-            name: s.title,
-            href: `/services/${s.slug}`,
-          })),
-        );
+        const fetchedLinks = data.map((s: any) => ({
+          name: s.title,
+          href: `/services/${s.slug}`,
+        }));
+        
+        // Ensure White Label GoHighLevel is always in the list since it's statically generated right now
+        const hasGHL = fetchedLinks.some((l: any) => l.href === "/services/white-label-gohighlevel");
+        if (!hasGHL) {
+            fetchedLinks.push({ name: "White Label GoHighLevel", href: "/services/white-label-gohighlevel" });
+        }
+        
+        setServicesLinks(fetchedLinks.sort((a: any, b: any) => a.name.localeCompare(b.name)));
       }
     };
     fetchServices();
