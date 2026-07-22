@@ -43,4 +43,5 @@ export interface Service {
     benefits_image?: string;
     feature_mockup_image?: string;
     video_url?: string; // Additional field for future use
+    custom_data?: any; // JSONB in DB for highly custom page layouts
 }

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import ServiceDetailClient from '@/components/ServiceDetailClient';
+import WhiteLabelGHLClient from '@/components/WhiteLabelGHLClient';
 import { notFound } from 'next/navigation';
 import { Service } from '@/lib/types';
 import { Footer } from '@/components/Footer';
@@ -26,7 +27,7 @@ export async function generateStaticParams() {
     const fallbackSlugs = [
         'web-development', 'app-development', 'digital-marketing',
         'graphic-design', 'seo', 'geo', 'brand-identity',
-        'cyber-security', 'ai-automations'
+        'cyber-security', 'ai-automations', 'white-label-gohighlevel'
     ];
 
     return fallbackSlugs.map(slug => ({ slug }));
@@ -93,7 +94,11 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <ServiceDetailClient service={service as Service} />
+            {slug === 'white-label-gohighlevel' ? (
+                <WhiteLabelGHLClient service={service as Service} />
+            ) : (
+                <ServiceDetailClient service={service as Service} />
+            )}
             <Footer />
         </>
     );

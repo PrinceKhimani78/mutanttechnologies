@@ -31,7 +31,8 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
         features: [],
         tools: [],
         process: [],
-        benefits: []
+        benefits: [],
+        custom_data: {}
     });
 
     // Helper to handle simple field changes
@@ -221,6 +222,29 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
                         onChange={(e) => {
                             const array = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
                             handleChange('tools', array);
+                        }}
+                    />
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm space-y-6">
+                <h2 className="text-xl font-bold border-b pb-4 mb-4">Custom JSON Data</h2>
+                <p className="text-sm text-zinc-500 mb-4">For highly customized landing pages (e.g. White Label GHL), you can manage the specific sections here.</p>
+
+                <div>
+                    <label className="block text-sm font-bold mb-2">Custom Data (Valid JSON only)</label>
+                    <textarea
+                        className="w-full p-3 border rounded-lg bg-transparent font-mono text-sm"
+                        rows={6}
+                        defaultValue={formData.custom_data ? JSON.stringify(formData.custom_data, null, 2) : '{}'}
+                        onChange={(e) => {
+                            try {
+                                const parsed = JSON.parse(e.target.value);
+                                handleChange('custom_data', parsed);
+                                e.target.classList.remove('border-red-500');
+                            } catch (err) {
+                                e.target.classList.add('border-red-500');
+                            }
                         }}
                     />
                 </div>
