@@ -1,6 +1,3 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import Link from 'next/link';
@@ -8,68 +5,43 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types";
 
-// Remove static revalidation - now using client-side fetching
-// export const revalidate = 60;
+import { getMetadata } from "@/lib/seo";
+import { Metadata } from "next";
 
-// Metadata should be defined in a layout.tsx or server component for client components
-// export const metadata: Metadata = {
-//     title: "Blog | Mutant Technologies",
-//     description: "Explore insights and updates from the world of digital innovation, web development, and marketing.",
-//     alternates: {
-//         canonical: '/blog',
-//     },
-// };
+export const revalidate = 60;
 
-export default function BlogPage() {
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+export async function generateMetadata(): Promise<Metadata> {
+    return await getMetadata('/blog', {
+        title: "Blog | Mutant Technologies",
+        description: "Explore insights and updates from the world of digital innovation, web development, and marketing.",
+    });
+}
 
-    useEffect(() => {
-        async function fetchPosts() {
-            const { data, error: fetchError } = await supabase
-                .from('posts')
-                .select('*')
-                .eq('is_published', true)
-                .order('created_at', { ascending: false });
+export default async function BlogPage() {
+    const { data, error: fetchError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
 
-            if (fetchError) {
-                console.error('Error fetching public posts:', fetchError);
-                setError(fetchError.message);
-            } else if (data) {
-                setPosts(data as Post[]);
-            }
-            setLoading(false);
-        }
+    if (fetchError) {
+        console.error('Error fetching public posts:', fetchError);
+    }
+    
+    const posts = (data || []) as Post[];
 
-        fetchPosts();
-    }, []);
-
-    if (loading) {
+    if (!posts || posts.length === 0) {
         return (
             <div className="min-h-screen bg-background">
                 <Navbar />
                 <div className="container mx-auto px-6 py-32 text-center">
-                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                    <h2 className="text-2xl font-bold mb-4">No posts found</h2>
+                    <p className="text-gray-500">Check back later for new content.</p>
                 </div>
                 <Footer />
             </div>
         );
     }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-background text-foreground">
-                <Navbar />
-                <div className="container mx-auto px-6 py-32 text-center">
-                    <p className="text-red-500">Error loading posts: {error}</p>
-                </div>
-                <Footer />
-            </div>
-        );
-    }
-
-    const safePosts = posts; // Now `posts` is already `Post[]` from state
 
     return (
         <main className="bg-background min-h-screen text-foreground transition-colors duration-300">
@@ -86,13 +58,13 @@ export default function BlogPage() {
                 </div>
 
                 {/* Blog Grid */}
-                {safePosts.length === 0 ? (
+                {posts.length === 0 ? (
                     <div className="text-center py-20 text-gray-500">
                         No articles published yet. Check back soon!
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-x-8 gap-y-16 mx-auto">
-                        {safePosts.map((post) => (
+                        {posts.map((post) => (
                             <Link href={`/blog/${post.slug}`} key={post.id} className="group cursor-pointer block">
                                 {/* Image Container */}
                                 <div className="aspect-[4/3] bg-gray-100 dark:bg-zinc-900 rounded-2xl overflow-hidden mb-6 relative border border-gray-200 dark:border-zinc-800">

@@ -29,9 +29,6 @@ export const metadata: Metadata = {
   description: "Creative, bold, future-focused digital agency. Web Development, SEO, Digital Marketing, and Cyber Security services.",
   authors: [{ name: "Mutant Technologies" }],
   metadataBase: new URL('https://www.mutanttechnologies.com'),
-  alternates: {
-    canonical: '/',
-  },
   openGraph: {
     title: "Mutant Technologies - Shine Bright Online",
     description: "Creative, bold, future-focused digital agency.",
@@ -39,6 +36,10 @@ export const metadata: Metadata = {
     siteName: 'Mutant Technologies',
     locale: 'en_US',
     type: 'website',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

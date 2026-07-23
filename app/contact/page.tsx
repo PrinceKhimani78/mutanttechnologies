@@ -2,10 +2,15 @@ import { Navbar } from "@/components/Navbar";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 
-export const metadata = {
-    title: "Contact Us",
-    description: "Get in touch with Mutant Technologies for your next digital project.",
-};
+import { getMetadata } from "@/lib/seo";
+import { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+    return await getMetadata('/contact', {
+        title: "Contact Us | Mutant Technologies",
+        description: "Get in touch with Mutant Technologies for your next digital project.",
+    });
+}
 
 export default function ContactPage() {
     return (
