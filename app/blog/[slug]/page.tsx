@@ -71,6 +71,7 @@ export async function generateMetadata({
     .from("posts")
     .select("*")
     .eq("slug", slug)
+    .eq("is_published", true)
     .single();
 
   if (!post) {
@@ -119,6 +120,7 @@ export default async function BlogPost({
     .from("posts")
     .select("*")
     .eq("slug", slug)
+    .eq("is_published", true)
     .single();
 
   if (!post) {
