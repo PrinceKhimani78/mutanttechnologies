@@ -1,5 +1,7 @@
 import { RenderBuilderContent } from "@/components/builder-page";
 import { notFound } from "next/navigation";
+import { getMetadata } from "@/lib/seo";
+import { Metadata } from "next";
 
 const model = "page";
 
@@ -36,6 +38,18 @@ interface PageProps {
         page: string[];
     }>;
     searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+// Gives every Builder-authored page its own canonical/title/description
+// (via lib/seo's `page_metadata` table) instead of inheriting the root layout defaults.
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ page: string[] }>;
+}): Promise<Metadata> {
+    const { page } = await params;
+    const urlPath = "/" + (page?.join("/") || "");
+    return getMetadata(urlPath, {});
 }
 
 export default async function Page(props: PageProps) {

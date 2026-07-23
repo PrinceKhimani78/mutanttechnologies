@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: '*',
             allow: '/',
-            disallow: ['/admin/', '/private/'],
+            disallow: ['/admin', '/private/', '/pixel'],
         },
         sitemap: 'https://www.mutanttechnologies.com/sitemap.xml',
     }

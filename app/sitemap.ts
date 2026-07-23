@@ -63,5 +63,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         console.error("Error fetching services for sitemap:", error);
     }
 
-    return [...staticPages, ...blogPages, ...servicePages];
+    // 4. Fetch Builder.io CMS pages so they're discoverable without manual linking
+    let builderPages: MetadataRoute.Sitemap = [];
+    try {
+        const knownPaths = new Set([
+            ...staticPages.map((p) => p.url),
+            ...blogPages.map((p) => p.url),
+            ...servicePages.map((p) => p.url),
+        ]);
+
+        const builderApiKey = process.env.NEXT_PUBLIC_BUILDER_API_KEY;
+        if (builderApiKey) {
+            const { builder } = await import('@builder.io/sdk');
+            builder.init(builderApiKey);
+
+            const pages = await builder.getAll('page', {
+                options: { noTargeting: true },
+                apiKey: builderApiKey,
+            });
+
+            builderPages = (pages || [])
+                .map((page) => page?.data?.url)
+                .filter((url): url is string => !!url)
+                .map((url) => `${baseUrl}${url}`)
+                .filter((url) => !knownPaths.has(url))
+                .map((url) => ({
+                    url,
+                    lastModified: new Date(),
+                    changeFrequency: 'weekly' as const,
+                    priority: 0.6,
+                }));
+        }
+    } catch (error) {
+        console.error("Error fetching Builder.io pages for sitemap:", error);
+    }
+
+    return [...staticPages, ...blogPages, ...servicePages, ...builderPages];
 }

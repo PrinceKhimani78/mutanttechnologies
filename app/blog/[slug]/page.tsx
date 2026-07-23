@@ -10,6 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import { Post } from "@/lib/types";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { getMetadata } from "@/lib/seo";
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
@@ -64,7 +65,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const supabase = await getSupabase();
 
-  if (!supabase) return { title: "Post Not Found" };
+  if (!supabase) return { title: "Post Not Found", robots: { index: false, follow: false } };
 
   const { data: post } = await supabase
     .from("posts")
@@ -75,20 +76,23 @@ export async function generateMetadata({
   if (!post) {
     return {
       title: "Post Not Found",
+      robots: { index: false, follow: false },
     };
   }
 
+  const metadata = await getMetadata(`/blog/${slug}`, {
+    title: post.title,
+    description: post.excerpt || `Read ${post.title} on Mutant Technologies blog.`,
+  });
+
   return {
-    title: `${post.title} | Mutant Technologies`,
-    description:
-      post.excerpt || `Read ${post.title} on Mutant Technologies blog.`,
+    ...metadata,
     openGraph: {
-      title: post.title,
-      description: post.excerpt,
+      ...metadata.openGraph,
       type: "article",
       publishedTime: post.created_at,
       authors: ["Mutant Technologies"],
-      images: post.cover_image ? [post.cover_image] : [],
+      images: post.cover_image ? [post.cover_image] : metadata.openGraph?.images,
     },
   };
 }
