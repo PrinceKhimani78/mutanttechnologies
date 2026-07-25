@@ -20,6 +20,10 @@
         localStorage.setItem('mutant_pixel_anon_id', anonymousId);
     }
 
+    // 3.5 Session Recording Buffer
+    let rrwebEvents = [];
+    const recordUrl = `${scriptUrl.origin}/api/pixel/record`;
+
     // 4. Capture UTM Parameters
     const getUTMs = () => {
         const params = new URLSearchParams(window.location.search);
@@ -90,12 +94,109 @@
                 keepalive: true
             });
             const data = await res.json();
-            if (data.success && data.config) {
-                injectIntegrations(data.config);
+            if (data.success) {
+                if (data.config) injectIntegrations(data.config);
+                if (data.popup) renderPopup(data.popup);
             }
         } catch (e) {
             // Silently fail to not disrupt user experience
         }
+    };
+
+    // 6.5 Smart Popup Renderer
+    const renderPopup = (popupConfig) => {
+        if (document.getElementById('mutant-pixel-popup')) return; // Already showing
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'mutant-pixel-popup';
+        Object.assign(overlay.style, {
+            position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.5)', zIndex: '999999',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: '0', transition: 'opacity 0.3s ease'
+        });
+
+        const modal = document.createElement('div');
+        Object.assign(modal.style, {
+            backgroundColor: '#fff', padding: '32px', borderRadius: '16px',
+            maxWidth: '400px', width: '90%', boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            fontFamily: 'system-ui, -apple-system, sans-serif', position: 'relative',
+            transform: 'translateY(20px)', transition: 'transform 0.3s ease'
+        });
+
+        let contentHtml = '';
+        if (popupConfig.type === 'form') {
+            contentHtml = `
+                <form id="mutant-pixel-form" style="display:flex; flex-direction:column; gap:12px;">
+                    <input type="text" name="name" placeholder="Your Name" required style="padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; width:100%; box-sizing:border-box;">
+                    <input type="email" name="email" placeholder="Your Email" required style="padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; width:100%; box-sizing:border-box;">
+                    <input type="tel" name="phone" placeholder="Your Phone Number" required style="padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; width:100%; box-sizing:border-box;">
+                    <input type="url" name="website" placeholder="Your Website URL" required style="padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; width:100%; box-sizing:border-box;">
+                    <button type="submit" style="padding:12px; background:#ff4a00; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; margin-top:8px;">${popupConfig.submit_text || 'Submit'}</button>
+                    <p id="mutant-pixel-form-msg" style="display:none; color:green; font-size:14px; margin:0; text-align:center;"></p>
+                </form>
+            `;
+        } else {
+            contentHtml = `<a href="${popupConfig.cta_link || '#'}" style="display:block; width:100%; padding:12px; background:#ff4a00; color:#fff; text-align:center; text-decoration:none; border-radius:8px; font-weight:600; box-sizing:border-box;">${popupConfig.cta_text || 'Learn More'}</a>`;
+        }
+
+        modal.innerHTML = `
+            <button id="mutant-popup-close" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:24px; cursor:pointer; color:#666;">&times;</button>
+            <h2 style="margin:0 0 16px 0; font-size:24px; color:#111; font-weight:700;">${popupConfig.title || 'Special Offer'}</h2>
+            <p style="margin:0 0 24px 0; font-size:16px; color:#444; line-height:1.5;">${popupConfig.body || ''}</p>
+            ${contentHtml}
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            modal.style.transform = 'translateY(0)';
+        });
+
+        // Close logic
+        const closeBtn = modal.querySelector('#mutant-popup-close');
+        closeBtn.onclick = () => {
+            overlay.style.opacity = '0';
+            modal.style.transform = 'translateY(20px)';
+            setTimeout(() => overlay.remove(), 300);
+            track({ event_type: 'popup_dismissed', metadata: { popup_title: popupConfig.title } });
+        };
+
+        // Handle form submission
+        const form = modal.querySelector('#mutant-pixel-form');
+        if (form) {
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('button');
+                btn.innerText = 'Submitting...';
+                btn.disabled = true;
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    await fetch(`${scriptUrl.origin}/api/pixel/submit-popup`, {
+                        method: 'POST',
+                        body: JSON.stringify({ ...data, client_id: clientId, url: window.location.href }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const msg = modal.querySelector('#mutant-pixel-form-msg');
+                    msg.style.display = 'block';
+                    msg.innerText = 'Thanks! We will be in touch shortly.';
+                    btn.style.display = 'none';
+                    setTimeout(() => closeBtn.click(), 3000);
+                } catch (err) {
+                    btn.innerText = 'Error. Try Again.';
+                    btn.disabled = false;
+                }
+            };
+        }
+
+        // Track view
+        track({ event_type: 'popup_viewed', metadata: { popup_title: popupConfig.title } });
     };
 
     // 7. Initialize
@@ -131,5 +232,61 @@
             }
         });
     }, true);
+
+    // 10. Start Session Recording (rrweb)
+    const startRecording = () => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/rrweb@2.0.0-alpha.11/dist/rrweb.min.js';
+        script.onload = () => {
+            if (window.rrweb) {
+                // Wait for the DOM to be fully loaded and React to hydrate before taking the first snapshot
+                const initRecord = () => {
+                    window.rrweb.record({
+                        emit(event) {
+                            rrwebEvents.push(event);
+                        },
+                        recordCanvas: true,
+                        collectFonts: true
+                    });
+
+                    // Flush events to server every 10 seconds
+                    setInterval(flushRecording, 10000);
+                    
+                    // Flush on exit
+                    window.addEventListener('beforeunload', flushRecording);
+                };
+
+                if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                    setTimeout(initRecord, 1000); // Give Next.js a second to hydrate
+                } else {
+                    window.addEventListener('DOMContentLoaded', () => setTimeout(initRecord, 1000));
+                }
+            }
+        };
+        document.head.appendChild(script);
+    };
+
+    const flushRecording = () => {
+        if (rrwebEvents.length === 0) return;
+        const eventsToSend = [...rrwebEvents];
+        rrwebEvents = []; // clear buffer
+
+        const payload = {
+            client_id: clientId,
+            anonymous_id: anonymousId,
+            url: window.location.href,
+            events: eventsToSend
+        };
+
+        // Use keepalive or sendBeacon to ensure it fires on page exit
+        fetch(recordUrl, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true
+        }).catch(() => {});
+    };
+
+    startRecording();
 
 })();

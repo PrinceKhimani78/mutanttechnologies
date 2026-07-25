@@ -194,10 +194,14 @@ export const Navbar = ({
               if (link.name === "Services") {
                 return (
                   <div key={link.name} className="relative group perspective">
-                    <button className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-3">
-                      {link.name}{" "}
-                      <span className="text-[10px] opacity-50 mt-[6px]">▼</span>
-                    </button>
+                    <Link 
+                      href="/services" 
+                      onClick={(e) => handleLinkClick(e, "/services")}
+                      className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2"
+                    >
+                      {link.name}
+                      <span className="text-[10px] opacity-50 mt-[2px]">▼</span>
+                    </Link>
 
                     {/* Dropdown */}
                     <div className="absolute top-full text-left left-1/2 -translate-x-1/2 mt-2 w-64 bg-background border border-gray-100 dark:border-gray-800 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top group-hover:translate-y-0 translate-y-2 p-2">
@@ -272,18 +276,29 @@ export const Navbar = ({
               <div key={link.name} className="mobile-nav-link">
                 {link.name === "Services" ? (
                   <div className="flex flex-col">
-                    <button
-                      onClick={() => setIsServicesOpen(!isServicesOpen)}
-                      className="flex items-center justify-between text-2xl sm:text-4xl font-oswald font-bold uppercase text-foreground hover:text-primary transition-colors w-full"
-                    >
-                      {link.name}
-                      <ChevronDown
-                        className={cn(
-                          "w-5 h-5 transition-transform duration-300",
-                          isServicesOpen ? "rotate-180" : "",
-                        )}
-                      />
-                    </button>
+                    <div className="flex items-center justify-between w-full">
+                      <Link
+                        href="/services"
+                        onClick={(e) => {
+                          setIsOpen(false);
+                          handleLinkClick(e, "/services");
+                        }}
+                        className="text-2xl sm:text-4xl font-oswald font-bold uppercase text-foreground hover:text-primary transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                      <button
+                        onClick={() => setIsServicesOpen(!isServicesOpen)}
+                        className="p-2"
+                      >
+                        <ChevronDown
+                          className={cn(
+                            "w-8 h-8 transition-transform duration-300",
+                            isServicesOpen ? "rotate-180" : "",
+                          )}
+                        />
+                      </button>
+                    </div>
 
                     <div
                       className={cn(
