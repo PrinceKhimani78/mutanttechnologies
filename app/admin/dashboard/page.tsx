@@ -92,11 +92,13 @@ export default function AdminDashboard() {
 
     const managementCards = [
         { title: 'Services', icon: Layout, link: '/admin/services', desc: 'Manage service pages and features', color: 'text-blue-500' },
+        { title: 'Careers', icon: Briefcase, link: '/admin/careers', desc: 'Manage job postings and roles', color: 'text-emerald-500' },
         { title: 'Portfolio', icon: Briefcase, link: '/admin/portfolio', desc: 'Case studies and project showcases', color: 'text-purple-500' },
         { title: 'Testimonials', icon: MessageSquare, link: '/admin/testimonials', desc: 'Client feedback and reviews', color: 'text-orange-500' },
         { title: 'Page SEO', icon: Rocket, link: '/admin/seo', desc: 'Meta titles, descriptions & social', color: 'text-green-500' },
         { title: 'Site Settings', icon: Settings, link: '/admin/settings', desc: 'Global configurations and contact info', color: 'text-zinc-500' },
     ];
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 text-foreground pb-20">

@@ -45,3 +45,15 @@ export interface Service {
     video_url?: string; // Additional field for future use
     custom_data?: any; // JSONB in DB for highly custom page layouts
 }
+
+export interface Career {
+    id: string;
+    title: string;
+    department: string;
+    location: string;
+    type: string;
+    description: string;
+    requirements: string[];
+    is_active: boolean;
+    created_at: string;
+}
