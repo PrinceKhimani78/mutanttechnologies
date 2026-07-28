@@ -99,14 +99,6 @@ export async function POST(request: Request) {
         }
         // 6. Smart Popup Logic (Demo)
         let popupConfig = null;
-        if (event_type === 'pageview' && (url.toLowerCase().includes('seo') || url.toLowerCase().includes('services') || url.toLowerCase().includes('mutant'))) {
-            popupConfig = {
-                type: 'form',
-                title: 'Free SEO Audit 🚀',
-                body: 'Want to see how you rank against your competitors? Get a free, comprehensive SEO audit delivered to your inbox.',
-                submit_text: 'Get My Free Audit'
-            };
-        }
 
         return NextResponse.json({ 
             success: true,
