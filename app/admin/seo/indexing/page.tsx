@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import {
-    ArrowLeft, Loader2, Search, RefreshCw, ExternalLink,
-    CheckCircle2, XCircle, AlertTriangle, HelpCircle,
+    ArrowLeft, Loader2, Search, RefreshCw, ExternalLink, Send,
+    CheckCircle2, XCircle, AlertTriangle, HelpCircle, History,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,13 +36,24 @@ interface InspectionResult {
 }
 
 type StatusMap = Record<string, { loading: boolean; result?: InspectionResult; deepLink?: string; error?: string }>;
+type SubmitMap = Record<string, { loading: boolean; message?: string; error?: string }>;
 
-async function authedFetch(path: string, body?: object) {
+interface LogEntry {
+    id: string;
+    action: 'sitemap_submit' | 'inspect' | 'indexnow_submit';
+    url: string | null;
+    status: 'success' | 'error';
+    message: string | null;
+    triggered_by: string | null;
+    created_at: string;
+}
+
+async function authedFetch(path: string, body?: object, method: 'GET' | 'POST' = 'POST') {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Not logged in');
 
     const res = await fetch(path, {
-        method: 'POST',
+        method,
         headers: {
             Authorization: `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
@@ -53,6 +64,12 @@ async function authedFetch(path: string, body?: object) {
     if (!res.ok) throw new Error(json.message || json.error || 'Request failed');
     return json;
 }
+
+const ACTION_LABELS: Record<LogEntry['action'], string> = {
+    sitemap_submit: 'Sitemap resubmitted',
+    inspect: 'Status checked',
+    indexnow_submit: 'Submitted via IndexNow',
+};
 
 function VerdictBadge({ verdict, coverageState }: { verdict: string; coverageState?: string }) {
     const map: Record<string, { icon: React.ReactNode; className: string; label: string }> = {
@@ -74,9 +91,24 @@ export default function IndexingDashboard() {
     const [configured, setConfigured] = useState<boolean | null>(null);
     const [rows, setRows] = useState<ContentRow[]>([]);
     const [status, setStatus] = useState<StatusMap>({});
+    const [submitting, setSubmitting] = useState<SubmitMap>({});
     const [manualUrl, setManualUrl] = useState('');
     const [manualStatus, setManualStatus] = useState<{ loading: boolean; result?: InspectionResult; deepLink?: string; error?: string }>({ loading: false });
+    const [manualSubmit, setManualSubmit] = useState<{ loading: boolean; message?: string; error?: string }>({ loading: false });
     const [sitemapState, setSitemapState] = useState<{ loading: boolean; message?: string; error?: string }>({ loading: false });
+    const [log, setLog] = useState<LogEntry[]>([]);
+    const [logLoading, setLogLoading] = useState(true);
+
+    const loadLog = useCallback(async () => {
+        setLogLoading(true);
+        try {
+            const json = await authedFetch('/api/seo/activity-log', undefined, 'GET');
+            setLog(json.events || []);
+        } catch {
+            // Table may not exist yet if the migration hasn't been run - just show an empty log, not an error.
+        }
+        setLogLoading(false);
+    }, []);
 
     useEffect(() => {
         (async () => {
@@ -92,7 +124,8 @@ export default function IndexingDashboard() {
             setRows([...staticRows, ...postRows, ...serviceRows]);
             setLoading(false);
         })();
-    }, []);
+        loadLog();
+    }, [loadLog]);
 
     const checkUrl = useCallback(async (id: string, url: string) => {
         setStatus((s) => ({ ...s, [id]: { loading: true } }));
@@ -105,7 +138,19 @@ export default function IndexingDashboard() {
             if (message.includes('not_configured') || message.includes('not set up')) setConfigured(false);
             setStatus((s) => ({ ...s, [id]: { loading: false, error: message } }));
         }
-    }, []);
+        loadLog();
+    }, [loadLog]);
+
+    const submitIndexNow = useCallback(async (id: string, url: string) => {
+        setSubmitting((s) => ({ ...s, [id]: { loading: true } }));
+        try {
+            const json = await authedFetch('/api/seo/submit-indexnow', { url });
+            setSubmitting((s) => ({ ...s, [id]: { loading: false, message: json.message } }));
+        } catch (err) {
+            setSubmitting((s) => ({ ...s, [id]: { loading: false, error: (err as Error).message } }));
+        }
+        loadLog();
+    }, [loadLog]);
 
     const checkManualUrl = async () => {
         if (!manualUrl) return;
@@ -119,6 +164,19 @@ export default function IndexingDashboard() {
             if (message.includes('not_configured') || message.includes('not set up')) setConfigured(false);
             setManualStatus({ loading: false, error: message });
         }
+        loadLog();
+    };
+
+    const submitManualIndexNow = async () => {
+        if (!manualUrl) return;
+        setManualSubmit({ loading: true });
+        try {
+            const json = await authedFetch('/api/seo/submit-indexnow', { url: manualUrl });
+            setManualSubmit({ loading: false, message: json.message });
+        } catch (err) {
+            setManualSubmit({ loading: false, error: (err as Error).message });
+        }
+        loadLog();
     };
 
     const resubmitSitemap = async () => {
@@ -132,6 +190,7 @@ export default function IndexingDashboard() {
             if (message.includes('not_configured') || message.includes('not set up')) setConfigured(false);
             setSitemapState({ loading: false, error: message });
         }
+        loadLog();
     };
 
     if (loading) {
@@ -202,7 +261,14 @@ export default function IndexingDashboard() {
                         <Button variant="outline" onClick={checkManualUrl} disabled={manualStatus.loading}>
                             {manualStatus.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Check'}
                         </Button>
+                        <Button variant="secondary" onClick={submitManualIndexNow} disabled={manualSubmit.loading || !manualUrl}>
+                            {manualSubmit.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        </Button>
                     </div>
+                    <p className="mt-2 text-xs text-gray-400">
+                        Check reads real Google status. Submit pushes to Bing, Yandex, DuckDuckGo, Seznam &amp; Naver via IndexNow -
+                        Google has no submission API, use the &quot;Inspect&quot; link below and click &quot;Request Indexing&quot; there for Google specifically.
+                    </p>
                     {manualStatus.result && (
                         <div className="mt-4 flex items-center gap-3 flex-wrap">
                             <VerdictBadge verdict={manualStatus.result.verdict} coverageState={manualStatus.result.coverageState} />
@@ -217,6 +283,8 @@ export default function IndexingDashboard() {
                         </div>
                     )}
                     {manualStatus.error && <p className="mt-3 text-sm text-red-600">{manualStatus.error}</p>}
+                    {manualSubmit.message && <p className="mt-3 text-sm text-green-600 font-medium">{manualSubmit.message}</p>}
+                    {manualSubmit.error && <p className="mt-3 text-sm text-red-600">{manualSubmit.error}</p>}
                 </div>
 
                 {/* Recent content */}
@@ -225,11 +293,14 @@ export default function IndexingDashboard() {
                     <div className="grid gap-3">
                         {rows.map((row) => {
                             const s = status[row.id];
+                            const sub = submitting[row.id];
                             return (
                                 <div key={row.id} className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-gray-200 dark:border-zinc-800 flex items-center justify-between gap-4 flex-wrap">
                                     <div className="min-w-0">
                                         <p className="font-bold truncate">{row.label}</p>
                                         <p className="text-xs text-gray-500 truncate">{row.url}</p>
+                                        {sub?.message && <p className="text-xs text-green-600 font-medium mt-1">{sub.message}</p>}
+                                        {sub?.error && <p className="text-xs text-red-600 mt-1">{sub.error}</p>}
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
                                         {s?.result && <VerdictBadge verdict={s.result.verdict} coverageState={s.result.coverageState} />}
@@ -242,6 +313,9 @@ export default function IndexingDashboard() {
                                         <Button size="sm" variant="outline" onClick={() => checkUrl(row.id, row.url)} disabled={s?.loading}>
                                             {s?.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Check status'}
                                         </Button>
+                                        <Button size="sm" variant="secondary" onClick={() => submitIndexNow(row.id, row.url)} disabled={sub?.loading} title="Submit to Bing, Yandex, DuckDuckGo, Seznam & Naver via IndexNow">
+                                            {sub?.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                        </Button>
                                     </div>
                                 </div>
                             );
@@ -249,6 +323,52 @@ export default function IndexingDashboard() {
                         {rows.length === 0 && (
                             <div className="text-center py-16 text-gray-500">No published posts or services yet.</div>
                         )}
+                    </div>
+                </div>
+
+                {/* Activity log */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-bold text-lg flex items-center gap-2">
+                            <History className="w-5 h-5 text-gray-400" /> Activity log
+                        </h2>
+                        <Button size="sm" variant="ghost" onClick={loadLog} disabled={logLoading}>
+                            {logLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        </Button>
+                    </div>
+                    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 divide-y divide-gray-100 dark:divide-zinc-800">
+                        {log.length === 0 && !logLoading && (
+                            <div className="text-center py-12 text-gray-500 text-sm">
+                                Nothing logged yet. Actions here appear once you resubmit the sitemap, check a status, or submit a URL.
+                                {' '}If this stays empty after doing that, the log table may not exist yet - run
+                                <code className="mx-1 px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10">migrations/add_indexing_log.sql</code>
+                                in the Supabase SQL Editor.
+                            </div>
+                        )}
+                        {log.map((entry) => (
+                            <div key={entry.id} className="p-4 flex items-center justify-between gap-4 flex-wrap text-sm">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        {entry.status === 'success' ? (
+                                            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+                                        )}
+                                        <span className="font-bold">{ACTION_LABELS[entry.action] || entry.action}</span>
+                                        {entry.url && <span className="text-gray-500 truncate">{entry.url}</span>}
+                                    </div>
+                                    {entry.message && (
+                                        <p className={`text-xs mt-1 ml-6 ${entry.status === 'error' ? 'text-red-600' : 'text-gray-500'}`}>
+                                            {entry.message}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="text-xs text-gray-400 text-right shrink-0">
+                                    <div>{new Date(entry.created_at).toLocaleString()}</div>
+                                    {entry.triggered_by && <div>{entry.triggered_by}</div>}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </main>

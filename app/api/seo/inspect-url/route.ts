@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminAuth';
 import { isGscConfigured, inspectUrl } from '@/lib/googleSearchConsole';
+import { logIndexingEvent } from '@/lib/indexingLog';
 
 export async function POST(request: Request) {
-    const { error } = await requireAdmin(request);
+    const { user, error } = await requireAdmin(request);
     if (error) return error;
 
     if (!isGscConfigured()) {
@@ -26,9 +27,18 @@ export async function POST(request: Request) {
 
     try {
         const result = await inspectUrl(url);
+        await logIndexingEvent({
+            action: 'inspect',
+            url,
+            status: 'success',
+            message: result.coverageState || result.verdict,
+            triggeredBy: user?.email,
+        });
         return NextResponse.json({ result, deepLink: result.inspectionResultLink });
     } catch (err) {
         console.error('URL inspection failed:', err);
-        return NextResponse.json({ error: 'inspection_failed', message: (err as Error).message }, { status: 502 });
+        const message = (err as Error).message;
+        await logIndexingEvent({ action: 'inspect', url, status: 'error', message, triggeredBy: user?.email });
+        return NextResponse.json({ error: 'inspection_failed', message }, { status: 502 });
     }
 }

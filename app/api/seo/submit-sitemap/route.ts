@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminAuth';
 import { isGscConfigured, submitSitemap } from '@/lib/googleSearchConsole';
+import { logIndexingEvent } from '@/lib/indexingLog';
 
 const SITE_URL = 'https://www.mutanttechnologies.com';
 
 export async function POST(request: Request) {
-    const { error } = await requireAdmin(request);
+    const { user, error } = await requireAdmin(request);
     if (error) return error;
 
     if (!isGscConfigured()) {
@@ -17,9 +18,17 @@ export async function POST(request: Request) {
 
     try {
         await submitSitemap(`${SITE_URL}/sitemap.xml`);
+        await logIndexingEvent({
+            action: 'sitemap_submit',
+            status: 'success',
+            message: 'Sitemap resubmitted to Google',
+            triggeredBy: user?.email,
+        });
         return NextResponse.json({ success: true, submittedAt: new Date().toISOString() });
     } catch (err) {
         console.error('Sitemap submission failed:', err);
-        return NextResponse.json({ error: 'submission_failed', message: (err as Error).message }, { status: 502 });
+        const message = (err as Error).message;
+        await logIndexingEvent({ action: 'sitemap_submit', status: 'error', message, triggeredBy: user?.email });
+        return NextResponse.json({ error: 'submission_failed', message }, { status: 502 });
     }
 }
