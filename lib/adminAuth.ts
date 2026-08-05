@@ -1,15 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { ADMIN_EMAILS } from '@/lib/adminEmails';
 
-// Shared with the admin allowlists in app/api/pixel/admin/* - kept as one
-// source of truth for new server-only routes instead of copy-pasting again.
-export const ADMIN_EMAILS = [
-    'admin@mutant.tech',
-    'prince@mutant.tech',
-    'princekhimani@gmail.com',
-    'princekhimani186@gmail.com',
-    'princekhimani78@gmail.com',
-    'prince@mutanttechnologies.com',
-];
+export { ADMIN_EMAILS };
 
 /**
  * Verifies the Supabase session token on an incoming admin API request and
