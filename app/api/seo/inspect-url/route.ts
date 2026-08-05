@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminAuth';
-import { isGscConfigured, inspectUrl, inspectUrlDeepLink } from '@/lib/googleSearchConsole';
+import { isGscConfigured, inspectUrl } from '@/lib/googleSearchConsole';
 
 export async function POST(request: Request) {
     const { error } = await requireAdmin(request);
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     try {
         const result = await inspectUrl(url);
-        return NextResponse.json({ result, deepLink: inspectUrlDeepLink(url) });
+        return NextResponse.json({ result, deepLink: result.inspectionResultLink });
     } catch (err) {
         console.error('URL inspection failed:', err);
         return NextResponse.json({ error: 'inspection_failed', message: (err as Error).message }, { status: 502 });

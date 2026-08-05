@@ -11,11 +11,22 @@ import Link from 'next/link';
 
 const SITE_URL = 'https://www.mutanttechnologies.com';
 
+// Kept in sync with the static routes in app/sitemap.ts - these don't come
+// from a database table, so they never show up without listing them here.
+const STATIC_PAGES: { label: string; path: string }[] = [
+    { label: 'Home', path: '' },
+    { label: 'About', path: '/about' },
+    { label: 'Contact', path: '/contact' },
+    { label: 'Portfolio', path: '/portfolio' },
+    { label: 'Services (index)', path: '/services' },
+    { label: 'Blog (index)', path: '/blog' },
+];
+
 interface ContentRow {
     id: string;
     label: string;
     url: string;
-    kind: 'post' | 'service';
+    kind: 'static' | 'post' | 'service';
 }
 
 interface InspectionResult {
@@ -74,10 +85,11 @@ export default function IndexingDashboard() {
                 supabase.from('services').select('id, slug, title').order('id'),
             ]);
 
+            const staticRows: ContentRow[] = STATIC_PAGES.map((p) => ({ id: `static-${p.path || 'home'}`, label: p.label, url: `${SITE_URL}${p.path}`, kind: 'static' }));
             const postRows: ContentRow[] = (posts || []).map((p) => ({ id: `post-${p.id}`, label: p.title, url: `${SITE_URL}/blog/${p.slug}`, kind: 'post' }));
             const serviceRows: ContentRow[] = (services || []).map((s) => ({ id: `service-${s.id}`, label: s.title, url: `${SITE_URL}/services/${s.slug}`, kind: 'service' }));
 
-            setRows([...postRows, ...serviceRows]);
+            setRows([...staticRows, ...postRows, ...serviceRows]);
             setLoading(false);
         })();
     }, []);
@@ -209,7 +221,7 @@ export default function IndexingDashboard() {
 
                 {/* Recent content */}
                 <div>
-                    <h2 className="font-bold text-lg mb-4">Recent posts &amp; services</h2>
+                    <h2 className="font-bold text-lg mb-4">Pages, posts &amp; services</h2>
                     <div className="grid gap-3">
                         {rows.map((row) => {
                             const s = status[row.id];

@@ -64,6 +64,8 @@ export interface IndexInspectionResult {
     indexingState?: string;
     sitemap?: string[];
     referringUrls?: string[];
+    /** Google-provided deep link straight to this result in the Search Console UI. */
+    inspectionResultLink?: string;
 }
 
 /** Reads Google's real index status for a URL - the same data the "URL Inspection" tool in Search Console shows. */
@@ -73,6 +75,7 @@ export async function inspectUrl(inspectionUrl: string): Promise<IndexInspection
 
     const res = await client.request<{
         inspectionResult?: {
+            inspectionResultLink?: string;
             indexStatusResult?: {
                 verdict?: string;
                 coverageState?: string;
@@ -104,15 +107,9 @@ export async function inspectUrl(inspectionUrl: string): Promise<IndexInspection
         indexingState: result.indexingState,
         sitemap: result.sitemap,
         referringUrls: result.referringUrls,
+        // Google hands back the exact, correct deep link for this result - use
+        // it as-is instead of hand-building a search.google.com URL, which
+        // drifts out of sync with whatever route Search Console's SPA expects.
+        inspectionResultLink: res.data.inspectionResult?.inspectionResultLink,
     };
-}
-
-/** Deep link that opens Search Console's URL Inspection tool pre-filled, for the one remaining manual "Request Indexing" click. */
-export function inspectUrlDeepLink(pageUrl: string): string {
-    const siteUrl = process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || '';
-    const params = new URLSearchParams({
-        resource_id: siteUrl,
-        id: pageUrl,
-    });
-    return `https://search.google.com/search-console/inspect?${params.toString()}`;
 }
