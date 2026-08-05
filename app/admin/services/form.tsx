@@ -8,6 +8,7 @@ import { Save, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Service } from '@/lib/types';
 import { ImageUpload } from '@/components/admin/ImageUpload';
+import { notifySitemapUpdate } from '@/lib/notifyGoogle';
 
 interface ServiceFormProps {
     initialData?: Service;
@@ -76,6 +77,7 @@ export default function ServiceForm({ initialData, isEditing = false }: ServiceF
                     .insert([formData]);
                 if (error) throw error;
             }
+            notifySitemapUpdate();
             router.push('/admin/services');
             router.refresh();
         } catch (error) {

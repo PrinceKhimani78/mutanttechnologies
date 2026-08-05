@@ -8,6 +8,7 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
 import { ArrowLeft, Save, Upload, Loader2, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { v4 as uuidv4 } from 'uuid';
+import { notifySitemapUpdate } from '@/lib/notifyGoogle';
 
 export default function CreatePost() {
     const router = useRouter();
@@ -98,6 +99,7 @@ export default function CreatePost() {
                 ]);
 
             if (error) throw error;
+            if (isPublished) notifySitemapUpdate();
             router.push('/admin/dashboard');
         } catch (error: any) {
             console.error('Error creating post:', error);

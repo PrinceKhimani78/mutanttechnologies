@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Search, Loader2, Globe, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Search, Loader2, Globe, Plus, ScanSearch } from 'lucide-react';
 import Link from 'next/link';
 
 interface PageMetadata {
@@ -60,11 +60,18 @@ export default function SEOList() {
                         </Link>
                         <h1 className="font-oswald text-2xl font-bold uppercase">SEO Manager</h1>
                     </div>
-                    <Link href="/admin/seo/edit">
-                        <Button size="sm">
-                            <Plus className="w-4 h-4 mr-2" /> New SEO Entry
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link href="/admin/seo/indexing">
+                            <Button size="sm" variant="outline">
+                                <ScanSearch className="w-4 h-4 mr-2" /> Google Indexing
+                            </Button>
+                        </Link>
+                        <Link href="/admin/seo/edit">
+                            <Button size="sm">
+                                <Plus className="w-4 h-4 mr-2" /> New SEO Entry
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
             </header>
 
