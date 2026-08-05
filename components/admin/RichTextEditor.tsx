@@ -1,12 +1,25 @@
 'use client';
 
 import { useEditor, EditorContent } from '@tiptap/react';
+import { DOMParser } from '@tiptap/pm/model';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Button } from '@/components/ui/button';
 import { Bold, Italic, List, ListOrdered, Quote, Heading1, Heading2, ImageIcon, Link as LinkIcon, Undo, Redo } from 'lucide-react';
+import { marked } from 'marked';
+
+// Matches Markdown syntax (#, ##, **bold**, - item, 1. item, > quote) so text
+// pasted from ChatGPT/Claude/etc. - which often lands as plain-text Markdown
+// rather than rich HTML - still becomes real headings/bold/lists instead of
+// literal "## " characters sitting in a paragraph.
+const MARKDOWN_PATTERN = /(^|\n) {0,3}#{1,6}\s|\*\*[^*\n]+\*\*|(^|\n) {0,3}[-*]\s|(^|\n) {0,3}\d+\.\s|(^|\n) {0,3}>\s/;
+
+// Whether pasted HTML already carries real semantic structure (from copying
+// directly out of a rendered chat UI). If so, Tiptap's default HTML paste
+// handling already does the right thing and we should stay out of the way.
+const HTML_HAS_STRUCTURE = /<(h[1-6]|strong|b|ul|ol|blockquote)[\s>]/i;
 
 interface RichTextEditorProps {
     content: string;
@@ -32,6 +45,41 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
         editorProps: {
             attributes: {
                 class: 'prose dark:prose-invert max-w-none focus:outline-none min-h-[300px]',
+            },
+            handlePaste: (view, event) => {
+                const clipboardData = event.clipboardData;
+                if (!clipboardData) return false;
+
+                const html = clipboardData.getData('text/html');
+                const text = clipboardData.getData('text/plain');
+
+                const shouldConvertMarkdown =
+                    !!text &&
+                    MARKDOWN_PATTERN.test(text) &&
+                    !HTML_HAS_STRUCTURE.test(html || '');
+
+                if (!shouldConvertMarkdown) return false; // let Tiptap's default HTML/plain-text paste handle it
+
+                event.preventDefault();
+                const parsedHtml = marked.parse(text, { async: false, breaks: true }) as string;
+
+                const dom = document.createElement('div');
+                dom.innerHTML = parsedHtml;
+
+                // The post title already renders as the page's one <h1> above the
+                // editor content, so any H1 in pasted Markdown (AI tools love
+                // opening with "# <Same Title Again>") gets demoted to H2 instead
+                // of creating a duplicate, SEO-unfriendly second H1.
+                dom.querySelectorAll('h1').forEach((h1) => {
+                    const h2 = document.createElement('h2');
+                    h2.innerHTML = h1.innerHTML;
+                    h1.replaceWith(h2);
+                });
+
+                const slice = DOMParser.fromSchema(view.state.schema).parseSlice(dom);
+                view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+
+                return true;
             },
         },
         immediatelyRender: false,

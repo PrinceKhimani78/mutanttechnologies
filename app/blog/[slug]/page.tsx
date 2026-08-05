@@ -3,6 +3,7 @@ import { Footer } from "@/components/Footer";
 import { Newsletter } from "@/components/Newsletter";
 import { LikeButton } from "@/components/blog/LikeButton";
 import { CommentSection } from "@/components/blog/CommentSection";
+import { BlogPostAnimator } from "@/components/blog/BlogPostAnimator";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -191,15 +192,16 @@ export default async function BlogPost({
       <Navbar />
 
       {/* Hero / Header */}
+      <BlogPostAnimator>
       <div className="pt-32 pb-16 px-6 w-full max-w-4xl mx-auto">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-8 text-sm font-mono uppercase tracking-widest"
+          className="post-item inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-8 text-sm font-mono uppercase tracking-widest"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Blog
         </Link>
 
-        <div className="flex items-center gap-4 mb-6">
+        <div className="post-item flex items-center gap-4 mb-6">
           <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider rounded-full border border-primary/20">
             {post.category || "General"}
           </span>
@@ -212,18 +214,18 @@ export default async function BlogPost({
           </span>
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-oswald font-bold uppercase leading-tight mb-8">
+        <h1 className="post-item text-4xl md:text-6xl font-oswald font-bold uppercase leading-tight mb-8">
           {post.title}
         </h1>
 
         {post.excerpt && (
-          <p className="text-xl md:text-2xl font-light text-gray-400 leading-relaxed border-l-4 border-primary pl-6 mb-12 italic">
+          <p className="post-item text-xl md:text-2xl font-light text-gray-400 leading-relaxed border-l-4 border-primary pl-6 mb-12 italic">
             {post.excerpt}
           </p>
         )}
 
         {post.cover_image && (
-          <div className="rounded-2xl overflow-hidden mb-12 border border-gray-200 dark:border-zinc-800 shadow-2xl relative aspect-video">
+          <div className="post-item rounded-2xl overflow-hidden mb-12 border border-gray-200 dark:border-zinc-800 shadow-2xl relative aspect-video">
             <Image
               src={post.cover_image}
               alt={post.title}
@@ -237,10 +239,14 @@ export default async function BlogPost({
 
         {/* Content Body */}
         <article
-          className="prose prose-lg dark:prose-invert max-w-none 
-                    prose-headings:font-oswald prose-headings:uppercase prose-headings:font-bold
+          className="blog-article-content prose prose-lg dark:prose-invert max-w-none
+                    prose-headings:font-oswald prose-headings:uppercase prose-headings:font-bold prose-headings:tracking-wide
+                    prose-headings:mt-12 prose-headings:mb-4 first:prose-headings:mt-0
+                    prose-p:leading-relaxed prose-p:text-gray-600 dark:prose-p:text-gray-400
+                    prose-strong:text-foreground prose-strong:font-bold
                     prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                     prose-img:rounded-xl prose-img:shadow-lg
+                    prose-li:marker:text-primary prose-ul:my-6 prose-ol:my-6
                     prose-blockquote:border-l-primary prose-blockquote:bg-gray-50 dark:prose-blockquote:bg-zinc-900 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:not-italic prose-blockquote:rounded-r-lg"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
@@ -258,6 +264,7 @@ export default async function BlogPost({
 
         <CommentSection slug={post.slug} />
       </div>
+      </BlogPostAnimator>
 
       <Footer />
     </main>
