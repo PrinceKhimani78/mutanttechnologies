@@ -22,10 +22,6 @@ export function CommentSection({ slug }: CommentSectionProps) {
     const [content, setContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    useEffect(() => {
-        if (slug) fetchComments();
-    }, [slug]);
-
     const fetchComments = async () => {
         const { data, error } = await supabase
             .from('comments')
@@ -38,6 +34,10 @@ export function CommentSection({ slug }: CommentSectionProps) {
         }
         setLoading(false);
     };
+
+    useEffect(() => {
+        if (slug) fetchComments();
+    }, [slug]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

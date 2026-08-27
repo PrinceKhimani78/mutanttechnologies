@@ -14,14 +14,6 @@ export function LikeButton({ slug }: LikeButtonProps) {
     const [liked, setLiked] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (!slug) return;
-        fetchLikes();
-        // Check local storage to see if user already liked
-        const hasLiked = localStorage.getItem(`liked_${slug}`);
-        if (hasLiked) setLiked(true);
-    }, [slug]);
-
     const fetchLikes = async () => {
         const { data, error } = await supabase
             .from('post_likes')
@@ -37,6 +29,14 @@ export function LikeButton({ slug }: LikeButtonProps) {
         }
         setLoading(false);
     };
+
+    useEffect(() => {
+        if (!slug) return;
+        fetchLikes();
+        // Check local storage to see if user already liked
+        const hasLiked = localStorage.getItem(`liked_${slug}`);
+        if (hasLiked) setLiked(true);
+    }, [slug]);
 
     const handleLike = async () => {
         if (liked) return; // Prevent multiple likes from same browser
