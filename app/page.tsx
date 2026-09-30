@@ -7,6 +7,7 @@ import { Testimonials } from "@/components/Testimonials";
 import { About } from "@/components/About";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
+import { ClientSlider } from "@/components/ClientSlider";
 import { RenderBuilderContent } from "@/components/builder-page";
 
 // Builder Public API Key set in .env.local
@@ -67,7 +68,8 @@ export default async function Home() {
           <ServiceMarquee />
           <Ongoing />
           <Services services={(services || []) as Service[]} />
-          <Testimonials initialData={testimonials || []} />
+          <ClientSlider />
+          <Testimonials />
           <About />
           <Contact />
         </>
