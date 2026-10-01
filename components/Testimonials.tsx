@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Quote, Star } from "lucide-react";
@@ -103,15 +102,6 @@ const defaultTestimonials = [
   }
 ];
 
-const fetchTestimonials = async () => {
-  const { supabase } = await import("@/lib/supabase");
-  const { data } = await supabase
-    .from("testimonials")
-    .select("*")
-    .order("created_at", { ascending: false });
-  return data || [];
-};
-
 export const Testimonials = ({
   scroller,
   initialData = [],
@@ -120,6 +110,7 @@ export const Testimonials = ({
   initialData?: any[];
 }) => {
   const marqueeRef = useRef<HTMLDivElement>(null);
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
   const [testimonials, setTestimonials] = useState<any[]>(initialData);
 
   useEffect(() => {
@@ -139,12 +130,10 @@ export const Testimonials = ({
         console.error("Error fetching testimonials:", err);
       }
     };
-    // If we have initialData, we might still want to fetch for fresh data if cached
-    // fetchTestimonials(); // Disabled to force showing the new local testimonials
+    // fetchTestimonials();
   }, []);
 
   // Use default testimonials if both DB and initialData are empty
-  // @ts-ignore
   const items = testimonials.length > 0 ? testimonials : defaultTestimonials;
 
   useGSAP(
@@ -157,28 +146,45 @@ export const Testimonials = ({
         return;
       }
 
-      // Clone the list to create seamless loop
-      const list = marqueeRef.current;
-      if (list && items.length > 0) {
-        const content = list.innerHTML;
-        list.innerHTML = content + content + content + content; // Repeat enough times
+      const track = marqueeRef.current;
+      if (!track || items.length === 0) return;
 
-        const width = list.scrollWidth / 2;
+      // Reset track position
+      gsap.set(track, { x: 0 });
 
-        gsap.to(list, {
-          x: -width,
-          duration: 120,
-          ease: "none",
-          repeat: -1,
-        });
-      }
+      // Calculate half width for seamless infinite loop of duplicated items
+      const totalWidth = track.scrollWidth / 2;
+
+      // Smooth, easy-to-read speed (~30px per second)
+      const duration = Math.max(180, totalWidth / 30);
+
+      const tween = gsap.to(track, {
+        x: -totalWidth,
+        duration: duration,
+        ease: "none",
+        repeat: -1,
+      });
+
+      tweenRef.current = tween;
+
+      return () => {
+        tween.kill();
+      };
     },
     { scope: marqueeRef, dependencies: [items] },
   );
 
+  const handleMouseEnter = () => {
+    tweenRef.current?.pause();
+  };
+
+  const handleMouseLeave = () => {
+    tweenRef.current?.resume();
+  };
+
   return (
     <section className="py-12 md:py-24 bg-background overflow-hidden relative">
-      <div className="container mx-auto px-6 mb-16">
+      <div className="container mx-auto px-6 mb-8 md:mb-12">
         <h2 className="text-4xl md:text-6xl font-oswald font-bold uppercase text-foreground mb-4">
           Client Testimonials{" "}
           <span className="text-primary">That Drive Success</span>
@@ -186,40 +192,53 @@ export const Testimonials = ({
         <div className="w-20 h-1 bg-gray-200 dark:bg-zinc-800"></div>
       </div>
 
-      <div className="relative w-full overflow-hidden">
-        {/* Gradient Masks */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-linear-to-r from-gray-50 via-gray-50/50 dark:from-zinc-950 dark:via-zinc-950/50 to-transparent z-10"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-linear-to-l from-gray-50 via-gray-50/50 dark:from-zinc-950 dark:via-zinc-950/50 to-transparent z-10"></div>
+      {/* Overflow wrapper with ample vertical padding to prevent card and shadow clipping */}
+      <div 
+        className="relative w-full overflow-hidden py-8 md:py-12"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onTouchStart={handleMouseEnter}
+        onTouchEnd={handleMouseLeave}
+      >
+        {/* Soft edge gradient masks */}
+        <div className="absolute left-0 top-0 bottom-0 w-20 md:w-36 bg-gradient-to-r from-background via-background/80 to-transparent pointer-events-none z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 md:w-36 bg-gradient-to-l from-background via-background/80 to-transparent pointer-events-none z-10" />
 
-        <div className="flex w-fit" ref={marqueeRef}>
-          {items.map((t: any, i: number) => (
-            <div key={i} className="w-[400px] shrink-0 px-6">
-              <div className="bg-white dark:bg-zinc-800/50 border border-t-[6px] border-t-primary border-x-transparent border-b-transparent p-8 rounded-2xl h-full relative group hover:-translate-y-2 transition-transform duration-300 shadow-xl dark:shadow-none">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-4 h-4 fill-orange-500 text-orange-500"
-                      />
-                    ))}
+        <div className="flex w-fit items-stretch" ref={marqueeRef}>
+          {/* Render two identical sets of items for a seamless infinite loop */}
+          {[...items, ...items].map((t: any, i: number) => (
+            <div 
+              key={`testimonial-${i}`} 
+              className="w-[320px] sm:w-[380px] md:w-[420px] shrink-0 px-3 md:px-4 flex flex-col"
+            >
+              <div className="bg-white dark:bg-zinc-800/50 border border-t-[6px] border-t-primary border-x-transparent border-b-transparent p-6 md:p-8 rounded-2xl h-full flex flex-col justify-between relative group hover:-translate-y-2 transition-all duration-300 shadow-xl hover:shadow-2xl dark:shadow-none">
+                <div>
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="flex gap-1">
+                      {[...Array(5)].map((_, starIdx) => (
+                        <Star
+                          key={starIdx}
+                          className="w-4 h-4 fill-orange-500 text-orange-500"
+                        />
+                      ))}
+                    </div>
                   </div>
+
+                  <p className="text-gray-700 dark:text-zinc-300 text-base md:text-lg leading-relaxed mb-6">
+                    "{t.quote}"
+                  </p>
                 </div>
 
-                <p className="text-gray-700 dark:text-zinc-300 text-lg leading-relaxed mb-8 flex-1">
-                  "{t.quote}"
-                </p>
-
-                <div className="flex items-center justify-between border-t border-gray-100 dark:border-zinc-800 pt-6">
+                <div className="flex items-center justify-between border-t border-gray-100 dark:border-zinc-800 pt-5 mt-auto">
                   <div>
-                    <div className="text-dark-slate dark:text-white font-bold text-lg uppercase font-oswald">
+                    <div className="text-dark-slate dark:text-white font-bold text-base md:text-lg uppercase font-oswald">
                       {t.author}
                     </div>
-                    <div className="text-gray-500 dark:text-zinc-500 text-sm">
+                    <div className="text-gray-500 dark:text-zinc-500 text-xs md:text-sm">
                       {t.role}
                     </div>
                   </div>
-                  <Quote className="w-8 h-8 text-gray-300 dark:text-zinc-700 group-hover:text-primary transition-colors" />
+                  <Quote className="w-7 h-7 md:w-8 md:h-8 text-gray-300 dark:text-zinc-700 group-hover:text-primary transition-colors" />
                 </div>
               </div>
             </div>
@@ -229,3 +248,4 @@ export const Testimonials = ({
     </section>
   );
 };
+
