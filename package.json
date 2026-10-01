@@ -53,9 +53,6 @@
     "typescript": "^5"
   },
   "engines": {
-    "node": "20.x"
-  },
-  "overrides": {
-    "isolated-vm": "5.0.1"
+    "node": "24.x"
   }
 }
