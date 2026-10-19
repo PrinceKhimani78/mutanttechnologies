@@ -21,11 +21,22 @@ import {
     UserCheck, 
     Briefcase, 
     X, 
-    Users,
-    Info
+    Users, 
+    Info, 
+    Send, 
+    Sparkles 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CareerApplication } from '@/lib/types';
+
+interface EmailModalState {
+    isOpen: boolean;
+    type: 'rejection' | 'shortlist';
+    candidate: CareerApplication;
+    subject: string;
+    message: string;
+    sending: boolean;
+}
 
 export function CandidatesManager() {
     const [applications, setApplications] = useState<CareerApplication[]>([]);
@@ -40,6 +51,10 @@ export function CandidatesManager() {
     const [candidateNotes, setCandidateNotes] = useState('');
     const [savingNotes, setSavingNotes] = useState(false);
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    
+    // Email notification modal state
+    const [emailModal, setEmailModal] = useState<EmailModalState | null>(null);
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
 
     useEffect(() => {
         fetchApplications();
@@ -66,7 +81,7 @@ export function CandidatesManager() {
         }
     };
 
-    const handleStatusChange = async (id: string, newStatus: CareerApplication['status']) => {
+    const handleDirectStatusUpdate = async (id: string, newStatus: CareerApplication['status']) => {
         setApplications(prev => prev.map(app => app.id === id ? { ...app, status: newStatus } : app));
         if (selectedCandidate && selectedCandidate.id === id) {
             setSelectedCandidate(prev => prev ? { ...prev, status: newStatus } : null);
@@ -81,6 +96,77 @@ export function CandidatesManager() {
         } catch (err) {
             console.error('Failed to update status:', err);
         }
+    };
+
+    const initiateStatusChange = (candidate: CareerApplication, targetStatus: CareerApplication['status']) => {
+        const firstName = (candidate.name || 'Candidate').split(' ')[0];
+
+        if (targetStatus === 'rejected') {
+            setEmailModal({
+                isOpen: true,
+                type: 'rejection',
+                candidate,
+                subject: `Update regarding your application for ${candidate.job_title} at Mutant Technologies`,
+                message: `Thank you very much for taking the time to apply for the ${candidate.job_title} position at Mutant Technologies, and for your interest in joining our team.\n\nWe received a high volume of applications from talented individuals. While your background and qualifications are impressive, after thorough consideration, we have decided to move forward with other candidates whose experience more closely matches our immediate project needs for this specific role.\n\nThis was a difficult decision. We will gladly keep your resume on file, and should another suitable opportunity arise that aligns with your skillset, we would love to get in touch.\n\nWe sincerely appreciate your interest in Mutant Technologies and wish you the very best in your career pursuits.`,
+                sending: false
+            });
+        } else if (targetStatus === 'shortlisted') {
+            setEmailModal({
+                isOpen: true,
+                type: 'shortlist',
+                candidate,
+                subject: `Great news! You have been shortlisted for ${candidate.job_title} at Mutant Technologies`,
+                message: `Thank you for applying for the ${candidate.job_title} role at Mutant Technologies!\n\nWe are pleased to let you know that our recruitment and technical team has reviewed your application and resume, and we have SHORTLISTED you for the next round of our hiring process!\n\nWe were very impressed by your qualifications and project background, and our team is enthusiastic to speak with you further.\n\nWhat's next?\nA member of our hiring team will reach out to you shortly via phone or email to schedule an introductory interview / technical conversation.\n\nIn the meantime, feel free to explore our recent work, client stories, and agency culture at mutanttechnologies.com.\n\nCongratulations again, and we look forward to speaking soon!`,
+                sending: false
+            });
+        } else {
+            handleDirectStatusUpdate(candidate.id, targetStatus);
+        }
+    };
+
+    const handleSendEmailAndChangeStatus = async () => {
+        if (!emailModal?.candidate) return;
+        setEmailModal(prev => prev ? { ...prev, sending: true } : null);
+
+        const { candidate, type, subject, message } = emailModal;
+
+        try {
+            const res = await fetch('/api/admin/careers/notify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    applicationId: candidate.id,
+                    type,
+                    candidateName: candidate.name,
+                    candidateEmail: candidate.email,
+                    jobTitle: candidate.job_title,
+                    customSubject: subject,
+                    customMessage: message
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                const newStatus = type === 'shortlist' ? 'shortlisted' : 'rejected';
+                handleDirectStatusUpdate(candidate.id, newStatus);
+                setToastMessage(`✓ ${type === 'shortlist' ? 'Shortlist' : 'Rejection'} email sent to ${candidate.email}!`);
+                setTimeout(() => setToastMessage(null), 4000);
+                setEmailModal(null);
+            } else {
+                alert('Failed to send email: ' + (data.error || 'Unknown error'));
+                setEmailModal(prev => prev ? { ...prev, sending: false } : null);
+            }
+        } catch (err: any) {
+            alert('Error sending email: ' + err.message);
+            setEmailModal(prev => prev ? { ...prev, sending: false } : null);
+        }
+    };
+
+    const handleUpdateStatusWithoutEmail = () => {
+        if (!emailModal?.candidate) return;
+        const newStatus = emailModal.type === 'shortlist' ? 'shortlisted' : 'rejected';
+        handleDirectStatusUpdate(emailModal.candidate.id, newStatus);
+        setEmailModal(null);
     };
 
     const handleSaveNotes = async () => {
@@ -219,6 +305,14 @@ export function CandidatesManager() {
 
     return (
         <div className="space-y-6">
+            {/* Toast Notification */}
+            {toastMessage && (
+                <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-gray-800 animate-in fade-in slide-in-from-bottom-4">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                    <span className="text-sm font-medium">{toastMessage}</span>
+                </div>
+            )}
+
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xs">
@@ -416,7 +510,7 @@ export function CandidatesManager() {
                                     </div>
                                 </div>
 
-                                {/* Right Actions: Perfectly unified horizontal row on desktop, full width on mobile */}
+                                {/* Right Actions */}
                                 <div className="flex items-center gap-2 shrink-0 self-start pt-3 md:pt-0 border-t md:border-t-0 border-gray-100 dark:border-zinc-800 w-full md:w-auto justify-between md:justify-end">
                                     {candidate.resume_url ? (
                                         <a
@@ -438,10 +532,10 @@ export function CandidatesManager() {
                                         <Eye className="w-3.5 h-3.5 mr-1" /> Details
                                     </Button>
 
-                                    {/* Status Quick Toggle */}
+                                    {/* Status Selector triggering automated email popup */}
                                     <select
                                         value={candidate.status || 'new'}
-                                        onChange={(e) => handleStatusChange(candidate.id, e.target.value as any)}
+                                        onChange={(e) => initiateStatusChange(candidate, e.target.value as any)}
                                         className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-2.5 py-2 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer h-9 shrink-0"
                                     >
                                         <option value="new">Mark New</option>
@@ -483,6 +577,112 @@ export function CandidatesManager() {
                     </div>
                 )}
             </div>
+
+            {/* Email Notification Preview & Confirmation Modal */}
+            {emailModal && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+                    <div className="bg-white dark:bg-zinc-900 w-full max-w-xl rounded-3xl border border-gray-200 dark:border-zinc-800 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95">
+                        {/* Header */}
+                        <div className={`p-5 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between ${
+                            emailModal.type === 'shortlist' ? 'bg-emerald-500/5' : 'bg-rose-500/5'
+                        }`}>
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                                    emailModal.type === 'shortlist' 
+                                        ? 'bg-emerald-500/10 text-emerald-600' 
+                                        : 'bg-rose-500/10 text-rose-600'
+                                }`}>
+                                    {emailModal.type === 'shortlist' ? <Sparkles className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-foreground">
+                                        {emailModal.type === 'shortlist' ? 'Send Shortlist Email' : 'Send Rejection Email'}
+                                    </h3>
+                                    <p className="text-xs text-gray-500">
+                                        To: <span className="font-semibold text-foreground">{emailModal.candidate.name}</span> ({emailModal.candidate.email})
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setEmailModal(null)}
+                                className="p-1.5 text-gray-400 hover:text-foreground rounded-lg"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Body / Editor */}
+                        <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
+                            <div className="p-3 bg-gray-50 dark:bg-zinc-950 rounded-xl border border-gray-100 dark:border-zinc-800 text-xs text-gray-500 flex items-center gap-2">
+                                <Info className="w-4 h-4 text-primary shrink-0" />
+                                <span>This email will be delivered from <strong>careers@mutanttechnologies.com</strong> directly to the candidate.</span>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">Email Subject</label>
+                                <input
+                                    type="text"
+                                    value={emailModal.subject}
+                                    onChange={(e) => setEmailModal(prev => prev ? { ...prev, subject: e.target.value } : null)}
+                                    className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-medium focus:outline-none focus:border-primary"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+                                    Message Body (You can personalize this before sending)
+                                </label>
+                                <textarea
+                                    rows={8}
+                                    value={emailModal.message}
+                                    onChange={(e) => setEmailModal(prev => prev ? { ...prev, message: e.target.value } : null)}
+                                    className="w-full bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl p-3.5 text-xs sm:text-sm leading-relaxed focus:outline-none focus:border-primary font-sans"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer Controls */}
+                        <div className="p-4 border-t border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleUpdateStatusWithoutEmail}
+                                className="text-xs text-gray-500 hover:text-foreground"
+                            >
+                                Update Status Only (Skip Email)
+                            </Button>
+
+                            <div className="flex items-center gap-2 justify-end">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setEmailModal(null)}
+                                    className="text-xs"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={handleSendEmailAndChangeStatus}
+                                    disabled={emailModal.sending}
+                                    className={`text-xs font-bold ${
+                                        emailModal.type === 'shortlist'
+                                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                            : 'bg-rose-600 hover:bg-rose-700 text-white'
+                                    }`}
+                                >
+                                    {emailModal.sending ? (
+                                        <><RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Sending...</>
+                                    ) : (
+                                        <><Send className="w-3.5 h-3.5 mr-1.5" /> Send Email & Update Status</>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Candidate Details Modal */}
             {selectedCandidate && (
@@ -541,13 +741,37 @@ export function CandidatesManager() {
                                 </div>
                             </div>
 
+                            {/* Email Action Buttons */}
+                            <div className="p-4 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-100 dark:border-zinc-800 space-y-3">
+                                <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">Automated Email Actions</div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => initiateStatusChange(selectedCandidate, 'shortlisted')}
+                                        className="h-10 text-xs font-bold border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 justify-start"
+                                    >
+                                        <Sparkles className="w-4 h-4 mr-2 text-emerald-500" /> Send Shortlist Email
+                                    </Button>
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => initiateStatusChange(selectedCandidate, 'rejected')}
+                                        className="h-10 text-xs font-bold border-rose-500/30 text-rose-600 hover:bg-rose-500/10 justify-start"
+                                    >
+                                        <Mail className="w-4 h-4 mr-2 text-rose-500" /> Send Rejection Email
+                                    </Button>
+                                </div>
+                            </div>
+
                             {/* Status, Date, Resume */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 dark:bg-zinc-950 rounded-2xl border border-gray-100 dark:border-zinc-800">
                                 <div>
                                     <div className="text-xs text-gray-400 font-medium mb-1">Application Status</div>
                                     <select
                                         value={selectedCandidate.status || 'new'}
-                                        onChange={(e) => handleStatusChange(selectedCandidate.id, e.target.value as any)}
+                                        onChange={(e) => initiateStatusChange(selectedCandidate, e.target.value as any)}
                                         className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-1.5 text-sm font-bold text-primary focus:outline-none focus:border-primary cursor-pointer"
                                     >
                                         <option value="new">New Applicant</option>
