@@ -128,7 +128,7 @@ export async function POST(request: Request) {
 
         // Send email via Resend
         const { data: emailData, error: emailError } = await resend.emails.send({
-            from: 'Mutant Careers <careers@mutanttechnologies.com>',
+            from: 'Prince Khimani <prince@mutanttechnologies.com>',
             to: [candidateEmail],
             replyTo: 'prince@mutanttechnologies.com',
             subject: subject,

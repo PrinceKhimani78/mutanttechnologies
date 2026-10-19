@@ -104,7 +104,7 @@ export async function POST(request: Request) {
         }
 
         const { data, error } = await resend.emails.send({
-            from: 'Mutant Careers <onboarding@resend.dev>',
+            from: 'Mutant Careers <prince@mutanttechnologies.com>',
             to: ['prince@mutanttechnologies.com'],
             replyTo: email,
             subject: `New Application for ${jobTitle} from ${name}`,

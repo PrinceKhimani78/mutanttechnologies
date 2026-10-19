@@ -616,7 +616,7 @@ export function CandidatesManager() {
                         <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
                             <div className="p-3 bg-gray-50 dark:bg-zinc-950 rounded-xl border border-gray-100 dark:border-zinc-800 text-xs text-gray-500 flex items-center gap-2">
                                 <Info className="w-4 h-4 text-primary shrink-0" />
-                                <span>This email will be delivered from <strong>careers@mutanttechnologies.com</strong> directly to the candidate.</span>
+                                <span>This email will be delivered from <strong>prince@mutanttechnologies.com</strong> directly to the candidate.</span>
                             </div>
 
                             <div>
