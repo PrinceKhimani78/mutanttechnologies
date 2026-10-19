@@ -81,6 +81,28 @@ export async function POST(request: Request) {
             </html>
         `;
 
+        // Save application to Supabase database
+        try {
+            const { createClient } = await import('@supabase/supabase-js');
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            if (supabaseUrl && serviceRoleKey) {
+                const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+                await supabaseAdmin.from('career_applications').insert([{
+                    job_id: jobId || null,
+                    job_title: jobTitle,
+                    name,
+                    email,
+                    phone: phone || null,
+                    resume_url: resumeUrl,
+                    cover_letter: coverLetter || null,
+                    status: 'new'
+                }]);
+            }
+        } catch (dbError) {
+            console.error('Failed to save application to Supabase database:', dbError);
+        }
+
         const { data, error } = await resend.emails.send({
             from: 'Mutant Careers <onboarding@resend.dev>',
             to: ['prince@mutanttechnologies.com'],

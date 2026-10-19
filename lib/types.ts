@@ -57,3 +57,17 @@ export interface Career {
     is_active: boolean;
     created_at: string;
 }
+
+export interface CareerApplication {
+    id: string;
+    job_id?: string | null;
+    job_title: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+    resume_url: string;
+    cover_letter?: string | null;
+    status: 'new' | 'reviewed' | 'shortlisted' | 'rejected';
+    notes?: string | null;
+    created_at: string;
+}
