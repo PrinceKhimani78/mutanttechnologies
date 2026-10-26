@@ -3,20 +3,23 @@ import { Metadata } from 'next';
 
 export async function getMetadata(slug: string, defaults: Metadata = {}): Promise<Metadata> {
     try {
+        const normalizedSlug = slug.startsWith('/') ? slug : `/${slug}`;
+        const cleanSlug = slug.startsWith('/') ? slug.slice(1) : slug;
+        const baseUrl = 'https://www.mutanttechnologies.com';
+        const pageUrl = `${baseUrl}${normalizedSlug === '/' ? '' : normalizedSlug}`;
+
         const { data, error } = await supabase
             .from('page_metadata')
             .select('*')
-            .eq('page_slug', slug)
-            .single();
-
-        const normalizedSlug = slug.startsWith('/') ? slug : `/${slug}`;
-        const baseUrl = 'https://www.mutanttechnologies.com';
-        const pageUrl = `${baseUrl}${normalizedSlug === '/' ? '' : normalizedSlug}`;
+            .or(`page_slug.eq."${slug}",page_slug.eq."${normalizedSlug}",page_slug.eq."${cleanSlug}"`)
+            .limit(1)
+            .maybeSingle();
 
         if (error || !data) {
             return {
                 title: defaults.title || 'Mutant Technologies - Shine Bright Online',
                 description: defaults.description || 'We blend creativity and technology to boost your digital presence.',
+                keywords: defaults.keywords,
                 ...defaults,
                 alternates: {
                     canonical: pageUrl,
@@ -37,6 +40,7 @@ export async function getMetadata(slug: string, defaults: Metadata = {}): Promis
         const metadata: Metadata = {
             title: fullTitle,
             description: data.description || defaults.description,
+            keywords: data.keywords || defaults.keywords,
             alternates: {
                 canonical: data.canonical_url || pageUrl,
             },
