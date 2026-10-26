@@ -141,14 +141,45 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: emailError.message }, { status: 500 });
         }
 
-        // Update status in Supabase if applicationId is provided
+        // Update status in Supabase if applicationId or candidateEmail is provided
+        const newStatus = type === 'shortlist' ? 'shortlisted' : 'rejected';
+        const supabase = getAdminSupabase();
+
+        // 1. Always update site_settings status store for reliable persistence
+        try {
+            const { data } = await supabase.from('site_settings').select('value').eq('key', 'career_applicants_status_store').maybeSingle();
+            let store: Record<string, any> = {};
+            if (data?.value) {
+                store = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+            }
+            const existingEntry = (applicationId && store[applicationId]) || (candidateEmail && store[candidateEmail.toLowerCase()]) || {};
+            const updatedEntry = {
+                ...existingEntry,
+                status: newStatus,
+                updated_at: new Date().toISOString()
+            };
+            if (applicationId) store[applicationId] = updatedEntry;
+            if (candidateEmail) store[candidateEmail.toLowerCase()] = updatedEntry;
+            await supabase.from('site_settings').upsert({
+                key: 'career_applicants_status_store',
+                value: JSON.stringify(store),
+                label: 'Career Applicants Status Store',
+                description: 'Persistent status and notes for career applicants across refreshes and logins'
+            }, { onConflict: 'key' });
+        } catch (e) {
+            console.error('Failed to update site_settings status store on notify:', e);
+        }
+
+        // 2. Also update career_applications table if it exists
         if (applicationId) {
-            const supabase = getAdminSupabase();
-            const newStatus = type === 'shortlist' ? 'shortlisted' : 'rejected';
-            await supabase
-                .from('career_applications')
-                .update({ status: newStatus })
-                .eq('id', applicationId);
+            try {
+                await supabase
+                    .from('career_applications')
+                    .update({ status: newStatus })
+                    .eq('id', applicationId);
+            } catch (e) {
+                // Ignore if table does not exist yet
+            }
         }
 
         return NextResponse.json({ 

@@ -59,6 +59,7 @@ async function fetchResendApplications() {
                     resume_url: resumeUrl,
                     cover_letter: coverLetter,
                     status: 'new',
+                    notes: '',
                     created_at: item.created_at || emailData.created_at,
                     source: 'resend'
                 });
@@ -73,12 +74,45 @@ async function fetchResendApplications() {
     }
 }
 
+// Helper to read persistent candidate metadata from site_settings (ensures persistence across refresh/logout)
+async function getCandidateStatusStore(supabase: any): Promise<Record<string, { status?: string; notes?: string; updated_at?: string }>> {
+    try {
+        const { data, error } = await supabase
+            .from('site_settings')
+            .select('value')
+            .eq('key', 'career_applicants_status_store')
+            .maybeSingle();
+
+        if (data?.value) {
+            return typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        }
+    } catch (err) {
+        console.warn('Error reading career_applicants_status_store from site_settings:', err);
+    }
+    return {};
+}
+
+// Helper to save persistent candidate metadata to site_settings
+async function saveCandidateStatusStore(supabase: any, store: Record<string, any>) {
+    try {
+        await supabase.from('site_settings').upsert({
+            key: 'career_applicants_status_store',
+            value: JSON.stringify(store),
+            label: 'Career Applicants Status Store',
+            description: 'Persistent status and notes for career applicants across refreshes and logins'
+        }, { onConflict: 'key' });
+    } catch (err) {
+        console.error('Error saving career_applicants_status_store to site_settings:', err);
+    }
+}
+
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const forceSync = searchParams.get('sync') === 'true';
 
         const supabase = getAdminSupabase();
+        const statusStore = await getCandidateStatusStore(supabase);
         
         // 1. Try querying Supabase career_applications table
         let dbApplications: any[] = [];
@@ -109,6 +143,10 @@ export async function GET(request: Request) {
                     );
 
                     if (!exists) {
+                        const savedMeta = statusStore[app.id] || (app.email ? statusStore[app.email.toLowerCase()] : null);
+                        const initialStatus = savedMeta?.status || 'new';
+                        const initialNotes = savedMeta?.notes || null;
+
                         const { data: inserted } = await supabase
                             .from('career_applications')
                             .insert([{
@@ -118,7 +156,8 @@ export async function GET(request: Request) {
                                 phone: app.phone || null,
                                 resume_url: app.resume_url,
                                 cover_letter: app.cover_letter || null,
-                                status: 'new',
+                                status: initialStatus,
+                                notes: initialNotes,
                                 created_at: app.created_at
                             }])
                             .select()
@@ -130,19 +169,45 @@ export async function GET(request: Request) {
                     }
                 }
 
+                // Apply any newer statusStore entries
+                for (const app of dbApplications) {
+                    const savedMeta = statusStore[app.id] || (app.email ? statusStore[app.email.toLowerCase()] : null);
+                    if (savedMeta) {
+                        if (savedMeta.status) app.status = savedMeta.status;
+                        if (savedMeta.notes) app.notes = savedMeta.notes;
+                    }
+                }
+
                 // Sort newest first
                 dbApplications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 return NextResponse.json({ success: true, applications: dbApplications, syncedCount: resendApps.length });
             }
 
-            // If table doesn't exist yet, return the parsed Resend applications directly!
+            // If table doesn't exist yet, merge with statusStore and return the parsed applications
             if (!tableExists) {
+                for (const app of resendApps) {
+                    const savedMeta = statusStore[app.id] || (app.email ? statusStore[app.email.toLowerCase()] : null);
+                    if (savedMeta) {
+                        if (savedMeta.status) app.status = savedMeta.status;
+                        if (savedMeta.notes) app.notes = savedMeta.notes;
+                    }
+                }
+
                 resendApps.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 return NextResponse.json({ 
                     success: true, 
                     applications: resendApps, 
-                    notice: 'Using direct email records. Run migrations/create_career_applications.sql in Supabase to enable status & notes persistence.' 
+                    notice: 'Persistence active via site_settings store. Optional: run migrations/create_career_applications.sql in Supabase for dedicated table.' 
                 });
+            }
+        }
+
+        // Apply statusStore entries to dbApplications as well
+        for (const app of dbApplications) {
+            const savedMeta = statusStore[app.id] || (app.email ? statusStore[app.email.toLowerCase()] : null);
+            if (savedMeta) {
+                if (savedMeta.status) app.status = savedMeta.status;
+                if (savedMeta.notes) app.notes = savedMeta.notes;
             }
         }
 
@@ -157,29 +222,51 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
     try {
         const body = await request.json();
-        const { id, status, notes } = body;
+        const { id, email, status, notes } = body;
 
-        if (!id) {
-            return NextResponse.json({ success: false, error: 'Application ID is required' }, { status: 400 });
+        if (!id && !email) {
+            return NextResponse.json({ success: false, error: 'Application ID or email is required' }, { status: 400 });
         }
 
         const supabase = getAdminSupabase();
+
+        // 1. Always persist in site_settings status store for reliable cross-session persistence
+        const statusStore = await getCandidateStatusStore(supabase);
+        const existingEntry = (id && statusStore[id]) || (email && statusStore[email.toLowerCase()]) || {};
+        
+        const updatedEntry = {
+            ...existingEntry,
+            ...(status ? { status } : {}),
+            ...(notes !== undefined ? { notes } : {}),
+            updated_at: new Date().toISOString()
+        };
+
+        if (id) statusStore[id] = updatedEntry;
+        if (email) statusStore[email.toLowerCase()] = updatedEntry;
+
+        await saveCandidateStatusStore(supabase, statusStore);
+
+        // 2. Also try updating career_applications table if it exists
         const updatePayload: any = {};
         if (status) updatePayload.status = status;
         if (notes !== undefined) updatePayload.notes = notes;
 
-        const { data, error } = await supabase
-            .from('career_applications')
-            .update(updatePayload)
-            .eq('id', id)
-            .select()
-            .single();
+        let dbUpdated: any = null;
+        try {
+            const query = supabase.from('career_applications').update(updatePayload);
+            if (id) query.eq('id', id);
+            else if (email) query.eq('email', email);
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+            const { data } = await query.select().maybeSingle();
+            if (data) dbUpdated = data;
+        } catch (tableErr) {
+            // Table might not exist yet; safe to ignore because site_settings store succeeded
         }
 
-        return NextResponse.json({ success: true, application: data });
+        return NextResponse.json({ 
+            success: true, 
+            application: dbUpdated || { id, email, ...updatedEntry } 
+        });
     } catch (err: any) {
         return NextResponse.json({ success: false, error: err.message || 'Internal server error' }, { status: 500 });
     }
@@ -189,19 +276,28 @@ export async function DELETE(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
+        const email = searchParams.get('email');
 
-        if (!id) {
-            return NextResponse.json({ success: false, error: 'Application ID is required' }, { status: 400 });
+        if (!id && !email) {
+            return NextResponse.json({ success: false, error: 'Application ID or email is required' }, { status: 400 });
         }
 
         const supabase = getAdminSupabase();
-        const { error } = await supabase
-            .from('career_applications')
-            .delete()
-            .eq('id', id);
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        // Remove from site_settings status store
+        const statusStore = await getCandidateStatusStore(supabase);
+        if (id && statusStore[id]) delete statusStore[id];
+        if (email && statusStore[email.toLowerCase()]) delete statusStore[email.toLowerCase()];
+        await saveCandidateStatusStore(supabase, statusStore);
+
+        // Delete from table if table exists
+        try {
+            const query = supabase.from('career_applications').delete();
+            if (id) query.eq('id', id);
+            else if (email) query.eq('email', email);
+            await query;
+        } catch (tableErr) {
+            // Ignore if table doesn't exist
         }
 
         return NextResponse.json({ success: true });

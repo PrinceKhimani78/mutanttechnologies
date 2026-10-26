@@ -56,6 +56,60 @@ export function CandidatesManager() {
     const [emailModal, setEmailModal] = useState<EmailModalState | null>(null);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+    // Initialize and persist filters across refresh, logout, and navigation
+    useEffect(() => {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlStatus = urlParams.get('status');
+            const urlRole = urlParams.get('role');
+            const savedStatus = urlStatus || localStorage.getItem('admin_candidate_status_filter');
+            const savedRole = urlRole || localStorage.getItem('admin_candidate_role_filter');
+
+            if (savedStatus && ['all', 'new', 'reviewed', 'shortlisted', 'rejected'].includes(savedStatus)) {
+                setStatusFilter(savedStatus);
+            }
+            if (savedRole) {
+                setRoleFilter(savedRole);
+            }
+        } catch (e) {
+            // Ignore SSR / localStorage errors
+        }
+    }, []);
+
+    const updateStatusFilter = (newStatus: string) => {
+        setStatusFilter(newStatus);
+        try {
+            localStorage.setItem('admin_candidate_status_filter', newStatus);
+            const url = new URL(window.location.href);
+            if (newStatus === 'all') {
+                url.searchParams.delete('status');
+            } else {
+                url.searchParams.set('status', newStatus);
+            }
+            window.history.replaceState({}, '', url.toString());
+        } catch (e) {}
+    };
+
+    const updateRoleFilter = (newRole: string) => {
+        setRoleFilter(newRole);
+        try {
+            localStorage.setItem('admin_candidate_role_filter', newRole);
+            const url = new URL(window.location.href);
+            if (newRole === 'all') {
+                url.searchParams.delete('role');
+            } else {
+                url.searchParams.set('role', newRole);
+            }
+            window.history.replaceState({}, '', url.toString());
+        } catch (e) {}
+    };
+
+    const clearAllFilters = () => {
+        updateStatusFilter('all');
+        updateRoleFilter('all');
+        setSearchQuery('');
+    };
+
     useEffect(() => {
         fetchApplications();
     }, []);
@@ -81,26 +135,34 @@ export function CandidatesManager() {
         }
     };
 
-    const handleDirectStatusUpdate = async (id: string, newStatus: CareerApplication['status']) => {
+    const handleDirectStatusUpdate = async (candidateOrId: CareerApplication | string, newStatus: CareerApplication['status']) => {
+        const id = typeof candidateOrId === 'string' ? candidateOrId : candidateOrId.id;
+        const candidate = typeof candidateOrId === 'object' ? candidateOrId : applications.find(a => a.id === id);
+        const email = candidate?.email;
+        const name = candidate?.name || 'Candidate';
+
         setApplications(prev => prev.map(app => app.id === id ? { ...app, status: newStatus } : app));
         if (selectedCandidate && selectedCandidate.id === id) {
             setSelectedCandidate(prev => prev ? { ...prev, status: newStatus } : null);
         }
 
         try {
-            await fetch('/api/admin/careers/applications', {
+            const res = await fetch('/api/admin/careers/applications', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, status: newStatus })
+                body: JSON.stringify({ id, email, status: newStatus })
             });
+            const data = await res.json();
+            if (data.success) {
+                setToastMessage(`✓ Marked ${name} as ${newStatus.toUpperCase()}`);
+                setTimeout(() => setToastMessage(null), 3000);
+            }
         } catch (err) {
             console.error('Failed to update status:', err);
         }
     };
 
     const initiateStatusChange = (candidate: CareerApplication, targetStatus: CareerApplication['status']) => {
-        const firstName = (candidate.name || 'Candidate').split(' ')[0];
-
         if (targetStatus === 'rejected') {
             setEmailModal({
                 isOpen: true,
@@ -120,7 +182,7 @@ export function CandidatesManager() {
                 sending: false
             });
         } else {
-            handleDirectStatusUpdate(candidate.id, targetStatus);
+            handleDirectStatusUpdate(candidate, targetStatus);
         }
     };
 
@@ -148,7 +210,7 @@ export function CandidatesManager() {
             const data = await res.json();
             if (data.success) {
                 const newStatus = type === 'shortlist' ? 'shortlisted' : 'rejected';
-                handleDirectStatusUpdate(candidate.id, newStatus);
+                handleDirectStatusUpdate(candidate, newStatus);
                 setToastMessage(`✓ ${type === 'shortlist' ? 'Shortlist' : 'Rejection'} email sent to ${candidate.email}!`);
                 setTimeout(() => setToastMessage(null), 4000);
                 setEmailModal(null);
@@ -165,7 +227,7 @@ export function CandidatesManager() {
     const handleUpdateStatusWithoutEmail = () => {
         if (!emailModal?.candidate) return;
         const newStatus = emailModal.type === 'shortlist' ? 'shortlisted' : 'rejected';
-        handleDirectStatusUpdate(emailModal.candidate.id, newStatus);
+        handleDirectStatusUpdate(emailModal.candidate, newStatus);
         setEmailModal(null);
     };
 
@@ -173,13 +235,22 @@ export function CandidatesManager() {
         if (!selectedCandidate) return;
         setSavingNotes(true);
         try {
-            await fetch('/api/admin/careers/applications', {
+            const res = await fetch('/api/admin/careers/applications', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: selectedCandidate.id, notes: candidateNotes })
+                body: JSON.stringify({ 
+                    id: selectedCandidate.id, 
+                    email: selectedCandidate.email, 
+                    notes: candidateNotes 
+                })
             });
-            setApplications(prev => prev.map(app => app.id === selectedCandidate.id ? { ...app, notes: candidateNotes } : app));
-            setSelectedCandidate(prev => prev ? { ...prev, notes: candidateNotes } : null);
+            const data = await res.json();
+            if (data.success) {
+                setApplications(prev => prev.map(app => app.id === selectedCandidate.id ? { ...app, notes: candidateNotes } : app));
+                setSelectedCandidate(prev => prev ? { ...prev, notes: candidateNotes } : null);
+                setToastMessage(`✓ Notes saved for ${selectedCandidate.name}`);
+                setTimeout(() => setToastMessage(null), 3000);
+            }
         } catch (err) {
             console.error('Failed to save notes:', err);
         } finally {
@@ -187,15 +258,21 @@ export function CandidatesManager() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to remove this application?')) return;
+    const handleDelete = async (candidateOrId: CareerApplication | string) => {
+        const id = typeof candidateOrId === 'string' ? candidateOrId : candidateOrId.id;
+        const candidate = typeof candidateOrId === 'object' ? candidateOrId : applications.find(a => a.id === id);
+        const email = candidate?.email;
+
+        if (!confirm(`Are you sure you want to remove application for ${candidate?.name || 'this candidate'}?`)) return;
         setApplications(prev => prev.filter(app => app.id !== id));
         if (selectedCandidate?.id === id) setSelectedCandidate(null);
 
         try {
-            await fetch(`/api/admin/careers/applications?id=${encodeURIComponent(id)}`, {
+            await fetch(`/api/admin/careers/applications?id=${encodeURIComponent(id)}&email=${encodeURIComponent(email || '')}`, {
                 method: 'DELETE'
             });
+            setToastMessage(`Application removed`);
+            setTimeout(() => setToastMessage(null), 3000);
         } catch (err) {
             console.error('Failed to delete application:', err);
         }
@@ -238,7 +315,8 @@ export function CandidatesManager() {
         const newApps = applications.filter(a => !a.status || a.status === 'new').length;
         const shortlisted = applications.filter(a => a.status === 'shortlisted').length;
         const reviewed = applications.filter(a => a.status === 'reviewed').length;
-        return { total, newApps, shortlisted, reviewed };
+        const rejected = applications.filter(a => a.status === 'rejected').length;
+        return { total, newApps, shortlisted, reviewed, rejected };
     }, [applications]);
 
     const exportToCsv = () => {
@@ -313,29 +391,53 @@ export function CandidatesManager() {
                 </div>
             )}
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xs">
+            {/* KPI Cards (Clickable Filter Shortcuts) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                <button
+                    type="button"
+                    onClick={() => updateStatusFilter('all')}
+                    className={`p-4 sm:p-5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        statusFilter === 'all'
+                            ? 'bg-white dark:bg-zinc-900 border-primary ring-2 ring-primary/20 shadow-sm'
+                            : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 shadow-xs'
+                    }`}
+                >
                     <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Candidates</span>
+                        <span className="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">All Candidates</span>
                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
                             <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
                     </div>
                     <div className="text-2xl sm:text-3xl font-bold font-oswald text-foreground">{stats.total}</div>
-                </div>
+                </button>
 
-                <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xs">
+                <button
+                    type="button"
+                    onClick={() => updateStatusFilter('new')}
+                    className={`p-4 sm:p-5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        statusFilter === 'new'
+                            ? 'bg-white dark:bg-zinc-900 border-amber-500 ring-2 ring-amber-500/20 shadow-sm'
+                            : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 shadow-xs'
+                    }`}
+                >
                     <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] sm:text-xs font-semibold text-amber-500 uppercase tracking-wider">New Unreviewed</span>
+                        <span className="text-[11px] sm:text-xs font-semibold text-amber-500 uppercase tracking-wider">New</span>
                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
                             <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
                     </div>
                     <div className="text-2xl sm:text-3xl font-bold font-oswald text-foreground">{stats.newApps}</div>
-                </div>
+                </button>
 
-                <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xs">
+                <button
+                    type="button"
+                    onClick={() => updateStatusFilter('shortlisted')}
+                    className={`p-4 sm:p-5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        statusFilter === 'shortlisted'
+                            ? 'bg-white dark:bg-zinc-900 border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm'
+                            : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 shadow-xs'
+                    }`}
+                >
                     <div className="flex items-center justify-between mb-1.5">
                         <span className="text-[11px] sm:text-xs font-semibold text-emerald-500 uppercase tracking-wider">Shortlisted</span>
                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -343,11 +445,29 @@ export function CandidatesManager() {
                         </div>
                     </div>
                     <div className="text-2xl sm:text-3xl font-bold font-oswald text-foreground">{stats.shortlisted}</div>
-                </div>
+                </button>
 
-                <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xs">
+                <button
+                    type="button"
+                    onClick={() => updateStatusFilter('rejected')}
+                    className={`p-4 sm:p-5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        statusFilter === 'rejected'
+                            ? 'bg-white dark:bg-zinc-900 border-rose-500 ring-2 ring-rose-500/20 shadow-sm'
+                            : 'bg-white dark:bg-zinc-900 border-gray-100 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 shadow-xs'
+                    }`}
+                >
                     <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[11px] sm:text-xs font-semibold text-blue-500 uppercase tracking-wider">Roles Applied</span>
+                        <span className="text-[11px] sm:text-xs font-semibold text-rose-500 uppercase tracking-wider">Rejected</span>
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                            <XCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </div>
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-bold font-oswald text-foreground">{stats.rejected}</div>
+                </button>
+
+                <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-xs col-span-2 sm:col-span-1">
+                    <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] sm:text-xs font-semibold text-blue-500 uppercase tracking-wider">Roles</span>
                         <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
                             <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
@@ -379,7 +499,7 @@ export function CandidatesManager() {
                     <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
                         <select
                             value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value)}
+                            onChange={(e) => updateRoleFilter(e.target.value)}
                             className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-primary cursor-pointer truncate max-w-[170px]"
                         >
                             <option value="all">All Roles ({applications.length})</option>
@@ -390,15 +510,24 @@ export function CandidatesManager() {
 
                         <select
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
+                            onChange={(e) => updateStatusFilter(e.target.value)}
                             className="bg-gray-50 dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-primary cursor-pointer truncate"
                         >
-                            <option value="all">All Statuses</option>
-                            <option value="new">New</option>
-                            <option value="reviewed">Reviewed</option>
-                            <option value="shortlisted">Shortlisted</option>
-                            <option value="rejected">Rejected</option>
+                            <option value="all">All Statuses ({applications.length})</option>
+                            <option value="new">New ({stats.newApps})</option>
+                            <option value="reviewed">Reviewed ({stats.reviewed})</option>
+                            <option value="shortlisted">Shortlisted ({stats.shortlisted})</option>
+                            <option value="rejected">Rejected ({stats.rejected})</option>
                         </select>
+
+                        {(statusFilter !== 'all' || roleFilter !== 'all' || searchQuery !== '') && (
+                            <button
+                                onClick={clearAllFilters}
+                                className="text-xs text-rose-500 hover:text-rose-600 font-semibold underline px-2 py-1 shrink-0 col-span-2 sm:col-span-1 text-center"
+                            >
+                                Reset filters
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -547,7 +676,7 @@ export function CandidatesManager() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => handleDelete(candidate.id)}
+                                        onClick={() => handleDelete(candidate)}
                                         className="h-9 w-9 p-0 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl shrink-0"
                                         title="Delete Application"
                                     >
@@ -841,7 +970,7 @@ export function CandidatesManager() {
                             <Button 
                                 variant="destructive" 
                                 size="sm" 
-                                onClick={() => handleDelete(selectedCandidate.id)}
+                                onClick={() => handleDelete(selectedCandidate)}
                                 className="text-xs"
                             >
                                 <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete Application
