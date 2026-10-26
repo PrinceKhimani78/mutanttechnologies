@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import ServiceDetailClient from '@/components/ServiceDetailClient';
 import WhiteLabelGHLClient from '@/components/WhiteLabelGHLClient';
 import { notFound } from 'next/navigation';
-import { Service } from '@/lib/types';
+import { Service, PortfolioProject, Testimonial } from '@/lib/types';
 import { Footer } from '@/components/Footer';
 
 export const revalidate = 60; // Revalidate every 60 seconds
@@ -65,14 +65,47 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ServiceDetail({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
 
-    const { data: service } = await supabase
-        .from('services')
-        .select('*')
-        .eq('slug', slug)
-        .single();
+    const [serviceRes, portfolioRes, testimonialsRes] = await Promise.all([
+        supabase.from('services').select('*').eq('slug', slug).single(),
+        supabase.from('portfolio').select('id, title, category, image_url, project_url, description, created_at').order('created_at', { ascending: false }),
+        supabase.from('testimonials').select('id, quote, author, role, rating').order('created_at', { ascending: false })
+    ]);
 
+    const service = serviceRes.data;
     if (!service) {
         notFound();
+    }
+
+    const allPortfolio = portfolioRes.data || [];
+    const allTestimonials = testimonialsRes.data || [];
+
+    // Filter projects matching this service category first, then supplement with top flagship projects
+    const slugLower = slug.toLowerCase();
+    const serviceTitleLower = (service.title || '').toLowerCase();
+
+    const matchingProjects = allPortfolio.filter((p: any) => {
+        const cat = (p.category || '').toLowerCase();
+        const title = (p.title || '').toLowerCase();
+        if (slugLower.includes('web') && cat.includes('web')) return true;
+        if (slugLower.includes('gohighlevel') && (cat.includes('ghl') || title.includes('gohighlevel'))) return true;
+        if (slugLower.includes('seo') && (cat.includes('seo') || cat.includes('web'))) return true;
+        if (slugLower.includes('ecommerce') && (title.includes('jewel') || title.includes('e-commerce'))) return true;
+        return cat.includes(slugLower) || (serviceTitleLower && cat.includes(serviceTitleLower));
+    });
+
+    const relatedProjects = [...matchingProjects];
+    for (const p of allPortfolio) {
+        if (!relatedProjects.some(rp => rp.id === p.id)) {
+            relatedProjects.push(p);
+        }
+        if (relatedProjects.length >= 4) break;
+    }
+
+    // Select a real testimonial rotating deterministically by service slug
+    let selectedTestimonial = allTestimonials[0] || null;
+    if (allTestimonials.length > 0) {
+        const hash = slug.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        selectedTestimonial = allTestimonials[hash % allTestimonials.length];
     }
 
     const jsonLd = {
@@ -97,7 +130,11 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
             {slug === 'white-label-gohighlevel' ? (
                 <WhiteLabelGHLClient service={service as Service} />
             ) : (
-                <ServiceDetailClient service={service as Service} />
+                <ServiceDetailClient 
+                    service={service as Service} 
+                    projects={relatedProjects as unknown as PortfolioProject[]}
+                    testimonial={selectedTestimonial as unknown as Testimonial | null}
+                />
             )}
             <Footer />
         </>

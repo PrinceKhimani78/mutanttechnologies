@@ -71,3 +71,13 @@ export interface CareerApplication {
     notes?: string | null;
     created_at: string;
 }
+
+export interface Testimonial {
+    id: string;
+    quote: string;
+    author: string;
+    role: string;
+    rating?: number;
+    created_at?: string;
+}
+

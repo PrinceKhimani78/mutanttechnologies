@@ -9,7 +9,7 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Service } from "@/lib/types";
+import { Service, PortfolioProject, Testimonial } from "@/lib/types";
 import { ProposalForm } from "./ProposalForm";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -18,51 +18,82 @@ gsap.registerPlugin(ScrollTrigger);
 
 interface ServiceDetailClientProps {
   service: Service;
+  projects?: PortfolioProject[];
+  testimonial?: Testimonial | null;
   scroller?: any; // For Visual Editor - disables GSAP animations
 }
 
-const navLogos = [
-  "NEXUS",
-  "VORTEX",
-  "APEX",
-  "ECHO",
-  "QUANTUM",
-  "HORIZON",
-  "PULSE",
+const realClientBrands = [
+  "SkySlope",
+  "One Dental Toronto",
+  "The Beige Jewels",
+  "SlideJewel",
+  "Green Minds India",
+  "SiderRoad",
+  "Petfam",
 ];
 
-const genericCaseStudies = [
+const fallbackProjects: PortfolioProject[] = [
   {
-    title: "Quantum Flow",
-    category: "SaaS Platform",
-    image:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Novus Markets",
-    category: "Fintech App",
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Elevate Gear",
+    id: "the-beige-jewels",
+    title: "The Beige Jewels – E-Commerce Website Development",
     category: "E-Commerce",
-    image:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop",
+    image_url:
+      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/fxxelr9tk67-1770810083440.png",
+    project_url: "https://thebeigejewels.com/",
+    description: "Modern luxury jewelry e-commerce website development.",
+    created_at: new Date().toISOString(),
   },
   {
-    title: "MediCore",
+    id: "slidejewels",
+    title: "SlideJewel – E-Commerce Website Development",
+    category: "E-Commerce",
+    image_url:
+      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/ll4r0kwhvdp-1770809951600.png",
+    project_url: "https://slidejewels.com/",
+    description: "High-performance direct-to-consumer e-commerce experience.",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "one-dental-toronto",
+    title: "One Dental Toronto – Dental Clinic Website Development",
     category: "Healthcare",
-    image:
-      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop",
+    image_url:
+      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/vl9udmc8e2h-1770809241327.png",
+    project_url: "https://onedentaltoronto.ca/",
+    description: "Clean, patient-centric healthcare clinic website.",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "green-minds-india",
+    title: "Green Minds India – Corporate Website Development",
+    category: "Corporate",
+    image_url:
+      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/24w3b0se65hh-1770809019257.png",
+    project_url: "https://greenmindsindia.in",
+    description: "Modern, responsive corporate website.",
+    created_at: new Date().toISOString(),
   },
 ];
+
+const fallbackTestimonial: Testimonial = {
+  id: "default-testimonial",
+  quote:
+    "The team at Mutant Technologies transformed our online strategy with their expertise and creativity. Their commitment to our growth has been exceptional.",
+  author: "Nicolas Boucher",
+  role: "Head Marketing",
+  rating: 5,
+};
 
 export default function ServiceDetailClient({
   service,
+  projects,
+  testimonial,
   scroller,
 }: ServiceDetailClientProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const displayProjects = projects && projects.length > 0 ? projects : fallbackProjects;
+  const activeTestimonial = testimonial || fallbackTestimonial;
   const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
 
   useGSAP(
@@ -259,17 +290,17 @@ export default function ServiceDetailClient({
           scroller && "py-8",
         )}
       >
-        <p className="text-center text-zinc-500 dark:text-zinc-400 font-medium mb-10 tracking-widest text-sm">
-          Trusted by 500+ global companies
+        <p className="text-center text-zinc-500 dark:text-zinc-400 font-medium mb-10 tracking-widest text-xs uppercase">
+          Trusted by ambitious founders, brands & modern businesses
         </p>
         <div className="overflow-hidden relative w-full">
           <div className="marquee-content flex gap-16 whitespace-nowrap min-w-full items-center">
-            {[...navLogos, ...navLogos, ...navLogos].map((logo, i) => (
+            {[...realClientBrands, ...realClientBrands, ...realClientBrands].map((brand, i) => (
               <span
                 key={i}
-                className="text-2xl font-bold text-zinc-300 dark:text-zinc-700 tracking-tighter"
+                className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-400 dark:text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
               >
-                {logo}
+                {brand}
               </span>
             ))}
           </div>
@@ -377,25 +408,47 @@ export default function ServiceDetailClient({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {genericCaseStudies.map((study, idx) => (
-              <div key={idx} className="group reveal-up cursor-pointer">
-                <div className="rounded-3xl overflow-hidden relative aspect-[4/3] mb-6">
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10"></div>
-                  <Image
-                    src={study.image}
-                    alt={study.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
-                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
-                  {study.title}
-                </h3>
-                <p className="text-zinc-500 dark:text-zinc-400 font-mono text-sm tracking-wider">
-                  {study.category}
-                </p>
-              </div>
-            ))}
+            {displayProjects.map((project, idx) => {
+              const CardWrapper = project.project_url ? "a" : "div";
+              const wrapperProps = project.project_url
+                ? {
+                    href: project.project_url,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                  }
+                : {};
+
+              return (
+                <CardWrapper
+                  key={project.id || idx}
+                  {...(wrapperProps as any)}
+                  className="group reveal-up cursor-pointer block"
+                >
+                  <div className="rounded-3xl overflow-hidden relative aspect-[4/3] mb-6 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10"></div>
+                    <Image
+                      src={project.image_url}
+                      alt={project.title}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    {project.project_url && (
+                      <div className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/70 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ArrowRight className="w-4 h-4 -rotate-45" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-orange-500 transition-colors">
+                      {project.title.split("–")[0].trim()}
+                    </h3>
+                    <p className="text-zinc-500 dark:text-zinc-400 font-mono text-sm tracking-wider">
+                      {project.category || "Client Project"}
+                    </p>
+                  </div>
+                </CardWrapper>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -429,16 +482,18 @@ export default function ServiceDetailClient({
                   "
                 </div>
                 <p className="text-xl leading-relaxed text-zinc-300 mb-8 relative z-10">
-                  "Mutant Technologies didn't just deliver a service; they
-                  transformed our entire digital infrastructure. The speed of
-                  delivery was unmatched."
+                  "{activeTestimonial.quote}"
                 </p>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-zinc-700"></div>
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                    {activeTestimonial.author.charAt(0)}
+                  </div>
                   <div>
-                    <div className="font-bold text-white">Michael Chen</div>
-                    <div className="text-sm text-zinc-500">
-                      CTO, Nexus Systems
+                    <div className="font-bold text-white">
+                      {activeTestimonial.author}
+                    </div>
+                    <div className="text-sm text-zinc-400">
+                      {activeTestimonial.role}
                     </div>
                   </div>
                 </div>

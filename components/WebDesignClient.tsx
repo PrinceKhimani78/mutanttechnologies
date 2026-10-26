@@ -26,11 +26,21 @@ const industries = [
     { name: "Education", image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop" }
 ];
 
+const realClientBrands = [
+    "SkySlope",
+    "One Dental Toronto",
+    "The Beige Jewels",
+    "SlideJewel",
+    "Green Minds India",
+    "SiderRoad",
+    "Petfam"
+];
+
 const caseStudies = [
-    { title: "Quantum Flow", category: "SaaS Platform", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop" },
-    { title: "Novus Markets", category: "Fintech App", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop" },
-    { title: "Elevate Gear", category: "E-Commerce", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=800&auto=format&fit=crop" },
-    { title: "MediCore", category: "Healthcare", image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=800&auto=format&fit=crop" }
+    { title: "The Beige Jewels", category: "E-Commerce", image: "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/fxxelr9tk67-1770810083440.png" },
+    { title: "SlideJewel", category: "E-Commerce", image: "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/ll4r0kwhvdp-1770809951600.png" },
+    { title: "One Dental Toronto", category: "Healthcare", image: "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/vl9udmc8e2h-1770809241327.png" },
+    { title: "Green Minds India", category: "Corporate", image: "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/24w3b0se65hh-1770809019257.png" }
 ];
 
 export default function WebDesignClient() {
@@ -166,12 +176,12 @@ export default function WebDesignClient() {
 
             {/* 2. LOGO MARQUEE */}
             <section className="py-16 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800">
-                <p className="text-center text-zinc-500 dark:text-zinc-400 font-medium mb-10 tracking-widest text-sm">Trusted by 500+ global companies</p>
+                <p className="text-center text-zinc-500 dark:text-zinc-400 font-medium mb-10 tracking-widest text-xs uppercase">Trusted by ambitious founders, brands & modern businesses</p>
                 <div className="overflow-hidden relative w-full">
                     <div className="marquee-content flex gap-16 whitespace-nowrap min-w-full items-center">
                         {/* Duplicated list for seamless loop */}
-                        {[...navLogos, ...navLogos, ...navLogos].map((logo, i) => (
-                            <span key={i} className="text-2xl font-bold text-zinc-300 dark:text-zinc-700 tracking-tighter">{logo}</span>
+                        {[...realClientBrands, ...realClientBrands, ...realClientBrands].map((brand, i) => (
+                            <span key={i} className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-400 dark:text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">{brand}</span>
                         ))}
                     </div>
                     {/* Fade Edges */}
@@ -318,13 +328,13 @@ export default function WebDesignClient() {
                             <div className="bg-zinc-900 rounded-3xl p-8 border border-zinc-800 relative reveal-up">
                                 <div className="text-orange-500 text-6xl font-serif absolute top-4 right-8 opacity-20">"</div>
                                 <p className="text-xl leading-relaxed text-zinc-300 mb-8 relative z-10">
-                                    "Mutant Technologies didn't just build a website; they transformed our entire digital infrastructure. The speed of delivery was unmatched."
+                                    "The team at Mutant Technologies transformed our online strategy with their expertise and creativity. Their commitment to our growth has been exceptional."
                                 </p>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-zinc-700"></div>
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-md">N</div>
                                     <div>
-                                        <div className="font-bold text-white">Michael Chen</div>
-                                        <div className="text-sm text-zinc-500">CTO, Nexus Systems</div>
+                                        <div className="font-bold text-white">Nicolas Boucher</div>
+                                        <div className="text-sm text-zinc-400">Head Marketing</div>
                                     </div>
                                     <Button size="sm" className="ml-auto bg-white text-black hover:bg-zinc-200 rounded-full whitespace-nowrap">
                                         Read case study
@@ -542,7 +552,6 @@ const servicesList = [
     { title: "Launch & growth", desc: "We don't just launch; we help you grow with data-driven optimization.", features: ["Analytics setup", "SEO basics", "Heatmaps"], bg: "#ea580c", text: "#fff", graphic: <BarChart className="w-32 h-32 text-white" /> } // Orange
 ];
 
-const navLogos = ["NEXUS", "VORTEX", "APEX", "ECHO", "QUANTUM", "HORIZON", "PULSE"];
 
 const getIndustryColor = (idx: number) => {
     const colors = ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
