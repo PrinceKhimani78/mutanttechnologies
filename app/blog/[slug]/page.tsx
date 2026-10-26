@@ -12,6 +12,7 @@ import { Post } from "@/lib/types";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getMetadata } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
@@ -194,6 +195,16 @@ export default async function BlogPost({
       {/* Hero / Header */}
       <BlogPostAnimator>
       <div className="pt-32 pb-16 px-6 w-full max-w-4xl mx-auto">
+        <div className="post-item mb-4">
+          <Breadcrumbs
+            items={[
+              { label: "Blog", href: "/blog" },
+              { label: post.title }
+            ]}
+            theme="auto"
+          />
+        </div>
+
         <Link
           href="/blog"
           className="post-item inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-8 text-sm font-mono uppercase tracking-widest"

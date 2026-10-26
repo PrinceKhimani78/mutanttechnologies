@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { GoogleTagManager, GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -68,7 +69,7 @@ export default function RootLayout({
     ],
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+91-9510103770', // Update with actual
+      telephone: '+91 9879846695',
       contactType: 'customer service',
     },
   };
@@ -94,6 +95,7 @@ export default function RootLayout({
             <CustomCursor />
             {children}
           </SmoothScroll>
+          <WhatsAppButton />
         </ThemeProvider>
         <Analytics />
       </body>

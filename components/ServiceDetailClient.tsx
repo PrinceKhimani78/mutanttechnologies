@@ -11,6 +11,7 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Service, PortfolioProject, Testimonial } from "@/lib/types";
 import { ProposalForm } from "./ProposalForm";
+import { Breadcrumbs } from "./Breadcrumbs";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
@@ -195,6 +196,16 @@ export default function ServiceDetailClient({
         >
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             <div className="lg:w-[60%] hero-content text-center lg:text-left">
+              <div className="mb-4 flex justify-center lg:justify-start">
+                <Breadcrumbs
+                  items={[
+                    { label: "Services", href: "/services" },
+                    { label: service.title }
+                  ]}
+                  theme="dark"
+                />
+              </div>
+
               <div className="inline-flex items-center gap-2 mb-6 lg:mb-8 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/5">
                 <Icon className="w-4 h-4 text-orange-500" />
                 <span className="text-xs lg:text-sm font-medium uppercase tracking-wider">

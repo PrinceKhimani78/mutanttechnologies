@@ -1,69 +1,143 @@
 import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
 
-// Static routes for your application
-const staticRoutes = [
-    '',
-    '/about',
-    '/contact',
-    '/portfolio',
-    '/services',
-    '/blog',
-];
+// Baseline fallback date for static pages when no database update timestamp exists.
+// Keeps lastmod stable so Google Search Console only detects changes when content actually changes.
+const STABLE_BASELINE_DATE = new Date('2026-02-06T09:41:31.000Z');
 
 export const revalidate = 3600; // Revalidate every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.mutanttechnologies.com'; // Fallback URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.mutanttechnologies.com';
 
-    // 1. Generate URLs for static routes
-    const staticPages = staticRoutes.map((route) => ({
-        url: `${baseUrl}${route}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: route === '' ? 1.0 : 0.8,
+    // Fetch all content modification dates in parallel
+    const [postsRes, servicesRes, metaRes, portfolioRes, careersRes] = await Promise.all([
+        supabase
+            .from('posts')
+            .select('slug, created_at, updated_at')
+            .eq('is_published', true),
+        supabase
+            .from('services')
+            .select('slug, created_at'),
+        supabase
+            .from('page_metadata')
+            .select('page_slug, created_at, updated_at'),
+        supabase
+            .from('portfolio')
+            .select('created_at')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        supabase
+            .from('careers')
+            .select('created_at')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+    ]);
+
+    // Build lookup map from page_metadata for custom updated_at timestamps
+    const metaMap = new Map<string, Date>();
+    (metaRes.data || []).forEach((row: any) => {
+        const rawDate = row.updated_at || row.created_at;
+        if (rawDate) {
+            const dateObj = new Date(rawDate);
+            metaMap.set(row.page_slug, dateObj);
+            metaMap.set(`/${row.page_slug}`, dateObj);
+        }
+    });
+
+    const latestPostDate = (postsRes.data || []).reduce<Date | null>((latest, p: any) => {
+        const d = new Date(p.updated_at || p.created_at);
+        return !latest || d > latest ? d : latest;
+    }, null);
+
+    const latestServiceDate = (servicesRes.data || []).reduce<Date | null>((latest, s: any) => {
+        const d = new Date(s.created_at);
+        return !latest || d > latest ? d : latest;
+    }, null);
+
+    const latestPortfolioDate = portfolioRes.data?.created_at
+        ? new Date(portfolioRes.data.created_at)
+        : null;
+
+    const latestCareersDate = careersRes.data?.created_at
+        ? new Date(careersRes.data.created_at)
+        : null;
+
+    // 1. Static Core Routes with real change timestamps
+    const staticRouteConfigs = [
+        {
+            route: '',
+            priority: 1.0,
+            changeFrequency: 'weekly' as const,
+            lastModified: metaMap.get('home') || metaMap.get('/') || STABLE_BASELINE_DATE,
+        },
+        {
+            route: '/about',
+            priority: 0.8,
+            changeFrequency: 'monthly' as const,
+            lastModified: metaMap.get('about') || metaMap.get('/about') || STABLE_BASELINE_DATE,
+        },
+        {
+            route: '/contact',
+            priority: 0.8,
+            changeFrequency: 'monthly' as const,
+            lastModified: metaMap.get('contact') || metaMap.get('/contact') || STABLE_BASELINE_DATE,
+        },
+        {
+            route: '/services',
+            priority: 0.9,
+            changeFrequency: 'weekly' as const,
+            lastModified: metaMap.get('services') || metaMap.get('/services') || latestServiceDate || STABLE_BASELINE_DATE,
+        },
+        {
+            route: '/portfolio',
+            priority: 0.85,
+            changeFrequency: 'weekly' as const,
+            lastModified: latestPortfolioDate || metaMap.get('portfolio') || STABLE_BASELINE_DATE,
+        },
+        {
+            route: '/blog',
+            priority: 0.8,
+            changeFrequency: 'daily' as const,
+            lastModified: latestPostDate || metaMap.get('blog') || STABLE_BASELINE_DATE,
+        },
+        {
+            route: '/careers',
+            priority: 0.7,
+            changeFrequency: 'monthly' as const,
+            lastModified: latestCareersDate || metaMap.get('careers') || STABLE_BASELINE_DATE,
+        },
+    ];
+
+    const staticPages: MetadataRoute.Sitemap = staticRouteConfigs.map((config) => ({
+        url: `${baseUrl}${config.route}`,
+        lastModified: config.lastModified,
+        changeFrequency: config.changeFrequency,
+        priority: config.priority,
     }));
 
-    // 2. Fetch Blog Posts from Supabase
-    let blogPages: MetadataRoute.Sitemap = [];
-    try {
-        const { data: posts } = await supabase
-            .from('posts')
-            .select('slug, created_at') // Using created_at as we don't have updated_at yet in types, but DB likely has it. Safest to use what we know exists or mapped.
-            .eq('is_published', true);
+    // 2. Blog Posts with individual real modification dates
+    const blogPages: MetadataRoute.Sitemap = (postsRes.data || []).map((post: any) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: new Date(post.updated_at || post.created_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+    }));
 
-        if (posts) {
-            blogPages = posts.map((post) => ({
-                url: `${baseUrl}/blog/${post.slug}`,
-                lastModified: new Date(post.created_at), // timestamp with time zone
-                changeFrequency: 'weekly' as const,
-                priority: 0.7,
-            }));
-        }
-    } catch (error) {
-        console.error("Error fetching blog posts for sitemap:", error);
-    }
+    // 3. Service Detail Pages with actual service modification dates
+    const servicePages: MetadataRoute.Sitemap = (servicesRes.data || []).map((service: any) => {
+        const metaDate = metaMap.get(`/services/${service.slug}`) || metaMap.get(`services/${service.slug}`);
+        return {
+            url: `${baseUrl}/services/${service.slug}`,
+            lastModified: metaDate || new Date(service.created_at),
+            changeFrequency: 'monthly' as const,
+            priority: 0.9,
+        };
+    });
 
-    // 3. Fetch Services from Supabase
-    let servicePages: MetadataRoute.Sitemap = [];
-    try {
-        const { data: services } = await supabase
-            .from('services')
-            .select('slug, created_at');
-
-        if (services) {
-            servicePages = services.map((service) => ({
-                url: `${baseUrl}/services/${service.slug}`,
-                lastModified: new Date(service.created_at),
-                changeFrequency: 'monthly' as const,
-                priority: 0.9,
-            }));
-        }
-    } catch (error) {
-        console.error("Error fetching services for sitemap:", error);
-    }
-
-    // 4. Fetch Builder.io CMS pages so they're discoverable without manual linking
+    // 4. Builder.io CMS pages (if configured)
     let builderPages: MetadataRoute.Sitemap = [];
     try {
         const knownPaths = new Set([
@@ -83,19 +157,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             });
 
             builderPages = (pages || [])
-                .map((page) => page?.data?.url)
-                .filter((url): url is string => !!url)
-                .map((url) => `${baseUrl}${url}`)
-                .filter((url) => !knownPaths.has(url))
-                .map((url) => ({
-                    url,
-                    lastModified: new Date(),
+                .map((page: any) => ({
+                    url: page?.data?.url ? `${baseUrl}${page.data.url}` : null,
+                    lastModified: page?.lastModified ? new Date(page.lastModified) : STABLE_BASELINE_DATE,
+                }))
+                .filter((item): item is { url: string; lastModified: Date } => !!item.url && !knownPaths.has(item.url))
+                .map((item) => ({
+                    url: item.url,
+                    lastModified: item.lastModified,
                     changeFrequency: 'weekly' as const,
                     priority: 0.6,
                 }));
         }
     } catch (error) {
-        console.error("Error fetching Builder.io pages for sitemap:", error);
+        console.error('Error fetching Builder.io pages for sitemap:', error);
     }
 
     return [...staticPages, ...blogPages, ...servicePages, ...builderPages];

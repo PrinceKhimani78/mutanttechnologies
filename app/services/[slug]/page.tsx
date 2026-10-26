@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return await getMetadata(`/services/${slug}`, {
-        title: `${service.title} | Services | Mutant Technologies`,
+        title: `${service.title} | Services`,
         description: service.short_description || service.description,
         openGraph: {
             title: service.title,

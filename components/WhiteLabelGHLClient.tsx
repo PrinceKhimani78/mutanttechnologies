@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ProposalForm } from '@/components/ProposalForm';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import {
     ArrowRight, CheckCircle2, Code2, Globe, Layout,
     Zap, Building2, HeartPulse, Briefcase, Calendar, 
@@ -174,6 +175,15 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
 
                 <div className="container mx-auto px-6 relative z-10 text-center">
                     <div className="max-w-4xl mx-auto hero-content">
+                        <div className="mb-4 flex justify-center">
+                            <Breadcrumbs
+                                items={[
+                                    { label: 'Services', href: '/services' },
+                                    { label: 'White Label GoHighLevel' }
+                                ]}
+                                theme="dark"
+                            />
+                        </div>
                         <div className="inline-flex items-center gap-2 mb-6 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/5">
                             <span className="text-sm font-medium tracking-wide">White Label Services</span>
                         </div>
