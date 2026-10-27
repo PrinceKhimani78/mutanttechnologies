@@ -77,14 +77,18 @@ const processFlow = [
 
 import { Service } from '@/lib/types';
 import { Navbar } from '@/components/Navbar';
-import { getServiceFaqs } from '@/lib/serviceFaqs';
+import { getServiceFaqs, serviceHeroHeadlines } from '@/lib/serviceFaqs';
 
 export default function WhiteLabelGHLClient({ service }: { service?: Service }) {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Fallbacks to dynamic DB content
-    const heroTitle = service?.title || "White Label GoHighLevel Development";
-    const heroDesc = service?.short_description || service?.description || "Mutant Technologies is your white label GoHighLevel implementation partner for full-funnel builds, websites, landing pages, and advanced GHL development. Deliver faster, smarter, and at scale, under your brand.";
+    const heroData = serviceHeroHeadlines['white-label-gohighlevel'] || {
+        headline: "White Label GoHighLevel",
+        highlight: "Agency",
+        subtitle: "Deliver GHL Funnels, Automations & Snapshots at Scale — 100% white-label fulfillment under your agency's brand.",
+    };
+    const heroTitle = "White Label GoHighLevel Agency";
+    const heroDesc = heroData.subtitle || service?.short_description || service?.description || "Mutant Technologies is your white label GoHighLevel implementation partner for full-funnel builds, websites, landing pages, and advanced GHL development. Deliver faster, smarter, and at scale, under your brand.";
     
     // Map process, benefits, features from DB if available
     const displayBenefits = service?.benefits?.length ? service.benefits.map((b: any) => ({
@@ -125,8 +129,23 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
         ]
     };
 
-    const displayCaseStudy = service?.custom_data?.caseStudy || null;
-    const displayTestimonials = service?.custom_data?.testimonials || [];
+    const isPlaceholderCaseStudy = (cs: any) => {
+        if (!cs) return true;
+        const text = JSON.stringify(cs);
+        return /agency\s*x/i.test(text);
+    };
+
+    const isPlaceholderTestimonial = (t: any) => {
+        if (!t) return true;
+        const text = JSON.stringify(t);
+        return /agency\s*owner/i.test(text) || /web\s*design\s*agency,\s*canada/i.test(text) || /marketing\s*agency,\s*usa/i.test(text) || /digital\s*agency,\s*australia/i.test(text);
+    };
+
+    const rawCaseStudy = service?.custom_data?.caseStudy;
+    const displayCaseStudy = isPlaceholderCaseStudy(rawCaseStudy) ? null : rawCaseStudy;
+
+    const rawTestimonials = Array.isArray(service?.custom_data?.testimonials) ? service.custom_data.testimonials : [];
+    const displayTestimonials = rawTestimonials.filter((t: any) => !isPlaceholderTestimonial(t));
 
     const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
     const ghlFaqs = getServiceFaqs(service);
@@ -168,9 +187,7 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
                             <span className="text-sm font-medium tracking-wide">White Label Services</span>
                         </div>
                         <h1 className="text-5xl lg:text-7xl font-oswald font-bold uppercase leading-[1.1] tracking-tight mb-8">
-                            {heroTitle.split('GoHighLevel')[0]} 
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">GoHighLevel</span> 
-                            {heroTitle.split('GoHighLevel')[1] || ''}
+                            White Label <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">GoHighLevel</span> Agency
                         </h1>
                         <p className="text-xl text-zinc-400 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
                             {heroDesc}
