@@ -56,11 +56,11 @@ export const Ongoing = ({
         year: p.created_at ? new Date(p.created_at).getFullYear().toString() : "2024"
     })) : [
         {
-            title: "Neon Horizon",
-            category: "Web Application",
-            description: "A futuristic dashboard for managing IoT devices in smart cities.",
-            image: "/ongoing-1.jpg",
-            color: "bg-cyan-500/20",
+            title: "The Beige Jewels",
+            category: "E-Commerce",
+            description: "High-performance direct-to-consumer luxury jewelry e-commerce experience.",
+            image: "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/fxxelr9tk67-1770810083440.png",
+            color: "bg-orange-500/20",
             year: "2024"
         }
     ];

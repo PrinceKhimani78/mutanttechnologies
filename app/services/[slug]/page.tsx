@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import ServiceDetailClient from '@/components/ServiceDetailClient';
+import { getServiceFaqs } from '@/lib/serviceFaqs';
 import WhiteLabelGHLClient from '@/components/WhiteLabelGHLClient';
 import { notFound } from 'next/navigation';
 import { Service, PortfolioProject, Testimonial } from '@/lib/types';
@@ -108,24 +109,95 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
         selectedTestimonial = allTestimonials[hash % allTestimonials.length];
     }
 
-    const jsonLd = {
+    const serviceFaqs = getServiceFaqs(service as Service);
+
+    const schemaGraph = {
         '@context': 'https://schema.org',
-        '@type': 'Service',
-        name: service.title,
-        description: service.short_description || service.description,
-        provider: {
-            '@type': 'Organization',
-            name: 'Mutant Technologies',
-            url: 'https://www.mutanttechnologies.com'
-        },
-        url: `https://www.mutanttechnologies.com/services/${service.slug}`,
+        '@graph': [
+            {
+                '@type': 'Service',
+                '@id': `https://www.mutanttechnologies.com/services/${service.slug}#service`,
+                name: service.title,
+                serviceType: service.title,
+                description: service.short_description || service.description,
+                url: `https://www.mutanttechnologies.com/services/${service.slug}`,
+                areaServed: {
+                    '@type': 'Country',
+                    name: 'Worldwide',
+                },
+                provider: {
+                    '@type': ['LocalBusiness', 'ProfessionalService'],
+                    '@id': 'https://www.mutanttechnologies.com/#localbusiness',
+                    name: 'Mutant Technologies',
+                    url: 'https://www.mutanttechnologies.com',
+                    telephone: '+91 9879846695',
+                    priceRange: '$$',
+                    image: 'https://www.mutanttechnologies.com/logo.png',
+                    address: {
+                        '@type': 'PostalAddress',
+                        addressLocality: 'Rajkot',
+                        addressRegion: 'Gujarat',
+                        postalCode: '360005',
+                        addressCountry: 'IN',
+                    },
+                },
+                hasOfferCatalog: {
+                    '@type': 'OfferCatalog',
+                    name: `${service.title} Deliverables`,
+                    itemListElement: (service.features || []).map((feature: any, idx: number) => ({
+                        '@type': 'Offer',
+                        itemOffered: {
+                            '@type': 'Service',
+                            name: typeof feature === 'string' ? feature : feature?.title || `${service.title} Item ${idx + 1}`,
+                            description: typeof feature === 'object' ? feature?.description : undefined,
+                        },
+                    })),
+                },
+            },
+            {
+                '@type': 'FAQPage',
+                '@id': `https://www.mutanttechnologies.com/services/${service.slug}#faq`,
+                mainEntity: serviceFaqs.map((faq) => ({
+                    '@type': 'Question',
+                    name: faq.question,
+                    acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: faq.answer,
+                    },
+                })),
+            },
+            {
+                '@type': 'BreadcrumbList',
+                '@id': `https://www.mutanttechnologies.com/services/${service.slug}#breadcrumbs`,
+                itemListElement: [
+                    {
+                        '@type': 'ListItem',
+                        position: 1,
+                        name: 'Home',
+                        item: 'https://www.mutanttechnologies.com',
+                    },
+                    {
+                        '@type': 'ListItem',
+                        position: 2,
+                        name: 'Services',
+                        item: 'https://www.mutanttechnologies.com/services',
+                    },
+                    {
+                        '@type': 'ListItem',
+                        position: 3,
+                        name: service.title,
+                        item: `https://www.mutanttechnologies.com/services/${service.slug}`,
+                    },
+                ],
+            },
+        ],
     };
 
     return (
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
             />
             {slug === 'white-label-gohighlevel' ? (
                 <WhiteLabelGHLClient service={service as Service} />

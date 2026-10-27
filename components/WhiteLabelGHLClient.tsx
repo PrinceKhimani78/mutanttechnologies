@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ProposalForm } from '@/components/ProposalForm';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
@@ -9,7 +9,7 @@ import {
     Zap, Building2, HeartPulse, Briefcase, Calendar, 
     MessageSquare, Clock, Lock, UserCheck, RefreshCw,
     XCircle, Check, ArrowDown, UserPlus, DollarSign, TrendingUp,
-    Star, Quote
+    Star, Quote, ChevronDown
 } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -150,6 +150,26 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
     };
 
     const displayTestimonials = service?.custom_data?.testimonials || testimonials;
+
+    const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+    const ghlFaqs = [
+        {
+            question: "How does the white-label fulfillment process work?",
+            answer: "We operate completely behind the scenes under your agency's brand. You communicate with your client, or invite our PM into your private agency Slack with your domain email. All funnels, snapshots, and automations are transferred directly into your client's sub-account."
+        },
+        {
+            question: "Do you sign a Non-Disclosure Agreement (NDA) and non-compete?",
+            answer: "Yes, always. We sign strict NDAs and non-compete agreements before any work begins. We will never contact, solicit, or reveal your clients."
+        },
+        {
+            question: "What happens if a client requests revisions?",
+            answer: "Every deliverable includes standard revision rounds to ensure 100% alignment with your client's requirements before final sign-off."
+        },
+        {
+            question: "How fast can you deliver a custom GoHighLevel build?",
+            answer: "Full sub-account setups and pipeline automations typically launch within 48 to 72 hours. Complex multi-tier custom funnels and API integrations are usually delivered in 5 to 10 business days."
+        }
+    ];
 
     useGSAP(() => {
         const tl = gsap.timeline();
@@ -377,6 +397,60 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
                                 </div>
                             ))}
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* FREQUENTLY ASKED QUESTIONS */}
+            <section id="faq" className="py-24 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800">
+                <div className="container mx-auto px-6 max-w-4xl">
+                    <div className="text-center mb-16">
+                        <span className="text-orange-500 font-mono text-xs uppercase tracking-widest font-semibold mb-3 block">
+                            Agency FAQ
+                        </span>
+                        <h2 className="text-4xl lg:text-5xl font-oswald font-bold uppercase mb-4 text-zinc-900 dark:text-white">
+                            Frequently Asked Questions
+                        </h2>
+                        <p className="text-zinc-600 dark:text-zinc-400 text-lg max-w-2xl mx-auto font-light">
+                            Clear answers on our white-label agency partnerships, fulfillment workflows, and non-disclosure terms.
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        {ghlFaqs.map((faq, idx) => {
+                            const isOpen = openFaqIndex === idx;
+                            return (
+                                <div
+                                    key={idx}
+                                    className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-hidden shadow-xs transition-colors"
+                                >
+                                    <button
+                                        onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                                        className="w-full text-left p-6 sm:p-7 flex items-center justify-between gap-4 focus:outline-hidden cursor-pointer"
+                                        aria-expanded={isOpen}
+                                    >
+                                        <span className="text-lg sm:text-xl font-bold font-oswald text-zinc-900 dark:text-zinc-100 pr-2">
+                                            {faq.question}
+                                        </span>
+                                        <div
+                                            className={cn(
+                                                "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border transition-transform duration-300",
+                                                isOpen
+                                                    ? "bg-orange-500 border-orange-500 text-white rotate-180"
+                                                    : "border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400"
+                                            )}
+                                        >
+                                            <ChevronDown className="w-4 h-4" />
+                                        </div>
+                                    </button>
+                                    {isOpen && (
+                                        <div className="px-6 pb-6 sm:px-7 sm:pb-7 text-zinc-600 dark:text-zinc-300 text-base sm:text-lg leading-relaxed pt-0 border-t border-zinc-100 dark:border-zinc-800 mt-1">
+                                            <p className="pt-4 font-light">{faq.answer}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>

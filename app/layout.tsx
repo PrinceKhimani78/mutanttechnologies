@@ -49,29 +49,71 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const jsonLd = {
+  const structuredData = {
     '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Mutant Technologies',
-    url: 'https://www.mutanttechnologies.com',
-    logo: 'https://www.mutanttechnologies.com/logo.png',
-    founder: 'Prince Khimani',
-    foundingDate: '2023', // Update if different
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Ahmedabad',
-      addressRegion: 'Gujarat',
-      addressCountry: 'India'
-    },
-    sameAs: [
-      'https://www.linkedin.com/company/mutant-technologies',
-      'https://www.instagram.com/mutanttechnologies',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': 'https://www.mutanttechnologies.com/#organization',
+        name: 'Mutant Technologies',
+        url: 'https://www.mutanttechnologies.com',
+        logo: 'https://www.mutanttechnologies.com/logo.png',
+        founder: {
+          '@type': 'Person',
+          name: 'Prince Khimani',
+        },
+        foundingDate: '2023',
+        sameAs: [
+          'https://www.linkedin.com/company/mutant-technologies',
+          'https://www.instagram.com/mutanttechnologies',
+        ],
+        contactPoint: {
+          '@type': 'ContactPoint',
+          telephone: '+91 9879846695',
+          contactType: 'customer service',
+          areaServed: 'Worldwide',
+          availableLanguage: ['English', 'Hindi', 'Gujarati'],
+        },
+      },
+      {
+        '@type': ['LocalBusiness', 'ProfessionalService'],
+        '@id': 'https://www.mutanttechnologies.com/#localbusiness',
+        name: 'Mutant Technologies',
+        url: 'https://www.mutanttechnologies.com',
+        logo: 'https://www.mutanttechnologies.com/logo.png',
+        image: 'https://www.mutanttechnologies.com/logo.png',
+        telephone: '+91 9879846695',
+        priceRange: '$$',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Rajkot',
+          addressRegion: 'Gujarat',
+          postalCode: '360005',
+          addressCountry: 'IN',
+        },
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: '22.3039',
+          longitude: '70.8022',
+        },
+        openingHoursSpecification: [
+          {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            opens: '09:00',
+            closes: '19:00',
+          },
+        ],
+        areaServed: [
+          { '@type': 'Country', name: 'Worldwide' },
+          { '@type': 'Country', name: 'United States' },
+          { '@type': 'Country', name: 'Canada' },
+          { '@type': 'Country', name: 'United Kingdom' },
+          { '@type': 'Country', name: 'Australia' },
+          { '@type': 'Country', name: 'India' },
+        ],
+      },
     ],
-    contactPoint: {
-      '@type': 'ContactPoint',
-      telephone: '+91 9879846695',
-      contactType: 'customer service',
-    },
   };
 
   return (
@@ -82,7 +124,7 @@ export default function RootLayout({
       >
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <ThemeProvider
           attribute="class"
