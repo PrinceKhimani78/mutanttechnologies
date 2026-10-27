@@ -83,9 +83,22 @@ export async function generateMetadata({
     };
   }
 
+  let fallbackTitle = post.title?.trim() || "Blog Post";
+  if (fallbackTitle.length > 55) {
+    const truncated = fallbackTitle.slice(0, 52).replace(/\s+\S*$/, "");
+    fallbackTitle = `${truncated} | Mutant`;
+  }
+
+  let fallbackDesc = post.excerpt?.trim() || `Read ${post.title} on the Mutant Technologies blog.`;
+  if (fallbackDesc.length > 160) {
+    fallbackDesc = fallbackDesc.slice(0, 157).replace(/\s+\S*$/, "") + "...";
+  } else if (fallbackDesc.length < 70) {
+    fallbackDesc = `${fallbackDesc} Explore more digital strategies on the Mutant Technologies blog.`;
+  }
+
   const metadata = await getMetadata(`/blog/${slug}`, {
-    title: post.title,
-    description: post.excerpt || `Read ${post.title} on Mutant Technologies blog.`,
+    title: fallbackTitle,
+    description: fallbackDesc,
   });
 
   return {

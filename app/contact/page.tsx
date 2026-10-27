@@ -7,8 +7,8 @@ import { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
     return await getMetadata('/contact', {
-        title: "Contact Us | Mutant Technologies",
-        description: "Get in touch with Mutant Technologies for your next digital project.",
+        title: "Contact Mutant Technologies | IT & Digital Agency",
+        description: "Get in touch with Mutant Technologies in Rajkot for web development, app development, SEO, and white-label digital solutions. Free consultation.",
     });
 }
 
@@ -17,7 +17,7 @@ export default function ContactPage() {
         <main className="min-h-screen bg-background text-foreground">
             <Navbar />
             <div className="pt-20">
-                <Contact />
+                <Contact isPage />
             </div>
             <Footer />
         </main>

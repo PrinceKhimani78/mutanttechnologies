@@ -17,6 +17,7 @@ interface ContactProps {
     email?: string;
     address?: string;
     scroller?: string;
+    isPage?: boolean;
 }
 
 export const Contact = ({
@@ -25,7 +26,8 @@ export const Contact = ({
     phone = "(+91) 7016228551",
     email = "contact@mutanttechnologies.com",
     address = "B-113 RK iconic Sheetal Park, Rajkot, Gujarat",
-    scroller
+    scroller,
+    isPage = false,
 }: ContactProps) => {
     const containerRef = useRef(null);
     const [loading, setLoading] = useState(false);
@@ -122,9 +124,15 @@ export const Contact = ({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
 
                     <div className="space-y-8">
-                        <h2 className="contact-item text-4xl md:text-5xl font-bold">
-                            {title.split(' ').map((word, i) => i === title.split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
-                        </h2>
+                        {isPage ? (
+                            <h1 className="contact-item text-4xl md:text-5xl font-bold">
+                                {title.split(' ').map((word, i) => i === title.split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
+                            </h1>
+                        ) : (
+                            <h2 className="contact-item text-4xl md:text-5xl font-bold">
+                                {title.split(' ').map((word, i) => i === title.split(' ').length - 1 ? <span key={i} className="text-primary">{word}</span> : word + ' ')}
+                            </h2>
+                        )}
                         <p className="contact-item text-gray-400 text-lg">
                             {description}
                         </p>

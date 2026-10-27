@@ -11,8 +11,8 @@ export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
     return await getMetadata('/services', {
-        title: "Web Development, SEO & AI Automation Services | Mutant Technologies",
-        description: "Explore our comprehensive suite of digital services including high-end web development, SEO, custom CRM setups, and white-label agency solutions.",
+        title: "Digital & IT Services in Rajkot | Mutant Technologies",
+        description: "Explore our full suite of digital services: high-speed web development, mobile apps, SEO, AI automations, and white-label GoHighLevel development.",
     });
 }
 
@@ -38,7 +38,7 @@ export default async function ServicesPage() {
         <main className="min-h-screen bg-background text-foreground">
             <Navbar />
             <div className="pt-20">
-                <Services services={servicesData} header={headerData} />
+                <Services services={servicesData} header={headerData} isPage />
             </div>
             <Footer />
         </main>

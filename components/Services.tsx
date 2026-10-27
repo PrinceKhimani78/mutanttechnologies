@@ -20,9 +20,10 @@ interface ServicesProps {
         subtitle?: string;
     };
     scroller?: string;
+    isPage?: boolean;
 }
 
-export const Services = ({ services, header, scroller }: ServicesProps) => {
+export const Services = ({ services, header, scroller, isPage = false }: ServicesProps) => {
     const containerRef = useRef<HTMLElement>(null);
     const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -52,9 +53,15 @@ export const Services = ({ services, header, scroller }: ServicesProps) => {
             <div className="container mx-auto px-6">
                 {/* Header Section */}
                 <div className="max-w-4xl mb-20 text-center md:text-left mx-auto md:mx-0">
-                    <h2 className="text-foreground text-5xl md:text-6xl font-oswald uppercase font-bold tracking-tighter mb-6 leading-none">
-                        {header?.title || 'Our Services'}
-                    </h2>
+                    {isPage ? (
+                        <h1 className="text-foreground text-5xl md:text-6xl font-oswald uppercase font-bold tracking-tighter mb-6 leading-none">
+                            {header?.title || 'Our Digital & IT Services'}
+                        </h1>
+                    ) : (
+                        <h2 className="text-foreground text-5xl md:text-6xl font-oswald uppercase font-bold tracking-tighter mb-6 leading-none">
+                            {header?.title || 'Our Services'}
+                        </h2>
+                    )}
                     <p className="text-gray-600 dark:text-zinc-400 text-xl md:text-2xl font-light max-w-2xl">
                         {header?.subtitle || 'Comprehensive solutions for your digital success in the modern era.'}
                     </p>

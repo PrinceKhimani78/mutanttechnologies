@@ -25,14 +25,14 @@ const oswald = Oswald({
 export const metadata: Metadata = {
   title: {
     template: "%s | Mutant Technologies",
-    default: "Mutant Technologies - Shine Bright Online",
+    default: "Mutant Technologies | IT & Digital Agency in Rajkot",
   },
-  description: "Creative, bold, future-focused digital agency. Web Development, SEO, Digital Marketing, and Cyber Security services.",
+  description: "Mutant Technologies is a premier IT & digital agency in Rajkot offering web development, mobile apps, SEO, digital marketing, and white label solutions.",
   authors: [{ name: "Mutant Technologies" }],
   metadataBase: new URL('https://www.mutanttechnologies.com'),
   openGraph: {
-    title: "Mutant Technologies - Shine Bright Online",
-    description: "Creative, bold, future-focused digital agency.",
+    title: "Mutant Technologies | IT & Digital Agency in Rajkot",
+    description: "Mutant Technologies is a premier IT & digital agency in Rajkot offering web development, mobile apps, SEO, digital marketing, and white label solutions.",
     url: 'https://www.mutanttechnologies.com',
     siteName: 'Mutant Technologies',
     locale: 'en_US',

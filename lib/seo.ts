@@ -17,7 +17,7 @@ export async function getMetadata(slug: string, defaults: Metadata = {}): Promis
 
         const siteName = 'Mutant Technologies';
 
-        const cleanSiteTitle = (raw: string | null | undefined): { fullTitle: string; pureTitle: string } => {
+        const cleanSiteTitle = (raw: string | null | undefined, isSavedSeoTitle = false): { fullTitle: string; pureTitle: string } => {
             if (!raw) {
                 return { fullTitle: 'Mutant Technologies - Shine Bright Online', pureTitle: siteName };
             }
@@ -30,8 +30,15 @@ export async function getMetadata(slug: string, defaults: Metadata = {}): Promis
             if (!pure || pure.toLowerCase() === siteName.toLowerCase()) {
                 return { fullTitle: 'Mutant Technologies - Shine Bright Online', pureTitle: siteName };
             }
-            // If the title already mentions siteName anywhere (e.g. "About Us - Mutant Technologies | Digital Innovation Experts"), don't append it again
-            if (pure.toLowerCase().includes(siteName.toLowerCase())) {
+            // If this is a saved SEO title from the database, it wins as-is!
+            if (isSavedSeoTitle) {
+                return {
+                    fullTitle: pure,
+                    pureTitle: pure,
+                };
+            }
+            // If the title already mentions "Mutant" anywhere, don't append it again
+            if (pure.toLowerCase().includes('mutant')) {
                 return {
                     fullTitle: pure,
                     pureTitle: pure,
@@ -48,7 +55,7 @@ export async function getMetadata(slug: string, defaults: Metadata = {}): Promis
             : (defaults.title as any)?.absolute || (defaults.title as any)?.default || '';
 
         if (error || !data) {
-            const { fullTitle, pureTitle } = cleanSiteTitle(rawDefaultTitle);
+            const { fullTitle, pureTitle } = cleanSiteTitle(rawDefaultTitle, false);
             return {
                 ...defaults,
                 title: { absolute: fullTitle },
@@ -66,8 +73,9 @@ export async function getMetadata(slug: string, defaults: Metadata = {}): Promis
             };
         }
 
-        const rawTitle = data.title || rawDefaultTitle;
-        const { fullTitle, pureTitle } = cleanSiteTitle(rawTitle);
+        const isSaved = Boolean(data.title && data.title.trim());
+        const rawTitle = isSaved ? data.title : rawDefaultTitle;
+        const { fullTitle, pureTitle } = cleanSiteTitle(rawTitle, isSaved);
 
         const metadata: Metadata = {
             title: { absolute: fullTitle },

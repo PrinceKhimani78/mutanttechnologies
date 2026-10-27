@@ -23,8 +23,8 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 export async function generateMetadata(): Promise<Metadata> {
   return await getMetadata('/', {
-    title: "Mutant Technologies - Shine Bright Online",
-    description: "We blend creativity and technology to boost your digital presence.",
+    title: "Mutant Technologies | IT & Digital Agency in Rajkot",
+    description: "Mutant Technologies is a premier IT & digital agency in Rajkot offering web development, mobile apps, SEO, digital marketing, and white label solutions.",
   });
 }
 
