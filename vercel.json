@@ -2,5 +2,18 @@
     "buildCommand": "npm run build",
     "devCommand": "npm run dev",
     "installCommand": "npm install",
-    "framework": "nextjs"
+    "framework": "nextjs",
+    "redirects": [
+        {
+            "source": "/:path*",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "mutanttechnologies.com"
+                }
+            ],
+            "destination": "https://www.mutanttechnologies.com/:path*",
+            "permanent": true
+        }
+    ]
 }

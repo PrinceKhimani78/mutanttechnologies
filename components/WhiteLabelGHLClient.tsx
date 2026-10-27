@@ -75,26 +75,9 @@ const processFlow = [
     { step: "5", title: "Launch Under Your Brand", desc: "Present the final product to your client as your own." },
 ];
 
-const testimonials = [
-    {
-        quote: "Hand them the task. Walk away. It gets done. Mutant acts as a true extension of our team.",
-        author: "Agency Owner",
-        company: "Web Design Agency, Canada"
-    },
-    {
-        quote: "Burned before by other white-labels. Different this time. They actually immersed themselves in our SOPs.",
-        author: "Founder",
-        company: "Marketing Agency, USA"
-    },
-    {
-        quote: "No hiring stress. Real flexibility. A team that listens and delivers GoHighLevel builds on time.",
-        author: "Operations Director",
-        company: "Digital Agency, Australia"
-    }
-];
-
 import { Service } from '@/lib/types';
 import { Navbar } from '@/components/Navbar';
+import { getServiceFaqs } from '@/lib/serviceFaqs';
 
 export default function WhiteLabelGHLClient({ service }: { service?: Service }) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -142,34 +125,11 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
         ]
     };
 
-    const displayCaseStudy = service?.custom_data?.caseStudy || {
-        agency: "Agency X",
-        situation: "needed overflow help after landing a massive real estate account.",
-        delivered: "8 high-converting real estate funnels and full CRM automation within 14 days.",
-        result: "Agency X successfully retained a $5k/mo client with zero delivery stress, completely under their own brand."
-    };
-
-    const displayTestimonials = service?.custom_data?.testimonials || testimonials;
+    const displayCaseStudy = service?.custom_data?.caseStudy || null;
+    const displayTestimonials = service?.custom_data?.testimonials || [];
 
     const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-    const ghlFaqs = [
-        {
-            question: "How does the white-label fulfillment process work?",
-            answer: "We operate completely behind the scenes under your agency's brand. You communicate with your client, or invite our PM into your private agency Slack with your domain email. All funnels, snapshots, and automations are transferred directly into your client's sub-account."
-        },
-        {
-            question: "Do you sign a Non-Disclosure Agreement (NDA) and non-compete?",
-            answer: "Yes, always. We sign strict NDAs and non-compete agreements before any work begins. We will never contact, solicit, or reveal your clients."
-        },
-        {
-            question: "What happens if a client requests revisions?",
-            answer: "Every deliverable includes standard revision rounds to ensure 100% alignment with your client's requirements before final sign-off."
-        },
-        {
-            question: "How fast can you deliver a custom GoHighLevel build?",
-            answer: "Full sub-account setups and pipeline automations typically launch within 48 to 72 hours. Complex multi-tier custom funnels and API integrations are usually delivered in 5 to 10 business days."
-        }
-    ];
+    const ghlFaqs = getServiceFaqs(service);
 
     useGSAP(() => {
         const tl = gsap.timeline();
@@ -354,52 +314,58 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
             </section>
 
             {/* AGENCY CASE STUDY & TESTIMONIALS */}
-            <section className="py-24 bg-white dark:bg-zinc-950">
-                <div className="container mx-auto px-6">
-                    <div className="grid lg:grid-cols-2 gap-16 items-center">
-                        {/* Case Study */}
-                        <div className="reveal-up">
-                            <h2 className="text-4xl font-oswald font-bold uppercase mb-8">Agency Success Profile</h2>
-                            <div className="bg-[#020617] p-8 rounded-3xl border border-white/10 text-white">
-                                <h3 className="text-xl font-oswald font-bold text-orange-400 mb-6 flex items-center gap-2">
-                                    <Briefcase className="w-5 h-5" /> The Situation
-                                </h3>
-                                <ul className="space-y-6">
-                                    <li className="flex gap-4">
-                                        <div className="w-2 h-2 rounded-full bg-orange-500 mt-2 shrink-0" />
-                                        <p className="font-light"><strong className="font-bold text-white">{displayCaseStudy.agency}</strong> {displayCaseStudy.situation}</p>
-                                    </li>
-                                    <li className="flex gap-4">
-                                        <div className="w-2 h-2 rounded-full bg-orange-500 mt-2 shrink-0" />
-                                        <p className="font-light"><strong className="font-bold text-white">We Delivered</strong> {displayCaseStudy.delivered}</p>
-                                    </li>
-                                    <li className="flex gap-4">
-                                        <div className="w-2 h-2 rounded-full bg-green-400 mt-2 shrink-0" />
-                                        <p className="font-light"><strong className="font-bold text-white">The Result:</strong> {displayCaseStudy.result}</p>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* Testimonials */}
-                        <div className="reveal-up space-y-6">
-                            <h2 className="text-3xl font-oswald font-bold uppercase mb-2">What Agency Owners Say</h2>
-                            <p className="text-zinc-500 font-light mb-8">Don't just take our word for it.</p>
-                            
-                            {displayTestimonials.map((test: any, idx: number) => (
-                                <div key={idx} className="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
-                                    <Quote className="w-8 h-8 text-orange-500/20 mb-4" />
-                                    <p className="text-lg italic font-light text-zinc-700 dark:text-zinc-300 mb-4">"{test.quote}"</p>
-                                    <div>
-                                        <p className="font-bold font-oswald text-zinc-900 dark:text-zinc-100">{test.author}</p>
-                                        <p className="text-sm text-zinc-500 uppercase tracking-wide">{test.company}</p>
+            {(displayCaseStudy || (displayTestimonials && displayTestimonials.length > 0)) && (
+                <section className="py-24 bg-white dark:bg-zinc-950">
+                    <div className="container mx-auto px-6">
+                        <div className={cn("grid gap-16 items-center", displayCaseStudy && displayTestimonials.length > 0 ? "lg:grid-cols-2" : "max-w-3xl mx-auto")}>
+                            {/* Case Study */}
+                            {displayCaseStudy && (
+                                <div className="reveal-up">
+                                    <h2 className="text-4xl font-oswald font-bold uppercase mb-8">Agency Success Profile</h2>
+                                    <div className="bg-[#020617] p-8 rounded-3xl border border-white/10 text-white">
+                                        <h3 className="text-xl font-oswald font-bold text-orange-400 mb-6 flex items-center gap-2">
+                                            <Briefcase className="w-5 h-5" /> The Situation
+                                        </h3>
+                                        <ul className="space-y-6">
+                                            <li className="flex gap-4">
+                                                <div className="w-2 h-2 rounded-full bg-orange-500 mt-2 shrink-0" />
+                                                <p className="font-light"><strong className="font-bold text-white">{displayCaseStudy.agency}</strong> {displayCaseStudy.situation}</p>
+                                            </li>
+                                            <li className="flex gap-4">
+                                                <div className="w-2 h-2 rounded-full bg-orange-500 mt-2 shrink-0" />
+                                                <p className="font-light"><strong className="font-bold text-white">We Delivered</strong> {displayCaseStudy.delivered}</p>
+                                            </li>
+                                            <li className="flex gap-4">
+                                                <div className="w-2 h-2 rounded-full bg-green-400 mt-2 shrink-0" />
+                                                <p className="font-light"><strong className="font-bold text-white">The Result:</strong> {displayCaseStudy.result}</p>
+                                            </li>
+                                        </ul>
                                     </div>
                                 </div>
-                            ))}
+                            )}
+
+                            {/* Testimonials */}
+                            {displayTestimonials && displayTestimonials.length > 0 && (
+                                <div className="reveal-up space-y-6">
+                                    <h2 className="text-3xl font-oswald font-bold uppercase mb-2">What Agency Owners Say</h2>
+                                    <p className="text-zinc-500 font-light mb-8">Don't just take our word for it.</p>
+                                    
+                                    {displayTestimonials.map((test: any, idx: number) => (
+                                        <div key={idx} className="p-6 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                                            <Quote className="w-8 h-8 text-orange-500/20 mb-4" />
+                                            <p className="text-lg italic font-light text-zinc-700 dark:text-zinc-300 mb-4">"{test.quote}"</p>
+                                            <div>
+                                                <p className="font-bold font-oswald text-zinc-900 dark:text-zinc-100">{test.author}</p>
+                                                <p className="text-sm text-zinc-500 uppercase tracking-wide">{test.company}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* FREQUENTLY ASKED QUESTIONS */}
             <section id="faq" className="py-24 bg-zinc-50 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800">

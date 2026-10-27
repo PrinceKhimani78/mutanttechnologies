@@ -21,9 +21,9 @@ interface HeroProps {
 }
 
 export const Hero = ({
-    title1 = "SHINE",
-    title2 = "BRIGHT",
-    subtitle = "We blend creativity and technology to boost your digital presence.",
+    title1 = "IT & DIGITAL AGENCY",
+    title2 = "IN RAJKOT",
+    subtitle = "Shine Bright Online — We engineer high-performance websites, custom apps, SEO campaigns, and white-label digital solutions.",
     buttonText = "Start Project",
     scroller
 }: HeroProps) => {
@@ -41,9 +41,9 @@ export const Hero = ({
     // Update state when props change (for live preview)
     useEffect(() => {
         setContent({
-            title1: title1 || "SHINE",
-            title2: title2 || "BRIGHT",
-            subtitle: subtitle || "We blend creativity and technology to boost your digital presence.",
+            title1: title1 || "IT & DIGITAL AGENCY",
+            title2: title2 || "IN RAJKOT",
+            subtitle: subtitle || "Shine Bright Online — We engineer high-performance websites, custom apps, SEO campaigns, and white-label digital solutions.",
             button_text: buttonText || "Start Project"
         });
     }, [title1, title2, subtitle, buttonText]);
@@ -135,18 +135,22 @@ export const Hero = ({
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] mix-blend-multiply dark:mix-blend-screen animate-pulse" />
 
             <div className="container mx-auto px-6 text-center relative z-10">
+                <div className="inline-flex items-center gap-2 mb-6 bg-primary/10 border border-primary/20 px-4 py-1.5 rounded-full text-primary text-xs sm:text-sm font-semibold tracking-widest uppercase">
+                    Shine Bright Online
+                </div>
+
                 <div ref={titleRef} className="overflow-hidden mb-6">
-                    <h1 className="font-oswald text-[12vw] leading-[0.9] font-bold uppercase text-dark-slate tracking-tighter pb-4">
+                    <h1 className="font-oswald text-[8vw] sm:text-[6.5vw] md:text-[5.5vw] lg:text-[5vw] leading-[1.0] font-bold uppercase text-dark-slate tracking-tighter pb-4">
                         <span className="inline-block">
                             {(content.title1 || "").split("").map((char, i) => (
-                                <span key={i} className="hero-char inline-block">{char}</span>
+                                <span key={i} className="hero-char inline-block">{char === " " ? "\u00A0" : char}</span>
                             ))}
                         </span>
                         <br />
                         <span className="relative inline-block pb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
                             {(content.title2 || "").split("").map((char, i) => (
                                 <span key={i} className="hero-char inline-block text-transparent bg-clip-text bg-gradient-to-r from-[#FC6203] to-[#e85b02]">
-                                    {char}
+                                    {char === " " ? "\u00A0" : char}
                                 </span>
                             ))}
                         </span>

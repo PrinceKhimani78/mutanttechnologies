@@ -86,7 +86,7 @@ export const Navbar = ({
     });
   }, []);
 
-  const [contactEmail, setContactEmail] = useState("hello@mutant.tech");
+  const [contactEmail, setContactEmail] = useState("contact@mutanttechnologies.com");
   useEffect(() => {
     const fetchSettings = async () => {
       const { data } = await import("@/lib/cms").then((mod) =>

@@ -23,7 +23,7 @@ interface ContactProps {
 export const Contact = ({
     title = "Let's Start a Conversation",
     description = "Ready to transform your digital presence? Reach out to us for a free consultation.",
-    phone = "(+91) 7016228551",
+    phone = "(+91) 98798 46695",
     email = "contact@mutanttechnologies.com",
     address = "B-113 RK iconic Sheetal Park, Rajkot, Gujarat",
     scroller,

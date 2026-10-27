@@ -236,7 +236,7 @@ export default function ServiceDetailClient({
               </h1>
 
               <p className="text-lg lg:text-xl text-zinc-400 max-w-xl leading-relaxed mb-8 mx-auto lg:mx-0">
-                {service.description}
+                {heroData.subtitle || service.description}
               </p>
 
               <div className="flex flex-col sm:flex-row flex-wrap gap-4 mt-8 lg:mt-10 justify-center lg:justify-start">
