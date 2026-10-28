@@ -193,7 +193,10 @@ async function renderCoverImage({
 }): Promise<Buffer> {
     let logoDataUrl: string | null = null;
     try {
-        const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+        let logoPath = path.join(process.cwd(), 'public', 'preloader logo.png');
+        if (!fs.existsSync(logoPath)) {
+            logoPath = path.join(process.cwd(), 'public', 'logo.png');
+        }
         if (fs.existsSync(logoPath)) {
             const buf = fs.readFileSync(logoPath);
             logoDataUrl = `data:image/png;base64,${buf.toString('base64')}`;
@@ -203,8 +206,9 @@ async function renderCoverImage({
     }
 
     const trimmedTitle = title.trim();
-    const titleFontSize = trimmedTitle.length > 80 ? '38px' : trimmedTitle.length > 50 ? '46px' : '54px';
-    const displayCategory = (category || 'Technology').trim().toUpperCase();
+    const titleFontSize = trimmedTitle.length > 80 ? '40px' : trimmedTitle.length > 55 ? '48px' : '54px';
+    const cleanCategory = (category || 'Technology').replace(/[\s·•-]+BLOG$/i, '').trim();
+    const displayCategory = `${cleanCategory.toUpperCase()} · BLOG`;
     const displaySubtitle = subtitle && subtitle.trim() ? subtitle.trim() : null;
 
     const element = React.createElement('div', {
@@ -213,100 +217,108 @@ async function renderCoverImage({
             flexDirection: 'column',
             width: '100%',
             height: '100%',
-            backgroundColor: '#0a0d14',
-            backgroundImage: 'radial-gradient(circle at 92% 10%, rgba(252, 98, 3, 0.24) 0%, transparent 45%), radial-gradient(circle at 8% 90%, rgba(252, 98, 3, 0.10) 0%, transparent 40%)',
-            padding: '56px 64px',
+            backgroundColor: '#FFFFFF',
+            backgroundImage: 'radial-gradient(circle at 100% 100%, #fff4e8 0%, rgba(255, 244, 232, 0.85) 30%, transparent 65%)',
+            padding: '64px 80px 44px 80px',
             justifyContent: 'space-between',
             fontFamily: 'sans-serif',
             boxSizing: 'border-box',
             position: 'relative',
+            overflow: 'hidden',
         }
     }, [
-        // Top row: Category tag & Mutant Logo
+        // Faint orange ring in top right
         React.createElement('div', {
-            key: 'header',
+            key: 'ring',
             style: {
+                position: 'absolute',
+                right: '-80px',
+                top: '-180px',
+                width: '540px',
+                height: '540px',
+                borderRadius: '50%',
+                border: '45px solid rgba(247, 148, 29, 0.16)',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
             }
-        }, [
-            React.createElement('div', {
-                key: 'badge',
-                style: {
-                    display: 'flex',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(252, 98, 3, 0.12)',
-                    border: '1px solid rgba(252, 98, 3, 0.45)',
-                    borderRadius: '9999px',
-                    padding: '8px 22px',
-                    color: '#FC6203',
-                    fontSize: '17px',
-                    fontWeight: '700',
-                    letterSpacing: '1.2px',
-                }
-            }, displayCategory),
-            logoDataUrl ? React.createElement('img', {
-                key: 'logo',
-                src: logoDataUrl,
-                width: 180,
-                height: 29,
-                style: { objectFit: 'contain', filter: 'brightness(2)' }
-            }) : React.createElement('div', {
-                key: 'fallback-logo',
-                style: {
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: '#FFFFFF',
-                    fontSize: '20px',
-                    fontWeight: '800',
-                    letterSpacing: '2px',
-                }
-            }, [
-                'MUTANT',
-                React.createElement('span', { key: 'dot', style: { color: '#FC6203' } }, '.')
-            ])
-        ]),
+        }),
 
-        // Center: Title & Subtitle
+        // Main content area
         React.createElement('div', {
-            key: 'content',
+            key: 'main-content',
             style: {
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
-                marginTop: '16px',
-                marginBottom: '16px',
+                width: '100%',
             }
         }, [
-            React.createElement('h1', {
-                key: 'title',
+            // Orange #F7941D “<CATEGORY> · BLOG” label
+            React.createElement('div', {
+                key: 'category',
                 style: {
-                    fontSize: titleFontSize,
-                    fontWeight: '800',
-                    color: '#FFFFFF',
-                    lineHeight: 1.18,
-                    margin: '0 0 18px 0',
-                    letterSpacing: '-1px',
                     display: 'flex',
-                    flexWrap: 'wrap',
+                    color: '#F7941D',
+                    fontSize: '18px',
+                    fontWeight: '800',
+                    letterSpacing: '2.5px',
+                    textTransform: 'uppercase',
+                    marginBottom: '32px',
                 }
-            }, trimmedTitle),
+            }, displayCategory),
+
+            // Orange vertical bar beside black Inter ExtraBold title
+            React.createElement('div', {
+                key: 'title-row',
+                style: {
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'stretch',
+                    marginBottom: '22px',
+                }
+            }, [
+                React.createElement('div', {
+                    key: 'bar',
+                    style: {
+                        width: '8px',
+                        backgroundColor: '#F7941D',
+                        borderRadius: '4px',
+                        marginRight: '24px',
+                        display: 'flex',
+                        flexShrink: 0,
+                    }
+                }),
+                React.createElement('h1', {
+                    key: 'title',
+                    style: {
+                        color: '#000000',
+                        fontSize: titleFontSize,
+                        fontWeight: '900',
+                        lineHeight: 1.15,
+                        letterSpacing: '-1.5px',
+                        margin: 0,
+                        padding: 0,
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        maxWidth: '1000px',
+                    }
+                }, trimmedTitle)
+            ]),
+
+            // Grey subtitle
             displaySubtitle ? React.createElement('p', {
                 key: 'subtitle',
                 style: {
-                    fontSize: '22px',
-                    color: '#94A3B8',
-                    lineHeight: 1.45,
-                    margin: 0,
+                    color: '#64748B',
+                    fontSize: '24px',
                     fontWeight: '400',
-                    maxWidth: '1020px',
+                    lineHeight: 1.4,
+                    margin: 0,
+                    maxWidth: '980px',
+                    display: 'flex',
                 }
             }, displaySubtitle) : null
         ]),
 
-        // Bottom row: Accent line & mutanttechnologies.com
+        // Footer section: Thin grey line with logo bottom left and mutanttechnologies.com bottom right
         React.createElement('div', {
             key: 'footer',
             style: {
@@ -318,15 +330,15 @@ async function renderCoverImage({
             React.createElement('div', {
                 key: 'divider',
                 style: {
-                    display: 'flex',
                     width: '100%',
-                    height: '3px',
-                    background: 'linear-gradient(to right, #FC6203 0%, rgba(252, 98, 3, 0.45) 40%, transparent 100%)',
-                    marginBottom: '16px',
+                    height: '1px',
+                    backgroundColor: '#E5E7EB',
+                    marginBottom: '20px',
+                    display: 'flex',
                 }
             }),
             React.createElement('div', {
-                key: 'footer-meta',
+                key: 'footer-row',
                 style: {
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -334,39 +346,33 @@ async function renderCoverImage({
                     width: '100%',
                 }
             }, [
-                React.createElement('span', {
-                    key: 'domain',
+                logoDataUrl ? React.createElement('img', {
+                    key: 'logo',
+                    src: logoDataUrl,
+                    height: 56,
                     style: {
-                        fontSize: '16px',
-                        color: '#64748B',
-                        letterSpacing: '1px',
-                        fontWeight: '500',
+                        objectFit: 'contain',
                     }
-                }, 'mutanttechnologies.com'),
-                React.createElement('div', {
-                    key: 'brand-tag',
+                }) : React.createElement('div', {
+                    key: 'fallback-logo',
                     style: {
                         display: 'flex',
                         alignItems: 'center',
-                        fontSize: '14px',
-                        color: '#FC6203',
-                        fontWeight: '700',
+                        color: '#000000',
+                        fontSize: '18px',
+                        fontWeight: '800',
                         letterSpacing: '1.5px',
                     }
-                }, [
-                    React.createElement('span', {
-                        key: 'dot',
-                        style: {
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: '#FC6203',
-                            display: 'flex',
-                            marginRight: '8px',
-                        }
-                    }),
-                    'MUTANT TECHNOLOGIES'
-                ])
+                }, 'MUTANT TECHNOLOGIES'),
+                React.createElement('span', {
+                    key: 'domain',
+                    style: {
+                        color: '#475569',
+                        fontSize: '20px',
+                        fontWeight: '500',
+                        letterSpacing: '0.2px',
+                    }
+                }, 'mutanttechnologies.com')
             ])
         ])
     ]);
