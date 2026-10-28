@@ -23,6 +23,7 @@ interface ServiceDetailClientProps {
   projects?: PortfolioProject[];
   testimonial?: Testimonial | null;
   scroller?: any; // For Visual Editor - disables GSAP animations
+  contentHtml?: string | null;
 }
 
 const realClientBrands = [
@@ -35,68 +36,16 @@ const realClientBrands = [
   "Petfam",
 ];
 
-const fallbackProjects: PortfolioProject[] = [
-  {
-    id: "the-beige-jewels",
-    title: "The Beige Jewels – E-Commerce Website Development",
-    category: "E-Commerce",
-    image_url:
-      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/fxxelr9tk67-1770810083440.png",
-    project_url: "https://thebeigejewels.com/",
-    description: "Modern luxury jewelry e-commerce website development.",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "slidejewels",
-    title: "SlideJewel – E-Commerce Website Development",
-    category: "E-Commerce",
-    image_url:
-      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/ll4r0kwhvdp-1770809951600.png",
-    project_url: "https://slidejewels.com/",
-    description: "High-performance direct-to-consumer e-commerce experience.",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "one-dental-toronto",
-    title: "One Dental Toronto – Dental Clinic Website Development",
-    category: "Healthcare",
-    image_url:
-      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/vl9udmc8e2h-1770809241327.png",
-    project_url: "https://onedentaltoronto.ca/",
-    description: "Clean, patient-centric healthcare clinic website.",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "green-minds-india",
-    title: "Green Minds India – Corporate Website Development",
-    category: "Corporate",
-    image_url:
-      "https://kvwvhytbatyfkcppwace.supabase.co/storage/v1/object/public/images/24w3b0se65hh-1770809019257.png",
-    project_url: "https://greenmindsindia.in",
-    description: "Modern, responsive corporate website.",
-    created_at: new Date().toISOString(),
-  },
-];
-
-const fallbackTestimonial: Testimonial = {
-  id: "default-testimonial",
-  quote:
-    "The team at Mutant Technologies transformed our online strategy with their expertise and creativity. Their commitment to our growth has been exceptional.",
-  author: "Nicolas Boucher",
-  role: "Head Marketing",
-  rating: 5,
-};
-
-
 export default function ServiceDetailClient({
   service,
   projects,
   testimonial,
   scroller,
+  contentHtml,
 }: ServiceDetailClientProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const displayProjects = projects && projects.length > 0 ? projects : fallbackProjects;
-  const activeTestimonial = testimonial || fallbackTestimonial;
+  const displayProjects = projects && projects.length > 0 ? projects : [];
+  const activeTestimonial = testimonial || null;
   const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const faqs = getServiceFaqs(service);
@@ -326,6 +275,18 @@ export default function ServiceDetailClient({
         </div>
       </section>
 
+      {/* 2.5 FULL SERVICE OVERVIEW & DETAILED GUIDE */}
+      {contentHtml && (
+        <section id="service-overview" className="py-20 bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="container mx-auto px-6 max-w-4xl">
+            <div
+              className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-heading prose-headings:font-bold prose-h2:text-3xl sm:prose-h2:text-4xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-zinc-900 dark:prose-h2:text-white prose-h3:text-xl sm:prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-orange-600 dark:prose-h3:text-orange-500 prose-p:text-zinc-600 dark:prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:mb-6 prose-li:text-zinc-600 dark:prose-li:text-zinc-300 prose-li:my-2 prose-strong:text-zinc-900 dark:prose-strong:text-white prose-a:text-orange-600 hover:prose-a:text-orange-500 prose-table:my-8 prose-th:p-3 prose-th:bg-zinc-100 dark:prose-th:bg-zinc-900 prose-td:p-3 prose-td:border-b prose-td:border-zinc-200 dark:prose-td:border-zinc-800"
+              dangerouslySetInnerHTML={{ __html: contentHtml }}
+            />
+          </div>
+        </section>
+      )}
+
       {/* 3. BENEFITS (Accordion Style) */}
       <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
         <div className={cn("container mx-auto px-6", scroller && "max-w-full")}>
@@ -362,7 +323,7 @@ export default function ServiceDetailClient({
                 <span className="text-orange-600">{service.title}</span>?
               </h2>
               <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-12">
-                {service.content.substring(0, 150)}...
+                {service.description || "Everything we build is engineered for high performance, business credibility, and tangible revenue growth."}
               </p>
 
               <div className="space-y-4">
@@ -410,73 +371,75 @@ export default function ServiceDetailClient({
         </div>
       </section>
 
-      {/* 4. CASE STUDIES GRID (Generic for now) */}
-      <section className="py-24 bg-white dark:bg-zinc-950 relative">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-50/50 dark:bg-blue-900/10 pointer-events-none"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-900 dark:text-white leading-tight">
-              Recent Work <br />
-              <span className="text-orange-600">and Impact</span>
-            </h2>
-            <Link href="/portfolio">
-              <Button className="mt-8 md:mt-0 rounded-full h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 whitespace-nowrap">
-                View Portfolio <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
+      {/* 4. CASE STUDIES GRID (Only rendered when real projects exist) */}
+      {displayProjects && displayProjects.length > 0 && (
+        <section className="py-24 bg-white dark:bg-zinc-950 relative">
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-50/50 dark:bg-blue-900/10 pointer-events-none"></div>
+          <div className="container mx-auto px-6 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold font-heading text-zinc-900 dark:text-white leading-tight">
+                Recent Work <br />
+                <span className="text-orange-600">and Impact</span>
+              </h2>
+              <Link href="/portfolio">
+                <Button className="mt-8 md:mt-0 rounded-full h-12 px-8 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 whitespace-nowrap">
+                  View Portfolio <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {displayProjects.map((project, idx) => {
-              const CardWrapper = project.project_url ? "a" : "div";
-              const wrapperProps = project.project_url
-                ? {
-                    href: project.project_url,
-                    target: "_blank",
-                    rel: "noopener noreferrer",
-                  }
-                : {};
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {displayProjects.map((project, idx) => {
+                const CardWrapper = project.project_url ? "a" : "div";
+                const wrapperProps = project.project_url
+                  ? {
+                      href: project.project_url,
+                      target: "_blank",
+                      rel: "noopener noreferrer",
+                    }
+                  : {};
 
-              return (
-                <CardWrapper
-                  key={project.id || idx}
-                  {...(wrapperProps as any)}
-                  className="group reveal-up cursor-pointer block"
-                >
-                  <div className="rounded-3xl overflow-hidden relative aspect-[4/3] mb-6 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10"></div>
-                    <Image
-                      src={project.image_url}
-                      alt={project.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    {project.project_url && (
-                      <div className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/70 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <ArrowRight className="w-4 h-4 -rotate-45" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-orange-500 transition-colors">
-                      {project.title.split("–")[0].trim()}
-                    </h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 font-mono text-sm tracking-wider">
-                      {project.category || "Client Project"}
-                    </p>
-                  </div>
-                </CardWrapper>
-              );
-            })}
+                return (
+                  <CardWrapper
+                    key={project.id || idx}
+                    {...(wrapperProps as any)}
+                    className="group reveal-up cursor-pointer block"
+                  >
+                    <div className="rounded-3xl overflow-hidden relative aspect-[4/3] mb-6 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10"></div>
+                      <Image
+                        src={project.image_url}
+                        alt={project.title}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      {project.project_url && (
+                        <div className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/70 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ArrowRight className="w-4 h-4 -rotate-45" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-orange-500 transition-colors">
+                        {project.title.split("–")[0].trim()}
+                      </h3>
+                      <p className="text-zinc-500 dark:text-zinc-400 font-mono text-sm tracking-wider">
+                        {project.category || "Client Project"}
+                      </p>
+                    </div>
+                  </CardWrapper>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 5. DELIVERY / PROCESS BANNER */}
       <section className="py-24 bg-[#050505] text-white">
         <div className={cn("container mx-auto px-6", scroller && "max-w-full")}>
           <div className="flex flex-col lg:flex-row gap-16 items-center">
-            <div className="lg:w-1/2">
+            <div className={activeTestimonial ? "lg:w-1/2" : "w-full max-w-3xl mx-auto"}>
               <h2 className="text-4xl md:text-5xl font-bold font-heading mb-8">
                 Efficient Process <br />
                 <span className="text-orange-500">Fast Results</span>
@@ -495,29 +458,31 @@ export default function ServiceDetailClient({
                 ))}
               </div>
             </div>
-            <div className="lg:w-1/2 w-full">
-              <div className="bg-zinc-900 rounded-3xl p-8 border border-zinc-800 relative reveal-up">
-                <div className="text-orange-500 text-6xl font-serif absolute top-4 right-8 opacity-20">
-                  "
-                </div>
-                <p className="text-xl leading-relaxed text-zinc-300 mb-8 relative z-10">
-                  "{activeTestimonial.quote}"
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
-                    {activeTestimonial.author.charAt(0)}
+            {activeTestimonial && (
+              <div className="lg:w-1/2 w-full">
+                <div className="bg-zinc-900 rounded-3xl p-8 border border-zinc-800 relative reveal-up">
+                  <div className="text-orange-500 text-6xl font-serif absolute top-4 right-8 opacity-20">
+                    "
                   </div>
-                  <div>
-                    <div className="font-bold text-white">
-                      {activeTestimonial.author}
+                  <p className="text-xl leading-relaxed text-zinc-300 mb-8 relative z-10">
+                    "{activeTestimonial.quote}"
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                      {activeTestimonial.author.charAt(0)}
                     </div>
-                    <div className="text-sm text-zinc-400">
-                      {activeTestimonial.role}
+                    <div>
+                      <div className="font-bold text-white">
+                        {activeTestimonial.author}
+                      </div>
+                      <div className="text-sm text-zinc-400">
+                        {activeTestimonial.role}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

@@ -1259,7 +1259,7 @@ export async function POST(request: Request) {
             if (toolName === 'list_services') {
                 const supabase = getAdminSupabase();
                 const [servicesRes, metadataRes] = await Promise.all([
-                    supabase.from('services').select('id, slug, title, short_description, tools, created_at').order('title'),
+                    supabase.from('services').select('id, slug, title, short_description, tools, created_at, content, process, benefits').order('title'),
                     supabase.from('page_metadata').select('page_slug, title, keywords, description')
                 ]);
 
@@ -1287,9 +1287,14 @@ export async function POST(request: Request) {
                     const kwCount = meta?.keywords ? (Array.isArray(meta.keywords) ? meta.keywords.length : 1) : 0;
                     const kwText = kwCount > 0 ? (Array.isArray(meta.keywords) ? meta.keywords.join(', ') : meta.keywords) : 'None';
                     const metaTitle = meta?.title ? `"${meta.title}"` : 'Default';
+                    const contentLength = s.content ? s.content.length : 0;
+                    const processCount = Array.isArray(s.process) ? s.process.length : 0;
+                    const benefitsCount = Array.isArray(s.benefits) ? s.benefits.length : 0;
 
                     return `${idx + 1}. ${s.title}\n` +
                            `   • Slug: ${s.slug} (https://www.mutanttechnologies.com/services/${s.slug})\n` +
+                           `   • Main Text: ${contentLength > 0 ? `${contentLength} chars (saved in full)` : 'Empty'}\n` +
+                           `   • Process Steps: ${processCount} | Benefits: ${benefitsCount}\n` +
                            `   • Summary: ${s.short_description || 'No summary set'}\n` +
                            `   • Tools/Tech: ${s.tools?.join(', ') || 'None listed'}\n` +
                            `   • SEO Meta Title: ${metaTitle}\n` +
@@ -1367,9 +1372,6 @@ export async function POST(request: Request) {
                                       `• Short Description: ${service.short_description || 'None'}\n` +
                                       `• Full Description: ${service.description || 'None'}\n` +
                                       `• Tools/Stack: ${service.tools?.join(', ') || 'None'}\n` +
-                                      `• Features Count: ${service.features?.length || 0}\n` +
-                                      `• Process Steps: ${service.process?.length || 0}\n` +
-                                      `• Benefits Count: ${service.benefits?.length || 0}\n` +
                                       `• Media: Hero=${service.hero_image || 'None'}, Benefits=${service.benefits_image || 'None'}, Mockup=${service.feature_mockup_image || 'None'}\n` +
                                       `• Has Custom Data: ${service.custom_data && Object.keys(service.custom_data).length > 0 ? 'Yes' : 'No'}\n\n` +
                                       `--- SEO METADATA ---\n` +
@@ -1379,8 +1381,18 @@ export async function POST(request: Request) {
                                       `• Canonical URL: ${seoData?.canonical_url || `https://www.mutanttechnologies.com/services/${service.slug}`}\n` +
                                       `• OpenGraph Title: ${seoData?.og_title || 'Same as title'}\n` +
                                       `• Robots: ${seoData?.robots || 'index, follow'}\n\n` +
-                                      `Full Raw Features: ${JSON.stringify(service.features || [], null, 2)}\n\n` +
-                                      `Full Custom Data: ${JSON.stringify(service.custom_data || {}, null, 2)}`
+                                      `--- FULL MAIN TEXT / PAGE CONTENT (${service.content?.length || 0} characters) ---\n` +
+                                      `${service.content || 'No content written yet.'}\n\n` +
+                                      `--- PROCESS WORKFLOW (${service.process?.length || 0} steps) ---\n` +
+                                      `${JSON.stringify(service.process || [], null, 2)}\n\n` +
+                                      `--- BENEFITS (${service.benefits?.length || 0} items) ---\n` +
+                                      `${JSON.stringify(service.benefits || [], null, 2)}\n\n` +
+                                      `--- FEATURES (${service.features?.length || 0} items) ---\n` +
+                                      `${JSON.stringify(service.features || [], null, 2)}\n\n` +
+                                      `--- CUSTOM DATA ---\n` +
+                                      `${JSON.stringify(service.custom_data || {}, null, 2)}\n\n` +
+                                      `--- COMPLETE RAW BACKUP (JSON) ---\n` +
+                                      `${JSON.stringify(service, null, 2)}`
                             }
                         ]
                     }

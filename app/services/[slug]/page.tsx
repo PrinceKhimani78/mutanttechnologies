@@ -5,6 +5,7 @@ import WhiteLabelGHLClient from '@/components/WhiteLabelGHLClient';
 import { notFound } from 'next/navigation';
 import { Service, PortfolioProject, Testimonial } from '@/lib/types';
 import { Footer } from '@/components/Footer';
+import { marked } from 'marked';
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
@@ -193,6 +194,16 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
         ],
     };
 
+    let contentHtml: string | null = null;
+    if (service.content && service.content.trim().length > 0) {
+        try {
+            contentHtml = await marked.parse(service.content);
+        } catch (err) {
+            console.error('Error parsing markdown for service content:', err);
+            contentHtml = null;
+        }
+    }
+
     return (
         <>
             <script
@@ -200,12 +211,13 @@ export default async function ServiceDetail({ params }: { params: Promise<{ slug
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
             />
             {slug === 'white-label-gohighlevel' ? (
-                <WhiteLabelGHLClient service={service as Service} />
+                <WhiteLabelGHLClient service={service as Service} contentHtml={contentHtml} />
             ) : (
                 <ServiceDetailClient 
                     service={service as Service} 
                     projects={relatedProjects as unknown as PortfolioProject[]}
                     testimonial={selectedTestimonial as unknown as Testimonial | null}
+                    contentHtml={contentHtml}
                 />
             )}
             <Footer />

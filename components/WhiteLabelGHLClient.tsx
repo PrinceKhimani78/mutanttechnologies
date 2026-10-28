@@ -79,7 +79,7 @@ import { Service } from '@/lib/types';
 import { Navbar } from '@/components/Navbar';
 import { getServiceFaqs, serviceHeroHeadlines } from '@/lib/serviceFaqs';
 
-export default function WhiteLabelGHLClient({ service }: { service?: Service }) {
+export default function WhiteLabelGHLClient({ service, contentHtml }: { service?: Service; contentHtml?: string | null }) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const heroData = serviceHeroHeadlines['white-label-gohighlevel'] || {
@@ -220,6 +220,18 @@ export default function WhiteLabelGHLClient({ service }: { service?: Service }) 
                     </div>
                 </div>
             </section>
+
+            {/* FULL SERVICE CONTENT / IN-DEPTH GUIDE */}
+            {contentHtml && (
+                <section id="service-overview" className="py-20 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
+                    <div className="container mx-auto px-6 max-w-4xl">
+                        <div
+                            className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-oswald prose-headings:font-bold prose-h2:text-3xl sm:prose-h2:text-4xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:text-zinc-900 dark:prose-h2:text-white prose-h3:text-xl sm:prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-orange-600 dark:prose-h3:text-orange-500 prose-p:text-zinc-600 dark:prose-p:text-zinc-300 prose-p:leading-relaxed prose-p:mb-6 prose-li:text-zinc-600 dark:prose-li:text-zinc-300 prose-li:my-2 prose-strong:text-zinc-900 dark:prose-strong:text-white prose-a:text-orange-600 hover:prose-a:text-orange-500 prose-table:my-8 prose-th:p-3 prose-th:bg-zinc-100 dark:prose-th:bg-zinc-900 prose-td:p-3 prose-td:border-b prose-td:border-zinc-200 dark:prose-td:border-zinc-800"
+                            dangerouslySetInnerHTML={{ __html: contentHtml }}
+                        />
+                    </div>
+                </section>
+            )}
 
             {/* WHY AGENCIES PARTNER WITH MUTANT */}
             <section className="py-24 bg-white dark:bg-zinc-950">
