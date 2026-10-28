@@ -192,18 +192,24 @@ async function renderCoverImage({
     subtitle?: string;
 }): Promise<Buffer> {
     let logoDataUrl: string | null = null;
-    let logoWidth = 246;
-    let logoHeight = 40;
+    let logoWidth = 399;
+    let logoHeight = 65;
     try {
-        const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+        let logoPath = path.join(process.cwd(), 'public', 'logo.svg');
+        let mime = 'image/svg+xml';
+        if (!fs.existsSync(logoPath)) {
+            logoPath = path.join(process.cwd(), 'public', 'logo.png');
+            mime = 'image/png';
+        }
         if (fs.existsSync(logoPath)) {
             const buf = fs.readFileSync(logoPath);
-            logoDataUrl = `data:image/png;base64,${buf.toString('base64')}`;
-            if (buf.length >= 24 && buf.subarray(0, 8).toString('hex') === '89504e470d0a1a0a') {
+            logoDataUrl = `data:${mime};base64,${buf.toString('base64')}`;
+            if (mime === 'image/png' && buf.length >= 24 && buf.subarray(0, 8).toString('hex') === '89504e470d0a1a0a') {
                 const origW = buf.readUInt32BE(16);
                 const origH = buf.readUInt32BE(20);
                 if (origW > 0 && origH > 0) {
-                    logoHeight = 40;
+                    // Double the displayed size (65px height) to prevent subpixel font breakdown, preserving exact aspect ratio
+                    logoHeight = 65;
                     logoWidth = Math.round(logoHeight * (origW / origH));
                 }
             }
@@ -359,8 +365,11 @@ async function renderCoverImage({
                     width: logoWidth,
                     height: logoHeight,
                     style: {
+                        width: `${logoWidth}px`,
+                        height: `${logoHeight}px`,
                         objectFit: 'contain',
                         objectPosition: 'left center',
+                        flexShrink: 0,
                     }
                 }) : React.createElement('div', {
                     key: 'fallback-logo',
@@ -368,7 +377,7 @@ async function renderCoverImage({
                         display: 'flex',
                         alignItems: 'center',
                         color: '#000000',
-                        fontSize: '18px',
+                        fontSize: '22px',
                         fontWeight: '800',
                         letterSpacing: '1.5px',
                     }
