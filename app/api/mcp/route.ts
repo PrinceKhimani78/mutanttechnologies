@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { marked } from 'marked';
+import fs from 'fs';
+import path from 'path';
 import { isIndexNowConfigured, submitToIndexNow } from '@/lib/indexNow';
 import { isGscConfigured, submitSitemap, inspectUrl } from '@/lib/googleSearchConsole';
 import { logIndexingEvent } from '@/lib/indexingLog';
@@ -670,6 +672,58 @@ const TOOLS_DEFINITION = [
         inputSchema: {
             type: 'object',
             properties: {}
+        }
+    },
+    {
+        name: 'upload_image',
+        description: 'Upload an image (PNG, JPG/JPEG, WebP, SVG, GIF) to Supabase Storage (assets bucket) and get a permanent public CDN URL. Accepts base64 image data (pure base64 or data:image/...;base64,...) and a file name. Use this to upload generated cover images, blog banners, mockups, and client graphics.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                file_name: {
+                    type: 'string',
+                    description: 'Target filename (e.g. "web-development-cover.png", "covers/white-label-ghl.jpg"). If extension is omitted, defaults to .png'
+                },
+                image_base64: {
+                    type: 'string',
+                    description: 'The base64 encoded image string, or a data URL (e.g. data:image/png;base64,...)'
+                },
+                bucket: {
+                    type: 'string',
+                    description: 'Target Supabase storage bucket name. Defaults to "assets" (can also use "images" or "blog-images").'
+                },
+                upsert: {
+                    type: 'boolean',
+                    description: 'Whether to overwrite an existing file with the same name. Defaults to true.'
+                }
+            },
+            required: ['file_name', 'image_base64']
+        }
+    },
+    {
+        name: 'get_logo',
+        description: 'Get the official Mutant Technologies logo (logo.png) encoded in base64, along with its data URL and public CDN URL. Use this so Claude can composite, watermark, or include the real brand logo into generated cover images and blog banners.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                format: {
+                    type: 'string',
+                    description: 'Format to return: "all" (default, returns public URL, data URL, and raw base64), "base64", or "data_url".'
+                }
+            }
+        }
+    },
+    {
+        name: 'get_asset',
+        description: 'Retrieve any static website asset (e.g. "logo.png", "icon.png", "favicon.ico") as a base64 encoded string and public URL.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                asset_name: {
+                    type: 'string',
+                    description: 'Name of the public asset file to fetch (e.g. "logo.png"). Defaults to "logo.png".'
+                }
+            }
         }
     }
 ];
@@ -1942,6 +1996,231 @@ export async function POST(request: Request) {
                         result: {
                             isError: true,
                             content: [{ type: 'text', text: `Failed to resubmit sitemap: ${sitemapErr.message}` }]
+                        }
+                    }, { headers: corsHeaders() });
+                }
+            }
+
+            // TOOL: upload_image
+            if (toolName === 'upload_image') {
+                const fileName = args.file_name || args.filename || args.name || `image-${Date.now()}.png`;
+                const rawBase64 = args.image_base64 || args.base64 || args.image || args.content || '';
+                const bucket = args.bucket || 'assets';
+                const upsert = args.upsert !== false;
+
+                if (!rawBase64) {
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            isError: true,
+                            content: [{ type: 'text', text: 'Error: Must provide "image_base64" (base64 string or data:image/...;base64,... data URL).' }]
+                        }
+                    }, { headers: corsHeaders() });
+                }
+
+                try {
+                    let cleanBase64 = rawBase64;
+                    let mimeType = 'image/png';
+
+                    const dataUrlMatch = rawBase64.match(/^data:([^;]+);base64,(.+)$/);
+                    if (dataUrlMatch) {
+                        mimeType = dataUrlMatch[1].trim();
+                        cleanBase64 = dataUrlMatch[2].trim();
+                    } else {
+                        const ext = path.extname(fileName).toLowerCase();
+                        if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+                        else if (ext === '.png') mimeType = 'image/png';
+                        else if (ext === '.webp') mimeType = 'image/webp';
+                        else if (ext === '.svg') mimeType = 'image/svg+xml';
+                        else if (ext === '.gif') mimeType = 'image/gif';
+                    }
+
+                    cleanBase64 = cleanBase64.replace(/\s+/g, '');
+                    const buffer = Buffer.from(cleanBase64, 'base64');
+
+                    if (!buffer || buffer.length === 0) {
+                        return NextResponse.json({
+                            jsonrpc: '2.0',
+                            id: id ?? null,
+                            result: {
+                                isError: true,
+                                content: [{ type: 'text', text: 'Error: Failed to decode base64 string into a valid image buffer.' }]
+                            }
+                        }, { headers: corsHeaders() });
+                    }
+
+                    const cleanFileName = fileName.replace(/^\/+/, '');
+                    const supabase = getAdminSupabase();
+
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from(bucket)
+                        .upload(cleanFileName, buffer, {
+                            contentType: mimeType,
+                            upsert,
+                            cacheControl: '3600'
+                        });
+
+                    if (uploadError) {
+                        return NextResponse.json({
+                            jsonrpc: '2.0',
+                            id: id ?? null,
+                            result: {
+                                isError: true,
+                                content: [{ type: 'text', text: `Failed to upload image to bucket "${bucket}": ${uploadError.message}` }]
+                            }
+                        }, { headers: corsHeaders() });
+                    }
+
+                    const { data: { publicUrl } } = supabase.storage
+                        .from(bucket)
+                        .getPublicUrl(cleanFileName);
+
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: `✓ Image successfully uploaded to Supabase Storage!\n\n` +
+                                          `• Public URL: ${publicUrl}\n` +
+                                          `• Bucket: ${bucket}\n` +
+                                          `• File: ${cleanFileName}\n` +
+                                          `• Size: ${(buffer.length / 1024).toFixed(1)} KB\n` +
+                                          `• MIME Type: ${mimeType}\n\n` +
+                                          `Markdown embed:\n![${cleanFileName}](${publicUrl})`
+                                }
+                            ]
+                        }
+                    }, { headers: corsHeaders() });
+                } catch (err: any) {
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            isError: true,
+                            content: [{ type: 'text', text: `Upload error: ${err.message}` }]
+                        }
+                    }, { headers: corsHeaders() });
+                }
+            }
+
+            // TOOL: get_logo
+            if (toolName === 'get_logo') {
+                try {
+                    const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+                    if (!fs.existsSync(logoPath)) {
+                        return NextResponse.json({
+                            jsonrpc: '2.0',
+                            id: id ?? null,
+                            result: {
+                                isError: true,
+                                content: [{ type: 'text', text: 'Error: public/logo.png not found on server.' }]
+                            }
+                        }, { headers: corsHeaders() });
+                    }
+
+                    const logoBuffer = fs.readFileSync(logoPath);
+                    const base64 = logoBuffer.toString('base64');
+                    const dataUrl = `data:image/png;base64,${base64}`;
+                    const publicUrl = `${SITE_URL}/logo.png`;
+                    const format = (args.format || 'all').toLowerCase();
+
+                    let textResponse = '';
+                    if (format === 'base64') {
+                        textResponse = base64;
+                    } else if (format === 'data_url') {
+                        textResponse = dataUrl;
+                    } else {
+                        textResponse = `Mutant Technologies Logo (logo.png):\n\n` +
+                                       `• Public URL: ${publicUrl}\n` +
+                                       `• MIME Type: image/png\n` +
+                                       `• File Size: ${(logoBuffer.length / 1024).toFixed(1)} KB\n` +
+                                       `• Usage: Real brand logo for compositing onto cover images, headers, and social graphics\n\n` +
+                                       `--- DATA URL (data:image/png;base64,...) ---\n${dataUrl}\n\n` +
+                                       `--- RAW BASE64 STRING ---\n${base64}`;
+                    }
+
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: textResponse
+                                }
+                            ]
+                        }
+                    }, { headers: corsHeaders() });
+                } catch (err: any) {
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            isError: true,
+                            content: [{ type: 'text', text: `Failed to read logo: ${err.message}` }]
+                        }
+                    }, { headers: corsHeaders() });
+                }
+            }
+
+            // TOOL: get_asset
+            if (toolName === 'get_asset') {
+                const assetName = (args.asset_name || args.file_name || args.name || 'logo.png').replace(/^[\/\\]+/, '');
+                const safeName = path.basename(assetName);
+                const assetPath = path.join(process.cwd(), 'public', safeName);
+
+                if (!fs.existsSync(assetPath)) {
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            isError: true,
+                            content: [{ type: 'text', text: `Error: public/${safeName} does not exist.` }]
+                        }
+                    }, { headers: corsHeaders() });
+                }
+
+                try {
+                    const assetBuffer = fs.readFileSync(assetPath);
+                    const ext = path.extname(safeName).toLowerCase();
+                    let mimeType = 'application/octet-stream';
+                    if (ext === '.png') mimeType = 'image/png';
+                    else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+                    else if (ext === '.svg') mimeType = 'image/svg+xml';
+                    else if (ext === '.ico') mimeType = 'image/x-icon';
+                    else if (ext === '.webp') mimeType = 'image/webp';
+
+                    const base64 = assetBuffer.toString('base64');
+                    const dataUrl = `data:${mimeType};base64,${base64}`;
+                    const publicUrl = `${SITE_URL}/${safeName}`;
+
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: `Asset "${safeName}":\n\n` +
+                                          `• Public URL: ${publicUrl}\n` +
+                                          `• MIME Type: ${mimeType}\n` +
+                                          `• File Size: ${(assetBuffer.length / 1024).toFixed(1)} KB\n\n` +
+                                          `--- DATA URL ---\n${dataUrl}\n\n` +
+                                          `--- RAW BASE64 STRING ---\n${base64}`
+                                }
+                            ]
+                        }
+                    }, { headers: corsHeaders() });
+                } catch (err: any) {
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            isError: true,
+                            content: [{ type: 'text', text: `Failed to read asset "${safeName}": ${err.message}` }]
                         }
                     }, { headers: corsHeaders() });
                 }
