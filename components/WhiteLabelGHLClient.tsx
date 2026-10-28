@@ -129,23 +129,8 @@ export default function WhiteLabelGHLClient({ service, contentHtml }: { service?
         ]
     };
 
-    const isPlaceholderCaseStudy = (cs: any) => {
-        if (!cs) return true;
-        const text = JSON.stringify(cs);
-        return /agency\s*x/i.test(text);
-    };
-
-    const isPlaceholderTestimonial = (t: any) => {
-        if (!t) return true;
-        const text = JSON.stringify(t);
-        return /agency\s*owner/i.test(text) || /web\s*design\s*agency,\s*canada/i.test(text) || /marketing\s*agency,\s*usa/i.test(text) || /digital\s*agency,\s*australia/i.test(text);
-    };
-
-    const rawCaseStudy = service?.custom_data?.caseStudy;
-    const displayCaseStudy = isPlaceholderCaseStudy(rawCaseStudy) ? null : rawCaseStudy;
-
-    const rawTestimonials = Array.isArray(service?.custom_data?.testimonials) ? service.custom_data.testimonials : [];
-    const displayTestimonials = rawTestimonials.filter((t: any) => !isPlaceholderTestimonial(t));
+    const displayCaseStudy = service?.custom_data?.caseStudy || null;
+    const displayTestimonials = Array.isArray(service?.custom_data?.testimonials) ? service.custom_data.testimonials : [];
 
     const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
     const ghlFaqs = getServiceFaqs(service);
