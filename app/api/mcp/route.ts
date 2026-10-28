@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import React from 'react';
+import { ImageResponse } from 'next/og';
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { marked } from 'marked';
@@ -178,6 +180,204 @@ async function upsertServiceSeo(supabase: any, slug: string, seoData: {
         if (error) throw error;
         return inserted;
     }
+}
+
+async function renderCoverImage({
+    title,
+    category,
+    subtitle
+}: {
+    title: string;
+    category?: string;
+    subtitle?: string;
+}): Promise<Buffer> {
+    let logoDataUrl: string | null = null;
+    try {
+        const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+        if (fs.existsSync(logoPath)) {
+            const buf = fs.readFileSync(logoPath);
+            logoDataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+        }
+    } catch (e) {
+        // Fallback gracefully if logo cannot be read from disk
+    }
+
+    const trimmedTitle = title.trim();
+    const titleFontSize = trimmedTitle.length > 80 ? '38px' : trimmedTitle.length > 50 ? '46px' : '54px';
+    const displayCategory = (category || 'Technology').trim().toUpperCase();
+    const displaySubtitle = subtitle && subtitle.trim() ? subtitle.trim() : null;
+
+    const element = React.createElement('div', {
+        style: {
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#0a0d14',
+            backgroundImage: 'radial-gradient(circle at 92% 10%, rgba(252, 98, 3, 0.24) 0%, transparent 45%), radial-gradient(circle at 8% 90%, rgba(252, 98, 3, 0.10) 0%, transparent 40%)',
+            padding: '56px 64px',
+            justifyContent: 'space-between',
+            fontFamily: 'sans-serif',
+            boxSizing: 'border-box',
+            position: 'relative',
+        }
+    }, [
+        // Top row: Category tag & Mutant Logo
+        React.createElement('div', {
+            key: 'header',
+            style: {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+            }
+        }, [
+            React.createElement('div', {
+                key: 'badge',
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(252, 98, 3, 0.12)',
+                    border: '1px solid rgba(252, 98, 3, 0.45)',
+                    borderRadius: '9999px',
+                    padding: '8px 22px',
+                    color: '#FC6203',
+                    fontSize: '17px',
+                    fontWeight: '700',
+                    letterSpacing: '1.2px',
+                }
+            }, displayCategory),
+            logoDataUrl ? React.createElement('img', {
+                key: 'logo',
+                src: logoDataUrl,
+                width: 180,
+                height: 29,
+                style: { objectFit: 'contain', filter: 'brightness(2)' }
+            }) : React.createElement('div', {
+                key: 'fallback-logo',
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#FFFFFF',
+                    fontSize: '20px',
+                    fontWeight: '800',
+                    letterSpacing: '2px',
+                }
+            }, [
+                'MUTANT',
+                React.createElement('span', { key: 'dot', style: { color: '#FC6203' } }, '.')
+            ])
+        ]),
+
+        // Center: Title & Subtitle
+        React.createElement('div', {
+            key: 'content',
+            style: {
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                marginTop: '16px',
+                marginBottom: '16px',
+            }
+        }, [
+            React.createElement('h1', {
+                key: 'title',
+                style: {
+                    fontSize: titleFontSize,
+                    fontWeight: '800',
+                    color: '#FFFFFF',
+                    lineHeight: 1.18,
+                    margin: '0 0 18px 0',
+                    letterSpacing: '-1px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                }
+            }, trimmedTitle),
+            displaySubtitle ? React.createElement('p', {
+                key: 'subtitle',
+                style: {
+                    fontSize: '22px',
+                    color: '#94A3B8',
+                    lineHeight: 1.45,
+                    margin: 0,
+                    fontWeight: '400',
+                    maxWidth: '1020px',
+                }
+            }, displaySubtitle) : null
+        ]),
+
+        // Bottom row: Accent line & mutanttechnologies.com
+        React.createElement('div', {
+            key: 'footer',
+            style: {
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%',
+            }
+        }, [
+            React.createElement('div', {
+                key: 'divider',
+                style: {
+                    display: 'flex',
+                    width: '100%',
+                    height: '3px',
+                    background: 'linear-gradient(to right, #FC6203 0%, rgba(252, 98, 3, 0.45) 40%, transparent 100%)',
+                    marginBottom: '16px',
+                }
+            }),
+            React.createElement('div', {
+                key: 'footer-meta',
+                style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                }
+            }, [
+                React.createElement('span', {
+                    key: 'domain',
+                    style: {
+                        fontSize: '16px',
+                        color: '#64748B',
+                        letterSpacing: '1px',
+                        fontWeight: '500',
+                    }
+                }, 'mutanttechnologies.com'),
+                React.createElement('div', {
+                    key: 'brand-tag',
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center',
+                        fontSize: '14px',
+                        color: '#FC6203',
+                        fontWeight: '700',
+                        letterSpacing: '1.5px',
+                    }
+                }, [
+                    React.createElement('span', {
+                        key: 'dot',
+                        style: {
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            backgroundColor: '#FC6203',
+                            display: 'flex',
+                            marginRight: '8px',
+                        }
+                    }),
+                    'MUTANT TECHNOLOGIES'
+                ])
+            ])
+        ])
+    ]);
+
+    const imageResponse = new ImageResponse(element, {
+        width: 1200,
+        height: 630,
+    });
+
+    const arrayBuffer = await imageResponse.arrayBuffer();
+    return Buffer.from(arrayBuffer);
 }
 
 const TOOLS_DEFINITION = [
@@ -672,6 +872,32 @@ const TOOLS_DEFINITION = [
         inputSchema: {
             type: 'object',
             properties: {}
+        }
+    },
+    {
+        name: 'generate_cover',
+        description: 'Generate a 1200×630 branded cover image PNG on the server using next/og ImageResponse, upload it to Supabase Storage at assets/covers/<slug>.png (overwriting if it exists), and return the public URL. Perfect for blog post headers, OpenGraph social share cards, and service pages.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                title: {
+                    type: 'string',
+                    description: 'The title of the post or service to display prominently on the cover image (e.g. "What Is White Label GoHighLevel? The Complete Guide in 2026")'
+                },
+                category: {
+                    type: 'string',
+                    description: 'Category label displayed in an orange accent pill (e.g. "GoHighLevel", "Technology", "SEO", "Web Development", "AI Automations"). Defaults to "Technology".'
+                },
+                subtitle: {
+                    type: 'string',
+                    description: 'Optional subtitle or brief description shown below the title.'
+                },
+                slug: {
+                    type: 'string',
+                    description: 'URL slug for the filename assets/covers/<slug>.png (e.g. "what-is-white-label-gohighlevel"). If omitted, auto-generated from title.'
+                }
+            },
+            required: ['title']
         }
     },
     {
@@ -1996,6 +2222,104 @@ export async function POST(request: Request) {
                         result: {
                             isError: true,
                             content: [{ type: 'text', text: `Failed to resubmit sitemap: ${sitemapErr.message}` }]
+                        }
+                    }, { headers: corsHeaders() });
+                }
+            }
+
+            // TOOL: generate_cover
+            if (toolName === 'generate_cover') {
+                const { title, category, subtitle, slug } = args;
+
+                if (!title || typeof title !== 'string' || !title.trim()) {
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            isError: true,
+                            content: [{ type: 'text', text: 'Error: "title" is required to generate a cover image.' }]
+                        }
+                    }, { headers: corsHeaders() });
+                }
+
+                // Clean and resolve the slug
+                const rawSlug = (slug || title || `cover-${Date.now()}`)
+                    .toString()
+                    .trim()
+                    .replace(/^covers\//i, '')
+                    .replace(/\.png$/i, '');
+                const cleanSlug = slugify(rawSlug) || `cover-${Date.now()}`;
+                const storagePath = `covers/${cleanSlug}.png`;
+
+                try {
+                    // 1. Render 1200x630 PNG with next/og ImageResponse
+                    const buffer = await renderCoverImage({
+                        title: title.trim(),
+                        category: category ? String(category) : undefined,
+                        subtitle: subtitle ? String(subtitle) : undefined,
+                    });
+
+                    // 2. Upload to Supabase Storage (assets bucket, overwriting if exists)
+                    const supabase = getAdminSupabase();
+                    const { error: uploadError } = await supabase.storage
+                        .from('assets')
+                        .upload(storagePath, buffer, {
+                            contentType: 'image/png',
+                            upsert: true,
+                            cacheControl: '3600',
+                        });
+
+                    if (uploadError) {
+                        console.error('Supabase cover upload error:', uploadError);
+                        return NextResponse.json({
+                            jsonrpc: '2.0',
+                            id: id ?? null,
+                            result: {
+                                isError: true,
+                                content: [{ type: 'text', text: `Failed to upload cover image to Supabase (assets/${storagePath}): ${uploadError.message}` }]
+                            }
+                        }, { headers: corsHeaders() });
+                    }
+
+                    // 3. Obtain public URL
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('assets')
+                        .getPublicUrl(storagePath);
+
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            content: [
+                                {
+                                    type: 'text',
+                                    text: `🎉 Cover image successfully generated and uploaded!\n\n` +
+                                          `• Public URL: ${publicUrl}\n` +
+                                          `• Storage Path: assets/${storagePath}\n` +
+                                          `• Slug: ${cleanSlug}\n` +
+                                          `• Title: ${title.trim()}\n` +
+                                          `• Category: ${category || 'Technology'}\n` +
+                                          `• Subtitle: ${subtitle || 'None'}\n` +
+                                          `• Dimensions: 1200×630 PNG\n` +
+                                          `• Size: ${(buffer.length / 1024).toFixed(1)} KB\n\n` +
+                                          `Markdown embed:\n![${title.trim()}](${publicUrl})`
+                                }
+                            ],
+                            public_url: publicUrl,
+                            url: publicUrl,
+                            storage_path: storagePath,
+                            slug: cleanSlug
+                        }
+                    }, { headers: corsHeaders() });
+
+                } catch (err: any) {
+                    console.error('Cover generation error:', err);
+                    return NextResponse.json({
+                        jsonrpc: '2.0',
+                        id: id ?? null,
+                        result: {
+                            isError: true,
+                            content: [{ type: 'text', text: `Failed to generate cover image: ${err.message}` }]
                         }
                     }, { headers: corsHeaders() });
                 }
