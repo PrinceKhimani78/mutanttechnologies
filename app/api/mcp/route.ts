@@ -192,14 +192,21 @@ async function renderCoverImage({
     subtitle?: string;
 }): Promise<Buffer> {
     let logoDataUrl: string | null = null;
+    let logoWidth = 246;
+    let logoHeight = 40;
     try {
-        let logoPath = path.join(process.cwd(), 'public', 'preloader logo.png');
-        if (!fs.existsSync(logoPath)) {
-            logoPath = path.join(process.cwd(), 'public', 'logo.png');
-        }
+        const logoPath = path.join(process.cwd(), 'public', 'logo.png');
         if (fs.existsSync(logoPath)) {
             const buf = fs.readFileSync(logoPath);
             logoDataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+            if (buf.length >= 24 && buf.subarray(0, 8).toString('hex') === '89504e470d0a1a0a') {
+                const origW = buf.readUInt32BE(16);
+                const origH = buf.readUInt32BE(20);
+                if (origW > 0 && origH > 0) {
+                    logoHeight = 40;
+                    logoWidth = Math.round(logoHeight * (origW / origH));
+                }
+            }
         }
     } catch (e) {
         // Fallback gracefully if logo cannot be read from disk
@@ -349,9 +356,11 @@ async function renderCoverImage({
                 logoDataUrl ? React.createElement('img', {
                     key: 'logo',
                     src: logoDataUrl,
-                    height: 56,
+                    width: logoWidth,
+                    height: logoHeight,
                     style: {
                         objectFit: 'contain',
+                        objectPosition: 'left center',
                     }
                 }) : React.createElement('div', {
                     key: 'fallback-logo',
