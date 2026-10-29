@@ -29,9 +29,10 @@ export async function POST(request: Request) {
 
         const resend = new Resend(process.env.RESEND_API_KEY);
 
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'Mutant Pixel <prince@mutanttechnologies.com>';
         // Send email notification to you
         await resend.emails.send({
-            from: 'Mutant Pixel <onboarding@resend.dev>', // You should verify a domain in Resend to change this
+            from: fromEmail,
             to: 'prince@mutanttechnologies.com', // Replace with the email where you want to receive leads
             subject: `New Lead from Smart Popup on ${new URL(url).hostname}`,
             html: `

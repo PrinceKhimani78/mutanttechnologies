@@ -88,8 +88,9 @@ export async function sendEmail(payload: EmailPayload) {
             </html>
         `;
 
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'Mutant Technologies <prince@mutanttechnologies.com>';
         const { data, error } = await resend.emails.send({
-            from: 'Mutant Website <onboarding@resend.dev>',
+            from: fromEmail,
             to: ['prince@mutanttechnologies.com'],
             replyTo: email,
             subject: emailSubject,
