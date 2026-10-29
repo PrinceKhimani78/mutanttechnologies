@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+.container {
+  width: 100%;
+}
+
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
